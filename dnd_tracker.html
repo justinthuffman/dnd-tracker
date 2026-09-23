@@ -7,10 +7,10 @@
 <link rel="icon" type="image/png" href="https://www.dungeonsanddragons.com/assets/favicons/favicon-16x16.png">
 <style>
 :root{
-  --bg:#17140f; --panel:#211d16; --panel2:#2a251c; --border:#3c3323;
-  --ink:#eee6d3; --ink-dim:#b8ab8e; --gold:#c9a24b; --gold-dim:#8a7237;
-  --maroon:#8a2f2f; --maroon-bright:#b8433f; --green:#5a7a4f;
-  --act-action:#7fae66; --act-bonus:#e0b04f; --act-ritual:#ab8fd6;
+  --bg:#0c1b26; --panel:#13293d; --panel2:#1b3750; --border:#2b4d68;
+  --ink:#e4edf2; --ink-dim:#8fa6b8; --sea:#4fb8a6; --sea-dim:#2f7d70;
+  --orange:#d97b3f; --orange-bright:#ea9257; --green:#6fbf8a;
+  --act-action:#d9654f; --act-bonus:#d9b34f; --act-ritual:#9b7fc4;
   --font-display: Georgia, 'Iowan Old Style', 'Palatino Linotype', serif;
   --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
@@ -22,24 +22,24 @@ body{
 h1,h2,h3{font-family:var(--font-display); font-weight:normal; margin:0;}
 .wrap{max-width:900px; margin:0 auto;}
 header.top{display:flex; align-items:baseline; justify-content:space-between; gap:12px; margin-bottom:18px; border-bottom:1px solid var(--border); padding-bottom:14px;}
-header.top h1{font-size:1.7rem; letter-spacing:0.02em; color:var(--gold);}
+header.top h1{font-size:1.7rem; letter-spacing:0.02em; color:var(--sea);}
 header.top .tag{color:var(--ink-dim); font-size:0.85rem;}
 
 .panel{background:var(--panel); border:1px solid var(--border); border-radius:6px; padding:16px 18px; margin-bottom:18px;}
-.panel h2{font-size:1.1rem; color:var(--gold); margin-bottom:12px; letter-spacing:0.02em;}
+.panel h2{font-size:1.1rem; color:var(--sea); margin-bottom:12px; letter-spacing:0.02em;}
 
 /* Import bar */
 .import-row{display:flex; gap:8px; flex-wrap:wrap; align-items:center;}
 .import-row input[type=text]{flex:1; min-width:220px; background:var(--panel2); border:1px solid var(--border); color:var(--ink); padding:9px 10px; border-radius:4px; font-size:0.9rem;}
 button{
-  background:var(--maroon); color:var(--ink); border:1px solid var(--maroon-bright);
+  background:var(--orange); color:var(--ink); border:1px solid var(--orange-bright);
   padding:9px 14px; border-radius:4px; cursor:pointer; font-size:0.9rem; font-family:var(--font-body);
 }
-button:hover{background:var(--maroon-bright);}
+button:hover{background:var(--orange-bright);}
 button.ghost{background:transparent; border:1px solid var(--border); color:var(--ink-dim);}
-button.ghost:hover{color:var(--ink); border-color:var(--gold-dim);}
+button.ghost:hover{color:var(--ink); border-color:var(--sea-dim);}
 .status{font-size:0.8rem; color:var(--ink-dim); margin-top:6px;}
-.status.err{color:#d97a6c;}
+.status.err{color:#e0574f;}
 .status.ok{color:var(--green);}
 
 /* Character summary */
@@ -49,55 +49,55 @@ button.ghost:hover{color:var(--ink); border-color:var(--gold-dim);}
 .field input{background:var(--panel2); border:1px solid var(--border); color:var(--ink); padding:7px 8px; border-radius:4px; font-size:0.95rem; width:100%;}
 .field input[readonly]{cursor:default; opacity:0.92;}
 .field.wide{grid-column:span 3;}
-.field.name input{font-family:var(--font-display); font-size:1.2rem; color:var(--gold);}
+.field.name input{font-family:var(--font-display); font-size:1.2rem; color:var(--sea);}
 
 .stats-row{display:grid; grid-template-columns:repeat(6,1fr); gap:10px; margin-top:14px;}
 .stat-box{background:var(--panel2); border:1px solid var(--border); border-radius:6px; text-align:center; padding:8px 4px;}
 .stat-box .abbr{font-size:0.72rem; color:var(--ink-dim); letter-spacing:0.05em;}
 .stat-box input{width:44px; background:transparent; border:none; color:var(--ink); text-align:center; font-size:1.1rem; font-family:var(--font-display);}
 .stat-box input[readonly]{cursor:default;}
-.stat-box .mod{color:var(--gold); font-size:0.85rem;}
+.stat-box .mod{color:var(--sea); font-size:0.85rem;}
 
 .chips{display:flex; flex-wrap:wrap; gap:6px; margin-top:6px;}
 .chip{background:var(--panel2); border:1px solid var(--border); border-radius:999px; padding:3px 10px; font-size:0.78rem; color:var(--ink-dim); cursor:default;}
 .chip-dim{opacity:0.4;}
-.subhead{font-size:0.75rem; text-transform:uppercase; letter-spacing:0.06em; color:var(--gold-dim); margin-top:14px; margin-bottom:4px;}
+.subhead{font-size:0.75rem; text-transform:uppercase; letter-spacing:0.06em; color:var(--sea-dim); margin-top:14px; margin-bottom:4px;}
 .attacks-list{font-size:0.85rem; color:var(--ink-dim);}
 .attacks-list div{padding:2px 0;}
 
 /* Combat menu */
 .move-line{font-size:0.95rem; margin-bottom:12px; color:var(--ink-dim);}
-.move-line span{color:var(--gold); font-family:var(--font-display); font-size:1.1rem;}
+.move-line span{color:var(--sea); font-family:var(--font-display); font-size:1.1rem;}
 .action-grid{display:flex; flex-wrap:wrap; gap:8px; margin-bottom:8px;}
 .action-grid button{flex:0 0 auto;}
-.action-grid button.active{background:var(--gold-dim); border-color:var(--gold);}
+.action-grid button.active{background:var(--sea-dim); border-color:var(--sea);}
 .action-row-label{font-size:0.72rem; text-transform:uppercase; letter-spacing:0.06em; color:var(--ink-dim); margin:10px 0 4px;}
 .detail{background:var(--panel2); border:1px dashed var(--border); border-radius:6px; padding:12px 14px; margin-top:10px; font-size:0.9rem;}
-.detail h4{font-family:var(--font-display); color:var(--gold); margin:0 0 8px; font-size:1rem;}
+.detail h4{font-family:var(--font-display); color:var(--sea); margin:0 0 8px; font-size:1rem;}
 .weapon-row{display:flex; justify-content:space-between; gap:10px; padding:6px 0; border-bottom:1px solid var(--border); flex-wrap:wrap;}
 .weapon-row:last-child{border-bottom:none;}
 .weapon-row .wname{color:var(--ink); font-weight:600;}
 .weapon-row .wdmg{color:var(--ink-dim); font-size:0.82rem;}
 .opt-block{margin-top:10px; padding-top:10px; border-top:1px solid var(--border);}
-.opt-block b{color:var(--gold-dim);}
+.opt-block b{color:var(--sea-dim);}
 .free-note{font-size:0.82rem; color:var(--ink-dim); margin-top:10px; font-style:italic;}
 .prepared-list .spell-line{padding:5px 0; cursor:pointer; border-bottom:1px solid var(--border);}
-.prepared-list .spell-line:hover{color:var(--gold);}
+.prepared-list .spell-line:hover{color:var(--sea);}
 .empty-note{color:var(--ink-dim); font-size:0.85rem; font-style:italic;}
 
 /* Spells section */
 .spell-toggle{cursor:pointer; display:flex; align-items:center; gap:8px; user-select:none;}
-.spell-toggle .arrow{transition:transform .15s; color:var(--gold-dim);}
+.spell-toggle .arrow{transition:transform .15s; color:var(--sea-dim);}
 .spell-toggle.open .arrow{transform:rotate(90deg);}
 .spell-body{display:none; margin-top:12px;}
 .spell-body.open{display:block;}
 .class-select{margin-bottom:12px; display:flex; gap:8px; align-items:center; font-size:0.85rem; color:var(--ink-dim);}
 .class-select select{background:var(--panel2); border:1px solid var(--border); color:var(--ink); padding:6px 8px; border-radius:4px;}
 .level-group{margin-bottom:14px;}
-.level-group h3{font-size:0.8rem; text-transform:uppercase; letter-spacing:0.06em; color:var(--gold-dim); border-bottom:1px solid var(--border); padding-bottom:4px; margin-bottom:6px;}
+.level-group h3{font-size:0.8rem; text-transform:uppercase; letter-spacing:0.06em; color:var(--sea-dim); border-bottom:1px solid var(--border); padding-bottom:4px; margin-bottom:6px;}
 .spell-row{display:flex; align-items:center; gap:8px; padding:4px 2px; border-radius:4px; position:relative;}
 .spell-row:hover{background:var(--panel);}
-.spell-row input[type=checkbox]{accent-color:var(--maroon);}
+.spell-row input[type=checkbox]{accent-color:var(--orange);}
 .spell-row .sname{cursor:default; border-bottom:1px dotted currentColor; opacity:0.9;}
 .spell-row .sname:hover{opacity:1;}
 .no-spells-note{font-size:0.85rem; color:var(--ink-dim); padding:8px 0;}
@@ -110,21 +110,21 @@ button.ghost:hover{color:var(--ink); border-color:var(--gold-dim);}
 .spell-line.act-ritual{color:var(--act-ritual); font-style:italic;}
 .spell-line.act-other{color:var(--ink);}
 .spell-line.spell-line-dim{opacity:0.45;}
-.detail-back{cursor:pointer; color:var(--gold-dim); font-size:0.8rem; margin-bottom:10px; display:inline-block;}
-.detail-back:hover{color:var(--gold);}
+.detail-back{cursor:pointer; color:var(--sea-dim); font-size:0.8rem; margin-bottom:10px; display:inline-block;}
+.detail-back:hover{color:var(--sea);}
 .legend{display:flex; flex-wrap:wrap; gap:14px; font-size:0.76rem; color:var(--ink-dim); margin-bottom:12px; align-items:center;}
 .legend-item{display:flex; align-items:center; gap:5px;}
 .legend .dot{width:9px; height:9px; border-radius:50%; display:inline-block;}
 
 /* Tooltip */
 #tooltip{
-  position:fixed; z-index:999; max-width:min(280px, calc(100vw - 28px)); background:#0e0c09; border:1px solid var(--gold-dim);
+  position:fixed; z-index:999; max-width:min(280px, calc(100vw - 28px)); background:#081420; border:1px solid var(--sea-dim);
   color:var(--ink); font-size:0.8rem; padding:10px 12px; border-radius:6px; box-shadow:0 6px 20px rgba(0,0,0,.5);
   display:none; pointer-events:none;
 }
-#tooltip b{color:var(--gold); display:block; margin-bottom:4px; font-family:var(--font-display); font-size:0.9rem;}
+#tooltip b{color:var(--sea); display:block; margin-bottom:4px; font-family:var(--font-display); font-size:0.9rem;}
 #tooltip .meta{color:var(--ink-dim); line-height:1.5;}
-#tooltip a{color:var(--gold); pointer-events:auto;}
+#tooltip a{color:var(--sea); pointer-events:auto;}
 
 footer{text-align:center; color:var(--ink-dim); font-size:0.75rem; margin-top:30px;}
 </style>
@@ -236,7 +236,7 @@ footer{text-align:center; color:var(--ink-dim); font-size:0.75rem; margin-top:30
     <div class="status" id="importStatus">Sheet must be shared as "Anyone with the link can view."</div>
     <div id="rawDumpWrap" style="display:none; margin-top:10px;">
       <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
-        <div class="spell-toggle" id="rawDumpToggle" style="font-size:0.85rem;"><span class="arrow">&#9656;</span><span style="color:var(--gold-dim);">Show raw sheet cells (for fixing ranges)</span></div>
+        <div class="spell-toggle" id="rawDumpToggle" style="font-size:0.85rem;"><span class="arrow">&#9656;</span><span style="color:var(--sea-dim);">Show raw sheet cells (for fixing ranges)</span></div>
         <button class="ghost" id="copyDumpBtn" type="button" style="font-size:0.75rem; padding:4px 10px; white-space:nowrap;">Copy dump</button>
       </div>
       <div id="rawDumpBody" class="spell-body" style="font-family:monospace; font-size:0.75rem; color:var(--ink-dim); max-height:320px; overflow-y:auto; background:var(--panel2); border:1px solid var(--border); border-radius:4px; padding:8px 10px; margin-top:8px; white-space:pre-wrap;"></div>
@@ -1417,7 +1417,7 @@ function showSpellPopupStatic(sp, backLabel, backFn){
     <h4 class="${sp.cls}">${sp.name}${sp.ritual?' <span style="font-size:0.7em; color:var(--ink-dim);">(Ritual)</span>':''}</h4>
     <div class="meta">${sp.school} &middot; ${sp.time}<br>Range: ${sp.range} &middot; Duration: ${sp.duration}<br>Components: ${sp.comp}</div>
     <p style="margin-top:8px;">${sp.desc}</p>
-    <p style="margin-top:8px;"><a href="${url}" target="_blank" style="color:var(--gold);">Full rules text on dnd5e.wikidot.com ↗</a></p>`);
+    <p style="margin-top:8px;"><a href="${url}" target="_blank" style="color:var(--sea);">Full rules text on dnd5e.wikidot.com ↗</a></p>`);
   document.getElementById('detailBack').addEventListener('click', backFn);
 }
 

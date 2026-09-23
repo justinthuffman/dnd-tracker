@@ -7,9 +7,9 @@
 <link rel="icon" type="image/png" href="https://www.dungeonsanddragons.com/assets/favicons/favicon-16x16.png">
 <style>
 :root{
-  --bg:#17140f; --panel:#211d16; --panel2:#2a251c; --border:#3c3323;
-  --ink:#eee6d3; --ink-dim:#b8ab8e; --gold:#c9a24b; --gold-dim:#8a7237;
-  --maroon:#8a2f2f; --maroon-bright:#b8433f;
+  --bg:#0c1b26; --panel:#13293d; --panel2:#1b3750; --border:#2b4d68;
+  --ink:#e4edf2; --ink-dim:#8fa6b8; --sea:#4fb8a6; --sea-dim:#2f7d70;
+  --orange:#d97b3f; --orange-bright:#ea9257;
   --font-display: Georgia, 'Iowan Old Style', 'Palatino Linotype', serif;
   --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
@@ -21,10 +21,10 @@ body{
   padding:64px 20px 48px;
 }
 .title-block{text-align:center; margin-bottom:56px;}
-.eyebrow-rule{width:64px; height:1px; background:var(--gold-dim); margin:0 auto 18px;}
+.eyebrow-rule{width:64px; height:1px; background:var(--sea-dim); margin:0 auto 18px;}
 h1{
   font-family:var(--font-display); font-weight:normal; font-size:2.6rem;
-  letter-spacing:0.015em; color:var(--gold); margin:0;
+  letter-spacing:0.015em; color:var(--sea); margin:0;
 }
 .subtitle{
   font-family:var(--font-display); font-style:italic; color:var(--ink-dim);
@@ -46,16 +46,16 @@ h1{
 }
 .plaque::before{
   content:''; position:absolute; top:0; left:18px; right:18px; height:2px;
-  background:var(--gold-dim); opacity:0.55;
+  background:var(--sea-dim); opacity:0.55;
 }
-.plaque:hover{border-color:var(--gold-dim); background:var(--panel2);}
-.plaque:hover::before{background:var(--gold); opacity:1;}
-.plaque:focus-visible{outline:2px solid var(--gold); outline-offset:3px;}
+.plaque:hover{border-color:var(--sea-dim); background:var(--panel2);}
+.plaque:hover::before{background:var(--sea); opacity:1;}
+.plaque:focus-visible{outline:2px solid var(--sea); outline-offset:3px;}
 .plaque-name{
   font-family:var(--font-display); font-size:1.25rem; color:var(--ink);
   letter-spacing:0.01em;
 }
-.plaque:hover .plaque-name{color:var(--gold);}
+.plaque:hover .plaque-name{color:var(--sea);}
 .plaque-sub{
   margin-top:6px; font-size:0.7rem; color:var(--ink-dim);
   text-transform:uppercase; letter-spacing:0.08em;
