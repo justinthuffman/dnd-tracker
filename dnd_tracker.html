@@ -100,6 +100,8 @@ button.ghost:hover{color:var(--ink); border-color:var(--sea-dim);}
 .spell-row input[type=checkbox]{accent-color:var(--orange);}
 .spell-row .sname{cursor:default; border-bottom:1px dotted currentColor; opacity:0.9;}
 .spell-row .sname:hover{opacity:1;}
+.prep-hint{font-size:0.85rem; color:var(--ink-dim); margin:10px 0 12px;}
+.prep-hint b{color:var(--orange); font-weight:600;}
 .no-spells-note{font-size:0.85rem; color:var(--ink-dim); padding:8px 0;}
 .sname.act-action{color:var(--act-action);}
 .sname.act-bonus{color:var(--act-bonus);}
@@ -218,6 +220,7 @@ footer{text-align:center; color:var(--ink-dim); font-size:0.75rem; margin-top:30
       <span class="legend-item"><span class="dot" style="background:var(--act-ritual);"></span>Ritual</span>
       <span class="legend-item">Plain text = Reaction or a longer casting time (Minutes/Hours)</span>
     </div>
+    <p class="prep-hint">Tick the box next to each spell you have prepared. Checked spells appear under <b>Cast Prepared Spell</b> in the Combat Menu.</p>
     <div id="spellListArea"></div>
   </div>
 </div>
