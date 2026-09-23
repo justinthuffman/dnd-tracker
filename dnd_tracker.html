@@ -66,6 +66,7 @@ button.ghost:hover{color:var(--ink); border-color:var(--sea-dim);}
 .attacks-list div{padding:2px 0;}
 
 /* Combat menu */
+.turn-note{font-size:0.82rem; color:var(--ink-dim); font-style:italic; margin:0 0 12px;}
 .move-line{font-size:0.95rem; margin-bottom:12px; color:var(--ink-dim);}
 .move-line span{color:var(--sea); font-family:var(--font-display); font-size:1.1rem;}
 .action-grid{display:flex; flex-wrap:wrap; gap:8px; margin-bottom:8px;}
@@ -176,6 +177,7 @@ footer{text-align:center; color:var(--ink-dim); font-size:0.75rem; margin-top:30
 <!-- COMBAT MENU -->
 <div class="panel">
   <h2>Combat Menu</h2>
+  <p class="turn-note">On your turn, you can do these in any order. The numbers are just for reference. You can also split your movement, for example moving 10 feet, attacking, then moving the rest. Some bonus actions do depend on something else first, such as off-hand attacks, which need the Attack action.</p>
   <div class="move-line">1. Move up to <span id="moveFt">30</span> feet.</div>
 
   <div class="action-row-label">2. Action</div>
