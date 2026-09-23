@@ -1667,10 +1667,14 @@ function extractAttacksRYAC(table, rowStart, rowEnd){
     const nameStr=String(name).trim();
     if(!nameStr || nameStr.toUpperCase()==='NAME') continue;
     let bonus=row[yC];
-    bonus = (bonus===null||bonus===undefined||bonus==='') ? '' : ((Number(bonus)>=0?'+':'')+bonus);
+    bonus = (bonus===null||bonus===undefined||bonus==='') ? '' : String(bonus).trim();
+    // Some sheets store the bonus as text that already has its sign ("+2"); only add one to bare numbers
+    if(bonus && /^\d/.test(bonus)) bonus = '+'+bonus;
     let dmg=row[acC];
     dmg = dmg ? String(dmg).replace(/\*\*\*/g,'').trim() : '';
     if(dmg==='-') dmg='';
+    // Sheet stores damage like "1d8[bludgeoning]|Simple Melee Weapon Attack..." — make it readable
+    dmg = dmg.replace(/\s*\[([^\]]*)\]/g, ' $1').replace(/\s*\|\s*/g, ' · ').replace(/\s{2,}/g, ' ').trim();
     out.push({name:nameStr, bonus, damage:dmg});
   }
   return out;
