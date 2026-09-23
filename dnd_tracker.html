@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Character Tracker</title>
+<link rel="icon" type="image/png" href="https://www.dungeonsanddragons.com/assets/favicons/favicon-16x16.png">
 <style>
 :root{
   --bg:#17140f; --panel:#211d16; --panel2:#2a251c; --border:#3c3323;
@@ -110,7 +111,7 @@ button.ghost:hover{color:var(--ink); border-color:var(--gold-dim);}
 
 /* Tooltip */
 #tooltip{
-  position:fixed; z-index:999; max-width:280px; background:#0e0c09; border:1px solid var(--gold-dim);
+  position:fixed; z-index:999; max-width:min(280px, calc(100vw - 28px)); background:#0e0c09; border:1px solid var(--gold-dim);
   color:var(--ink); font-size:0.8rem; padding:10px 12px; border-radius:6px; box-shadow:0 6px 20px rgba(0,0,0,.5);
   display:none; pointer-events:none;
 }
@@ -1437,12 +1438,23 @@ function showTooltip(e, sp){
 }
 function moveTooltip(e){
   const pad=14;
+  const rect = tooltip.getBoundingClientRect();
+  const w = rect.width || 280, h = rect.height || 80;
   let x = e.clientX + pad, y = e.clientY + pad;
-  if(x + 290 > window.innerWidth) x = e.clientX - 290 - pad;
-  if(y + 140 > window.innerHeight) y = e.clientY - 140 - pad;
+  if(x + w + pad > window.innerWidth) x = e.clientX - w - pad;
+  if(x < pad) x = pad;
+  if(x + w + pad > window.innerWidth) x = Math.max(pad, window.innerWidth - w - pad);
+  if(y + h + pad > window.innerHeight) y = e.clientY - h - pad;
+  if(y < pad) y = pad;
+  if(y + h + pad > window.innerHeight) y = Math.max(pad, window.innerHeight - h - pad);
   tooltip.style.left = x+'px'; tooltip.style.top = y+'px';
 }
 function hideTooltip(){ tooltip.style.display='none'; }
+document.addEventListener('touchstart', (e)=>{
+  if(tooltip.style.display === 'block' && !tooltip.contains(e.target)){
+    hideTooltip();
+  }
+}, {passive:true});
 function showAttrTooltip(e, itemName, abilityName){
   const info = ABILITY_INFO[abilityName];
   if(!info) return;
@@ -1717,15 +1729,20 @@ document.getElementById('f_speed').addEventListener('input', ()=>{
 
 renderChips('savesChips', []); renderChips('skillsChips', []); renderAttacksList();
 
-/* ---------- Auto-import when opened with ?sheet=<url> ---------- */
-(function(){
+/* ---------- Auto-import when opened with ?sheet=<url>&name=<name> ---------- */
+(async function(){
   const params = new URLSearchParams(window.location.search);
   const sheetParam = params.get('sheet');
+  const nameParam = params.get('name');
   if(sheetParam){
     document.getElementById('sheetUrl').value = sheetParam;
     document.getElementById('importToggle').classList.add('open');
     document.getElementById('importBody').classList.add('open');
-    runImport();
+    await runImport();
+  }
+  // Set after import so it isn't overwritten by whatever (usually blank) the sheet import found for name.
+  if(nameParam){
+    document.getElementById('f_name').value = nameParam;
   }
 })();
 </script>
