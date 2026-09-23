@@ -105,6 +105,13 @@ button.ghost:hover{color:var(--ink); border-color:var(--gold-dim);}
 .sname.act-bonus{color:var(--act-bonus);}
 .sname.act-ritual{color:var(--act-ritual); font-style:italic;}
 .sname.act-other{color:var(--ink);}
+.spell-line.act-action{color:var(--act-action);}
+.spell-line.act-bonus{color:var(--act-bonus);}
+.spell-line.act-ritual{color:var(--act-ritual); font-style:italic;}
+.spell-line.act-other{color:var(--ink);}
+.spell-line.spell-line-dim{opacity:0.45;}
+.detail-back{cursor:pointer; color:var(--gold-dim); font-size:0.8rem; margin-bottom:10px; display:inline-block;}
+.detail-back:hover{color:var(--gold);}
 .legend{display:flex; flex-wrap:wrap; gap:14px; font-size:0.76rem; color:var(--ink-dim); margin-bottom:12px; align-items:center;}
 .legend-item{display:flex; align-items:center; gap:5px;}
 .legend .dot{width:9px; height:9px; border-radius:50%; display:inline-block;}
@@ -1336,11 +1343,7 @@ document.getElementById('actionButtons').addEventListener('click', e=>{
   else if(act==='spell') renderCastDetail();
   else showDetail(`<h4>${btn.textContent}</h4><p>${ACTION_TEXT[act]}</p>`);
 });
-document.querySelector('.action-grid button[data-act="bonus"]').addEventListener('click', ()=>{
-  showDetail(`<h4>Bonus Action Options</h4>
-    <div class="opt-block"><b>Two-Weapon Fighting</b> — When you take the Attack action with a light melee weapon, you can use your bonus action to attack with a different light melee weapon in your other hand (or a thrown weapon you're holding). Don't add your ability modifier to that extra attack's damage unless it's negative.</div>
-    <p class="empty-note" style="margin-top:8px;">Other bonus actions depend on your class features, spells, or items (e.g. Divine Favor, Misty Step) — check your character's abilities.</p>`);
-});
+document.querySelector('.action-grid button[data-act="bonus"]').addEventListener('click', renderBonusDetail);
 
 function renderAttackDetail(){
   let html = `<h4>Attack</h4>`;
@@ -1359,32 +1362,63 @@ function renderAttackDetail(){
   showDetail(html);
 }
 
-function renderCastDetail(){
-  let html = `<h4>Cast Prepared Spell</h4>`;
-  const classKey = document.getElementById('spellClassSelect').value;
-  const prepared = [...state.preparedSpells].filter(n=>SPELL_DATA[classKey].some(s=>s.name===n));
-  if(!prepared.length){
-    html += `<p class="empty-note">No spells prepared yet — expand the Spells section below and check the ones you have prepared.</p>`;
-  } else {
-    html += `<div class="prepared-list">` + prepared.map(n=>{
-      const sp = SPELL_DATA[classKey].find(s=>s.name===n);
-      return `<div class="spell-line" data-spell="${n}">${n} <span style="color:var(--ink-dim); font-size:0.8rem;">(${LEVEL_NAMES[sp.level]})</span></div>`;
-    }).join('') + `</div>`;
-  }
-  showDetail(html);
+function renderSpellLineList(spells, dimPredicate){
+  return `<div class="prepared-list">` + spells.map(sp=>{
+    const dim = dimPredicate && dimPredicate(sp) ? ' spell-line-dim' : '';
+    return `<div class="spell-line ${sp.cls}${dim}" data-spell="${sp.name}">${sp.name} <span style="color:var(--ink-dim); font-size:0.8rem;">(${LEVEL_NAMES[sp.level]})</span></div>`;
+  }).join('') + `</div>`;
+}
+function wireSpellLines(classKey, backLabel, backFn){
   actionDetail.querySelectorAll('.spell-line').forEach(row=>{
+    const sp = SPELL_DATA[classKey].find(s=>s.name===row.dataset.spell);
+    if(!sp) return;
+    row.addEventListener('mouseenter', e=>showTooltip(e, sp));
+    row.addEventListener('mousemove', moveTooltip);
+    row.addEventListener('mouseleave', hideTooltip);
     row.addEventListener('click', ()=>{
-      const sp = SPELL_DATA[classKey].find(s=>s.name===row.dataset.spell);
-      showSpellPopupStatic(sp);
+      hideTooltip();
+      showSpellPopupStatic(sp, backLabel, backFn);
     });
   });
 }
-function showSpellPopupStatic(sp){
+
+function renderCastDetail(){
+  let html = `<h4>Cast Prepared Spell</h4>`;
+  const classKey = document.getElementById('spellClassSelect').value;
+  const prepared = [...state.preparedSpells].map(n=>SPELL_DATA[classKey].find(s=>s.name===n)).filter(Boolean);
+  if(!prepared.length){
+    html += `<p class="empty-note">No spells prepared yet — expand the Spells section below and check the ones you have prepared.</p>`;
+  } else {
+    html += renderSpellLineList(prepared, sp=>sp.cls==='act-ritual'||sp.cls==='act-bonus');
+    html += `<p class="empty-note" style="margin-top:10px; font-size:0.72rem;">Dimmed spells are rituals or Bonus Action spells — they can't be cast with your Action.</p>`;
+  }
+  showDetail(html);
+  wireSpellLines(classKey, 'prepared spells', renderCastDetail);
+}
+
+function renderBonusDetail(){
+  document.querySelectorAll('#actionButtons button').forEach(b=>b.classList.remove('active'));
+  const classKey = document.getElementById('spellClassSelect').value;
+  const bonusSpells = [...state.preparedSpells].map(n=>SPELL_DATA[classKey].find(s=>s.name===n)).filter(sp=>sp && sp.cls==='act-bonus');
+  let html = `<h4>Bonus Action Options</h4>
+    <div class="opt-block" style="margin-top:0; padding-top:0; border-top:none;"><b>Two-Weapon Fighting</b> — When you take the Attack action with a light melee weapon, you can use your bonus action to attack with a different light melee weapon in your other hand (or a thrown weapon you're holding). Don't add your ability modifier to that extra attack's damage unless it's negative.</div>`;
+  if(bonusSpells.length){
+    html += `<div style="margin-top:12px; font-size:0.7rem; color:var(--ink-dim); text-transform:uppercase; letter-spacing:0.06em;">Prepared Bonus Action Spells</div>`;
+    html += renderSpellLineList(bonusSpells, null);
+  }
+  html += `<p class="empty-note" style="margin-top:8px;">Other bonus actions depend on your class features, spells, or items (e.g. Divine Favor, Misty Step) — check your character's abilities.</p>`;
+  showDetail(html);
+  wireSpellLines(classKey, 'Bonus Action Options', renderBonusDetail);
+}
+
+function showSpellPopupStatic(sp, backLabel, backFn){
   const url = `https://dnd5e.wikidot.com/spell:${slugify(sp.name)}`;
-  showDetail(`<h4 class="${sp.cls}">${sp.name}${sp.ritual?' <span style="font-size:0.7em; color:var(--ink-dim);">(Ritual)</span>':''}</h4>
+  showDetail(`<div class="detail-back" id="detailBack">&larr; Back to ${backLabel}</div>
+    <h4 class="${sp.cls}">${sp.name}${sp.ritual?' <span style="font-size:0.7em; color:var(--ink-dim);">(Ritual)</span>':''}</h4>
     <div class="meta">${sp.school} &middot; ${sp.time}<br>Range: ${sp.range} &middot; Duration: ${sp.duration}<br>Components: ${sp.comp}</div>
     <p style="margin-top:8px;">${sp.desc}</p>
     <p style="margin-top:8px;"><a href="${url}" target="_blank" style="color:var(--gold);">Full rules text on dnd5e.wikidot.com ↗</a></p>`);
+  document.getElementById('detailBack').addEventListener('click', backFn);
 }
 
 /* ---------- Spells section ---------- */
@@ -1712,7 +1746,7 @@ async function runImport(){
     const matchedKey = ['wizard','paladin','bard','rogue'].find(k=>key.includes(k));
     if(matchedKey){ document.getElementById('spellClassSelect').value = matchedKey; renderSpellList(); }
 
-    setStatus('Imported. Name and Senses/Passive Perception weren\u2019t found in this sheet\u2019s data and need to be entered by hand — everything else should be correct, but double check.', 'ok');
+    setStatus('Imported.', 'ok');
   }catch(err){
     setStatus('Import failed: ' + err.message, 'err');
   }
@@ -1736,8 +1770,6 @@ renderChips('savesChips', []); renderChips('skillsChips', []); renderAttacksList
   const nameParam = params.get('name');
   if(sheetParam){
     document.getElementById('sheetUrl').value = sheetParam;
-    document.getElementById('importToggle').classList.add('open');
-    document.getElementById('importBody').classList.add('open');
     await runImport();
   }
   // Set after import so it isn't overwritten by whatever (usually blank) the sheet import found for name.
