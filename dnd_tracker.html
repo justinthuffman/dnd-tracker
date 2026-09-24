@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Character Tracker</title>
-<link rel="icon" type="image/png" href="https://www.dungeonsanddragons.com/assets/favicons/favicon-16x16.png">
+<title>Turnkeeper</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 40 40%27%3E%3Crect width=%2740%27 height=%2740%27 rx=%279%27 fill=%27%230c1b26%27/%3E%3Ccircle cx=%2720%27 cy=%2720%27 r=%2715%27 fill=%27none%27 stroke=%27%234fb8a6%27 stroke-width=%272.5%27/%3E%3Cpath d=%27M14 11H26M14 29H26M15 11Q15 18 20 20Q25 18 25 11M15 29Q15 22 20 20Q25 22 25 29%27 fill=%27none%27 stroke=%27%234fb8a6%27 stroke-width=%272.2%27 stroke-linejoin=%27round%27/%3E%3Cpath d=%27M17 27.5Q20 23.5 23 27.5Z%27 fill=%27%23d97b3f%27/%3E%3C/svg%3E">
 <style>
 :root{
   --bg:#0c1b26; --panel:#13293d; --panel2:#1b3750; --border:#2b4d68;
@@ -23,6 +23,8 @@ h1,h2,h3{font-family:var(--font-display); font-weight:normal; margin:0;}
 .wrap{max-width:900px; margin:0 auto;}
 header.top{display:flex; align-items:baseline; justify-content:space-between; gap:12px; margin-bottom:18px; border-bottom:1px solid var(--border); padding-bottom:14px;}
 header.top h1{font-size:1.7rem; letter-spacing:0.02em; color:var(--sea);}
+header.top h1.brand{display:flex; align-items:center; gap:10px;}
+.brand-mark{width:1.5em; height:1.5em; flex:0 0 auto;}
 
 .panel{background:var(--panel); border:1px solid var(--border); border-radius:6px; padding:16px 18px; margin-bottom:18px;}
 .panel h2{font-size:1.1rem; color:var(--sea); margin-bottom:12px; letter-spacing:0.02em;}
@@ -149,6 +151,36 @@ button.sel-toggle:empty{display:none;}
 .weapon-row:last-child{border-bottom:none;}
 .weapon-row .wname{color:var(--ink); font-weight:600;}
 .weapon-row .wdmg{color:var(--ink-dim); font-size:0.82rem;}
+/* Resources panel */
+.rest-btns{display:flex; gap:8px;}
+.rest-btns button{padding:6px 12px; font-size:0.82rem;}
+.rest-msg{font-size:0.82rem; color:var(--green); min-height:0;}
+.rest-msg:not(:empty){margin:-4px 0 10px;}
+.hp-row{display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:10px 16px; padding-bottom:10px; border-bottom:1px solid var(--border);}
+.res-label{font-size:0.72rem; text-transform:uppercase; letter-spacing:0.06em; color:var(--ink-dim);}
+#hpNow{font-family:var(--font-display); font-size:1.6rem; color:var(--sea);}
+#hpNow.hp-low{color:var(--orange-bright);}
+#hpNow.hp-zero{color:#e0574f;}
+.hp-max{color:var(--ink-dim); font-size:1rem;}
+.hp-adjust{display:flex; flex-wrap:wrap; align-items:center; gap:8px;}
+.hp-adjust input{width:64px; background:var(--panel2); border:1px solid var(--border); color:var(--ink); padding:7px 8px; border-radius:4px; font-size:0.95rem;}
+.hp-adjust button{padding:7px 12px; font-size:0.85rem;}
+.res-row{display:flex; flex-wrap:wrap; align-items:center; gap:6px 12px; padding:8px 0; border-bottom:1px solid var(--border);}
+.res-row:last-child{border-bottom:none;}
+.res-name{min-width:150px; font-size:0.9rem; color:var(--ink);}
+.res-name small{display:block; font-size:0.7rem; color:var(--ink-dim);}
+.pips{display:flex; flex-wrap:wrap; gap:6px;}
+button.pip{width:20px; height:20px; padding:0; border-radius:50%; background:transparent; border:2px solid var(--sea); cursor:pointer;}
+button.pip.on{background:var(--sea);}
+button.pip:hover{border-color:var(--ink);}
+.pool{display:flex; align-items:center; gap:6px; font-size:0.95rem;}
+.pool b{font-family:var(--font-display); font-size:1.15rem; color:var(--sea); font-weight:normal; min-width:2.5em; text-align:right;}
+.pool button{padding:3px 9px; font-size:0.8rem;}
+.res-group{font-size:0.72rem; text-transform:uppercase; letter-spacing:0.06em; color:var(--sea-dim); margin:12px 0 2px;}
+.spent-line{font-size:0.82rem; color:var(--ink-dim); margin:8px 0 0; padding:6px 10px; border-left:3px solid var(--sea-dim); background:var(--panel2); border-radius:3px;}
+.spent-line.warn{border-left-color:#e0574f; color:var(--ink);}
+.spent-line button.sel-toggle{margin-left:6px;}
+
 /* Attack flow (V2) */
 .flow-label{font-size:0.72rem; text-transform:uppercase; letter-spacing:0.06em; color:var(--ink-dim); margin:12px 0 6px;}
 .flow-label:first-of-type{margin-top:4px;}
@@ -241,7 +273,7 @@ footer{text-align:center; color:var(--ink-dim); font-size:0.75rem; margin-top:30
 <div class="wrap">
 
 <header class="top">
-  <h1>Character Tracker</h1>
+  <h1 class="brand"><svg class="brand-mark" viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="16" fill="none" stroke="var(--sea)" stroke-width="2"/><path d="M14 11 H26 M14 29 H26 M15 11 Q15 18 20 20 Q25 18 25 11 M15 29 Q15 22 20 20 Q25 22 25 29" fill="none" stroke="var(--sea)" stroke-width="1.8" stroke-linejoin="round"/><path d="M17.5 27 Q20 24 22.5 27 Z" fill="var(--orange)"/></svg>Turnkeeper</h1>
 </header>
 
 <!-- CHARACTER SUMMARY -->
@@ -316,6 +348,24 @@ footer{text-align:center; color:var(--ink-dim); font-size:0.75rem; margin-top:30
       <div id="atList"></div>
     </div>
   </div>
+</div>
+
+<!-- RESOURCES: hit points, spell slots, limited-use features, rests -->
+<div class="panel" id="resourcesPanel">
+  <div class="panel-head"><h2>Resources</h2>
+    <div class="rest-btns"><button type="button" class="ghost" id="shortRestBtn">Short Rest</button><button type="button" class="ghost" id="longRestBtn">Long Rest</button></div>
+  </div>
+  <div class="rest-msg" id="restMsg" aria-live="polite"></div>
+  <div class="hp-row">
+    <div class="hp-now"><span class="res-label">Hit Points</span> <span id="hpNow">&mdash;</span><span class="hp-max"> / <span id="hpMax">&mdash;</span></span></div>
+    <div class="hp-adjust">
+      <input type="number" id="hpAmount" min="1" value="1" aria-label="Amount of damage or healing">
+      <button type="button" id="hpDamage">Damage</button>
+      <button type="button" id="hpHeal">Heal</button>
+      <button type="button" class="sel-toggle" id="hpReset" title="Set hit points back to the value on your sheet">Reset to sheet</button>
+    </div>
+  </div>
+  <div id="resRows"><p class="empty-note">Import a sheet to track resources.</p></div>
 </div>
 
 <!-- COMBAT MENU -->
@@ -1753,12 +1803,24 @@ function renderAttackDetail(){
 const rollPopup = document.getElementById('rollPopup');
 const rollState = {sel:null, mode:'normal', crit:false, smite:0, undead:false};
 // Paladin spell slots: highest slot level available by paladin level (2014 half-caster table)
-function paladinMaxSlot(){ const l = charLevel(); return l>=17?5 : l>=13?4 : l>=9?3 : l>=5?2 : l>=2?1 : 0; }
 const ORDINAL = ['','1st','2nd','3rd','4th','5th'];
 
 function openRollPopup(sel, mode){
   hideTooltip();
-  Object.assign(rollState, {sel, mode, crit:false, smite:0, undead:false, alt:false});
+  Object.assign(rollState, {sel, mode, crit:false, smite:0, undead:false, alt:false, spendInfo:null, smiteSpent:null});
+  // Using a spell slot, racial use or feature charge is tracked as soon as the popup opens
+  let id = null, desc = '';
+  if(sel.kind==='spell' && sel.entry.sp.level > 0){
+    if(sel.entry.fixedLevel){ id = 'race:'+sel.entry.sp.name; desc = `${sel.entry.sp.name} (once per long rest)`; }
+    else { id = slotIdFor(sel.slot); desc = `a ${ORDINAL[sel.slot]}-level spell slot`; }
+  } else if(sel.kind==='feature'){
+    id = featureResourceId(sel.feature);
+    desc = sel.feature.spends==='channelDivinity' ? 'your Channel Divinity' : sel.feature.name;
+  }
+  if(id && maxFor(id) > 0){
+    if(remaining(id) > 0){ spend(id, 1); rollState.spendInfo = {id, desc, state:'spent'}; }
+    else rollState.spendInfo = {id, desc, state:'none'};
+  }
   renderRollPopup();
   rollPopup.hidden = false;
   requestAnimationFrame(()=>rollPopup.classList.add('open'));
@@ -1905,17 +1967,31 @@ function featurePopupHtml(){
   let html = `<p class="roll-intro">${t.desc}</p>`;
   if(/^Channel Divinity/.test(t.name)) html += `<p class="roll-intro">Uses your Channel Divinity (once per short or long rest).</p>`;
   if(t.save && dc) html += infoBox('Saving throw', `Target makes a <b>DC ${dc} ${ABILITY_TEXT(t.save)}</b> saving throw. ${t.saveNote||''}`);
-  else if(t.name==='Lay on Hands') html += infoBox('Healing pool', `<b>${5*charLevel()} hit points</b> (5 × paladin level), refilled on a long rest. Touch a creature and spend any amount from the pool; there’s nothing to roll. Or spend 5 to cure one disease or neutralize one poison.`);
+  else if(t.pool){
+    const id = 'feat:'+t.name, left = remaining(id);
+    html += infoBox('Healing pool', `<b>${left} of ${t.pool.max()} hit points</b> left (5 × paladin level, refilled on a long rest). Touch a creature and spend any amount; there’s nothing to roll. Or spend 5 to cure one disease or neutralize one poison.`
+      + `<div class="roll-toggles" style="margin-top:8px; align-items:center;"><input type="number" id="lohAmt" min="1" max="${left}" value="${Math.min(5, left) || 1}" style="width:64px; background:var(--bg); border:1px solid var(--border); color:var(--ink); padding:5px 8px; border-radius:4px;" aria-label="Hit points to spend">`
+      + `<button type="button" class="flow-btn" data-loh="amt"${left ? '' : ' disabled'}>Spend</button>`
+      + `<button type="button" class="flow-btn" data-loh="5"${left >= 5 ? '' : ' disabled'}>Cure disease/poison (5)</button></div>`);
+  }
   else html += infoBox('No roll', `${t.name} doesn’t need a roll.${t.tip ? ` ${t.tip}` : ''}`);
   return html;
 }
 
+// "Used a 1st-level spell slot (1 left) · Undo", or a warning when none are left
+function spendLineHtml(){
+  const s = rollState.spendInfo; if(!s) return '';
+  const cap = s.desc.charAt(0).toUpperCase() + s.desc.slice(1);
+  if(s.state==='spent') return `<div class="spent-line">Used ${s.desc} (${remaining(s.id)} left). <button type="button" class="sel-toggle" data-undo-spend="1">Undo</button></div>`;
+  if(s.state==='undone') return `<div class="spent-line">Not used: ${s.desc} was given back (${remaining(s.id)} left).</div>`;
+  return `<div class="spent-line warn">${cap}: none left. Check with your DM, or restore one in Resources if that’s wrong.</div>`;
+}
 function renderRollPopup(){
   const {sel, mode} = rollState;
   const modeLabel = ROLL_MODES.find(([k])=>k===mode)[1];
   document.getElementById('rollTitle').textContent = `${sel.label}${sel.kind==='spell' && sel.slot && !sel.entry.fixedLevel && sel.slot > sel.entry.sp.level ? ` (${ORDINAL[sel.slot]}-level slot)` : ''}${mode!=='normal' ? ` — ${modeLabel}` : ''}`;
   if(sel.kind==='spell' || sel.kind==='feature'){
-    document.getElementById('rollBody').innerHTML = sel.kind==='spell' ? spellPopupHtml() : featurePopupHtml();
+    document.getElementById('rollBody').innerHTML = spendLineHtml() + (sel.kind==='spell' ? spellPopupHtml() : featurePopupHtml());
     return;
   }
   let html = `<p class="roll-intro">Copy a command and paste it into Discord.</p>`
@@ -1927,10 +2003,15 @@ function renderRollPopup(){
     } else {
       // Decided after seeing the to-hit roll, per the rules: crit and Divine Smite
       let toggles = `<div class="roll-after">After you see the roll:</div><div class="roll-toggles">${toggleBtn('data-crit','1','Crit',rollState.crit)}</div>`;
-      if(dmg.melee && hasFeature('Divine Smite') && paladinMaxSlot()){
-        toggles += `<div class="roll-after">Divine Smite:</div><div class="roll-toggles">`
+      const smiteLevels = castableSlotLevels(1);
+      if(dmg.melee && hasFeature('Divine Smite') && smiteLevels.length){
+        // Picking a slot level spends that slot; changing it or picking None gives it back
+        toggles += `<div class="roll-after">Divine Smite (uses a spell slot):</div><div class="roll-toggles">`
           + toggleBtn('data-smite','0','None', !rollState.smite)
-          + Array.from({length:paladinMaxSlot()}, (_,i)=>toggleBtn('data-smite', i+1, `${ORDINAL[i+1]} slot`, rollState.smite===i+1)).join('')
+          + smiteLevels.map(l=>{
+              const left = remaining(slotIdFor(l)), on = rollState.smite===l;
+              return `<button type="button" class="flow-btn${on?' active':''}${!on && !left ? ' flow-dim' : ''}" data-smite="${l}" aria-pressed="${on}"${!on && !left ? ' disabled' : ''}>${ORDINAL[l]} slot <small>(${left} left)</small></button>`;
+            }).join('')
           + (rollState.smite ? toggleBtn('data-undead','1','Undead or fiend', rollState.undead) : '')
           + `</div>`;
       }
@@ -1946,7 +2027,18 @@ rollPopup.addEventListener('click', e=>{
   if(e.target===rollPopup || e.target.closest('.roll-close')){ closeRollPopup(); return; }
   const t = e.target.closest('button'); if(!t) return;
   if(t.dataset.crit){ rollState.crit = !rollState.crit; renderRollPopup(); }
-  else if(t.dataset.smite !== undefined){ rollState.smite = +t.dataset.smite; if(!rollState.smite) rollState.undead = false; renderRollPopup(); }
+  else if(t.dataset.smite !== undefined){
+    const lvl = +t.dataset.smite;
+    if(rollState.smiteSpent){ spend(rollState.smiteSpent, -1); rollState.smiteSpent = null; }
+    if(lvl){ const id = slotIdFor(lvl); if(spend(id, 1)) rollState.smiteSpent = id; }
+    rollState.smite = lvl; if(!lvl) rollState.undead = false; renderRollPopup();
+  }
+  else if(t.dataset.undoSpend){ const s = rollState.spendInfo; spend(s.id, -1); s.state = 'undone'; renderRollPopup(); }
+  else if(t.dataset.loh){
+    const n = t.dataset.loh==='amt' ? (parseInt(document.getElementById('lohAmt').value,10) || 0) : +t.dataset.loh;
+    if(n > 0) spend('feat:Lay on Hands', Math.min(n, remaining('feat:Lay on Hands')));
+    renderRollPopup();
+  }
   else if(t.dataset.undead){ rollState.undead = !rollState.undead; renderRollPopup(); }
   else if(t.dataset.alt){ rollState.alt = !rollState.alt; renderRollPopup(); }
   else if(t.dataset.copy !== undefined){ copyText(t.dataset.copy, t); }
@@ -2018,14 +2110,10 @@ function renderFeatureActionDetail(){
    Racial spells are cast at a fixed level (e.g. Hellish Rebuke at 2nd); everything else uses
    the class's spell slots. */
 const FULL_CASTERS = ['bard','cleric','druid','sorcerer','wizard'];
-// Highest spell slot level the character has (2014 tables). Warlock Pact Magic is a single
-// slot level, handled as a max here; add pact-only casting when Warlock is added.
+// Highest spell slot level the character has, from the slot tables (see slotTable)
 function maxSlotLevel(){
-  const l = charLevel(), k = cf.classKey;
-  if(FULL_CASTERS.includes(k)) return Math.min(9, Math.ceil(l/2));
-  if(k==='paladin' || k==='ranger') return l < 2 ? 0 : Math.min(5, Math.floor((l-1)/4) + 1);
-  if(k==='warlock') return Math.min(5, Math.ceil(l/2));
-  return 0;
+  const levels = slotTable().filter(s=>s.max>0).map(s=>s.level);
+  return levels.length ? Math.max(...levels) : 0;
 }
 function castableSpells(){
   const listKey = document.getElementById('spellClassSelect').value;
@@ -2053,14 +2141,21 @@ function spellStepHtml(entry){
   if(sp.level > 0){
     if(entry.fixedLevel){
       castFlow.slot = entry.fixedLevel;
-      html += `<div class="flow-label">Cast at</div><div class="flow-summary" style="margin-top:0;">${ORDINAL[entry.fixedLevel]} level (from ${entry.source==='Racial'?'your race':'this feature'}; no spell slot)</div>`;
+      const rid = 'race:'+sp.name, tracked = trackedResources().some(r=>r.id===rid);
+      html += `<div class="flow-label">Cast at</div><div class="flow-summary" style="margin-top:0;">${ORDINAL[entry.fixedLevel]} level (from ${entry.source==='Racial'?'your race':'this feature'}; no spell slot)${tracked ? ` &middot; ${remaining(rid)} use left until a long rest` : ''}</div>`;
     } else {
-      const max = Math.max(maxSlotLevel(), sp.level);
-      if(!castFlow.slot || castFlow.slot < sp.level || castFlow.slot > max) castFlow.slot = sp.level;
+      // Slot levels you have that can cast it (Warlocks: pact level only), with how many are left
+      let levels = castableSlotLevels(sp.level);
+      const noSlots = !levels.length;
+      if(noSlots) levels = [sp.level];
+      if(!levels.includes(castFlow.slot)) castFlow.slot = levels.find(l=>remaining(slotIdFor(l)) > 0) || levels[0];
       html += `<div class="flow-label">Spell slot</div><div class="flow-grid">`
-        + Array.from({length:max - sp.level + 1}, (_,i)=>sp.level+i).map(l=>`<button type="button" class="flow-btn${castFlow.slot===l?' active':''}" data-slot="${l}">${ORDINAL[l] || l+'th'} level</button>`).join('')
+        + levels.map(l=>{
+            const left = noSlots ? null : remaining(slotIdFor(l));
+            return `<button type="button" class="flow-btn${castFlow.slot===l?' active':''}${left===0?' flow-dim':''}" data-slot="${l}">${ORDINAL[l] || l+'th'} level${left===null ? '' : ` <small>(${left} left)</small>`}</button>`;
+          }).join('')
         + `</div>`;
-      if(maxSlotLevel() < sp.level) html += `<div class="flow-summary">You don’t have ${ORDINAL[sp.level]}-level slots yet at your level.</div>`;
+      if(noSlots) html += `<div class="flow-summary">You don’t have ${ORDINAL[sp.level]}-level slots yet at your level.</div>`;
     }
   }
   if(r && r.attack){
@@ -2547,6 +2642,13 @@ async function runImport(){
     setupClassFeatures(cls);
     updateSpellStats();
 
+    // Resource tracking: sheet HP is the starting point; tracked values are saved per character
+    const toNum = v=>{ const n = parseInt(String(v||'').replace(/[^\d-]/g,''),10); return isNaN(n) ? null : n; };
+    track.sheetHp = {cur: toNum(hpCur), max: toNum(hpMax)};
+    loadTrack();
+    renderResources();
+    document.getElementById('restMsg').textContent = '';
+
     updateMoveLine();
 
     const key = (cls||'').toLowerCase();
@@ -2574,7 +2676,7 @@ const RACIAL_TRAITS = {
   halforc: {traits:[
     DARKVISION,
     {name:'Menacing', desc:'Proficient in Intimidation.'},
-    {name:'Relentless Endurance', desc:'When you drop to 0 HP but aren’t killed outright, go to 1 HP instead. Once per long rest.'},
+    {name:'Relentless Endurance', uses:{max:()=>1, recharge:'long'}, desc:'When you drop to 0 HP but aren’t killed outright, go to 1 HP instead. Once per long rest.'},
     {name:'Savage Attacks', desc:'On a melee weapon crit, roll one extra weapon damage die and add it to the crit damage.'},
   ]},
   elf: {traits:[
@@ -2591,8 +2693,8 @@ const RACIAL_TRAITS = {
   drow: {base:'elf', replaces:['Darkvision'], traits:[
     {name:'Drow Magic', ability:'cha', desc:'Charisma is the spellcasting ability for these spells.',
       tiers:[{level:1, name:'Dancing Lights', text:'Cantrip; cast at will.'},
-             {level:3, name:'Faerie Fire', text:'Cast once per long rest.'},
-             {level:5, name:'Darkness', text:'Cast once per long rest.'}]},
+             {level:3, name:'Faerie Fire', perRest:'long', text:'Cast once per long rest.'},
+             {level:5, name:'Darkness', perRest:'long', text:'Cast once per long rest.'}]},
     {name:'Drow Weapon Training', desc:'Proficient with rapiers, shortswords and hand crossbows.'},
     {name:'Sunlight Sensitivity', desc:'Disadvantage on attack rolls and sight-based Perception checks in direct sunlight.'},
     {name:'Superior Darkvision', desc:'Darkvision out to 120 ft instead of 60.'},
@@ -2602,8 +2704,8 @@ const RACIAL_TRAITS = {
     {name:'Hellish Resistance', desc:'Resistance to fire damage.'},
     {name:'Infernal Legacy', ability:'cha', desc:'Charisma is the spellcasting ability for these spells.',
       tiers:[{level:1, name:'Thaumaturgy', text:'Cantrip; cast at will.'},
-             {level:3, name:'Hellish Rebuke', castLevel:2, text:'Cast once per long rest as a 2nd-level spell (3d10 fire).'},
-             {level:5, name:'Darkness', text:'Cast once per long rest.'}]},
+             {level:3, name:'Hellish Rebuke', perRest:'long', castLevel:2, text:'Cast once per long rest as a 2nd-level spell (3d10 fire).'},
+             {level:5, name:'Darkness', perRest:'long', text:'Cast once per long rest.'}]},
   ]},
 };
 
@@ -2631,9 +2733,11 @@ const oathSpells = (list)=>list.map(([level, name])=>({level, name, text:'Oath s
 const CLASS_FEATURES = {
   paladin: {
     subclassLabel: 'Sacred Oath', subclassLevel: 3,
+    // Shared pools that several features spend from
+    resources: [{id:'channelDivinity', label:'Channel Divinity', level:3, max:()=>1, recharge:'short'}],
     base: [
-      {level:1, name:'Divine Sense', type:'action', desc:'Until the end of your next turn, sense the location of any celestial, fiend or undead within 60 ft not behind total cover, and any consecrated or desecrated place or object nearby. Uses: 1 + your Charisma modifier per long rest.'},
-      {level:1, name:'Lay on Hands', type:'action', desc:'You have a healing pool of 5 × your paladin level, refilled on a long rest. Touch a creature to restore hit points from the pool, or spend 5 points to cure one disease or neutralize one poison.'},
+      {level:1, name:'Divine Sense', type:'action', uses:{max:()=>Math.max(0, 1 + abilityScoreMod('cha')), recharge:'long'}, desc:'Until the end of your next turn, sense the location of any celestial, fiend or undead within 60 ft not behind total cover, and any consecrated or desecrated place or object nearby. Uses: 1 + your Charisma modifier per long rest.'},
+      {level:1, name:'Lay on Hands', type:'action', pool:{max:()=>5*charLevel(), recharge:'long'}, desc:'You have a healing pool of 5 × your paladin level, refilled on a long rest. Touch a creature to restore hit points from the pool, or spend 5 points to cure one disease or neutralize one poison.'},
       {level:2, name:'Fighting Style', choose:true, desc:'Pick one style; its benefit is permanent.',
         tiers:[{level:2, name:'Defense', text:'+1 AC while wearing armor.'},
                {level:2, name:'Dueling', text:'+2 damage with a melee weapon in one hand and no other weapons.'},
@@ -2648,36 +2752,36 @@ const CLASS_FEATURES = {
       {level:6, name:'Aura of Protection', desc:'You and friendly creatures within 10 ft add your Charisma modifier (minimum +1) to saving throws while you’re conscious.'},
       {level:10, name:'Aura of Courage', desc:'You and friendly creatures within 10 ft can’t be frightened while you’re conscious.'},
       {level:11, name:'Improved Divine Smite', desc:'Every melee weapon hit deals an extra 1d8 radiant damage.'},
-      {level:14, name:'Cleansing Touch', type:'action', desc:'End one spell on yourself or a willing creature you touch. Uses: your Charisma modifier (minimum 1) per long rest.'},
+      {level:14, name:'Cleansing Touch', type:'action', uses:{max:()=>Math.max(1, abilityScoreMod('cha')), recharge:'long'}, desc:'End one spell on yourself or a willing creature you touch. Uses: your Charisma modifier (minimum 1) per long rest.'},
       {level:18, name:'Aura Improvements', desc:'Your auras reach 30 ft instead of 10 ft.'},
     ],
     subclasses: {
       'Oath of Devotion': [
         {level:3, name:'Oath Spells', desc:'Always prepared; they don’t count against your prepared spells.',
           tiers: oathSpells([[3,'Protection from Evil and Good'],[3,'Sanctuary'],[5,'Lesser Restoration'],[5,'Zone of Truth'],[9,'Beacon of Hope'],[9,'Dispel Magic'],[13,'Freedom of Movement'],[13,'Guardian of Faith'],[17,'Commune'],[17,'Flame Strike']])},
-        {level:3, name:'Channel Divinity: Sacred Weapon', type:'action', tip:'For the next minute, add your Charisma modifier (minimum +1) to attack rolls with that weapon: add it to the to-hit command in the Attack popup.', desc:'For 1 minute, add your Charisma modifier (minimum +1) to attack rolls with one weapon you hold. It sheds bright light 20 ft (dim 20 ft more) and counts as magical.'},
-        {level:3, name:'Channel Divinity: Turn the Unholy', type:'action', save:'wis', saveNote:'Each fiend or undead within 30 ft that can see or hear you. On a failure it is turned for 1 minute or until it takes damage.', desc:'Each fiend or undead within 30 ft that can see or hear you makes a Wisdom save or is turned for 1 minute or until it takes damage.'},
+        {level:3, name:'Channel Divinity: Sacred Weapon', type:'action', spends:'channelDivinity', tip:'For the next minute, add your Charisma modifier (minimum +1) to attack rolls with that weapon: add it to the to-hit command in the Attack popup.', desc:'For 1 minute, add your Charisma modifier (minimum +1) to attack rolls with one weapon you hold. It sheds bright light 20 ft (dim 20 ft more) and counts as magical.'},
+        {level:3, name:'Channel Divinity: Turn the Unholy', type:'action', spends:'channelDivinity', save:'wis', saveNote:'Each fiend or undead within 30 ft that can see or hear you. On a failure it is turned for 1 minute or until it takes damage.', desc:'Each fiend or undead within 30 ft that can see or hear you makes a Wisdom save or is turned for 1 minute or until it takes damage.'},
         {level:7, name:'Aura of Devotion', desc:'You and friendly creatures within 10 ft can’t be charmed while you’re conscious (30 ft at level 18).'},
         {level:15, name:'Purity of Spirit', desc:'You are always under the effects of Protection from Evil and Good.'},
-        {level:20, name:'Holy Nimbus', type:'action', desc:'For 1 minute, shed bright sunlight 30 ft. Enemies starting their turn in it take 10 radiant damage, and you have advantage on saves against spells from fiends and undead. Once per long rest.'},
+        {level:20, name:'Holy Nimbus', type:'action', uses:{max:()=>1, recharge:'long'}, desc:'For 1 minute, shed bright sunlight 30 ft. Enemies starting their turn in it take 10 radiant damage, and you have advantage on saves against spells from fiends and undead. Once per long rest.'},
       ],
       'Oath of the Ancients': [
         {level:3, name:'Oath Spells', desc:'Always prepared; they don’t count against your prepared spells.',
           tiers: oathSpells([[3,'Ensnaring Strike'],[3,'Speak with Animals'],[5,'Misty Step'],[5,'Moonbeam'],[9,'Plant Growth'],[9,'Protection from Energy'],[13,'Ice Storm'],[13,'Stoneskin'],[17,'Commune with Nature'],[17,'Tree Stride']])},
-        {level:3, name:'Channel Divinity: Nature’s Wrath', type:'action', save:'str/dex', saveNote:'The target picks Strength or Dexterity. On a failure it is restrained, and repeats the save at the end of each of its turns.', desc:'Spectral vines grab a creature within 10 ft; it makes a Strength or Dexterity save (its choice) or is restrained, repeating the save each turn.'},
-        {level:3, name:'Channel Divinity: Turn the Faithless', type:'action', save:'wis', saveNote:'Each fey or fiend within 30 ft that can hear you. On a failure it is turned for 1 minute or until it takes damage.', desc:'Each fey or fiend within 30 ft that can hear you makes a Wisdom save or is turned for 1 minute or until it takes damage.'},
+        {level:3, name:'Channel Divinity: Nature’s Wrath', type:'action', spends:'channelDivinity', save:'str/dex', saveNote:'The target picks Strength or Dexterity. On a failure it is restrained, and repeats the save at the end of each of its turns.', desc:'Spectral vines grab a creature within 10 ft; it makes a Strength or Dexterity save (its choice) or is restrained, repeating the save each turn.'},
+        {level:3, name:'Channel Divinity: Turn the Faithless', type:'action', spends:'channelDivinity', save:'wis', saveNote:'Each fey or fiend within 30 ft that can hear you. On a failure it is turned for 1 minute or until it takes damage.', desc:'Each fey or fiend within 30 ft that can hear you makes a Wisdom save or is turned for 1 minute or until it takes damage.'},
         {level:7, name:'Aura of Warding', desc:'You and friendly creatures within 10 ft have resistance to damage from spells (30 ft at level 18).'},
-        {level:15, name:'Undying Sentinel', desc:'When reduced to 0 HP and not killed outright, drop to 1 HP instead, once per long rest. You also stop showing signs of age.'},
-        {level:20, name:'Elder Champion', type:'action', desc:'For 1 minute: regain 10 HP at the start of each turn, cast action-length paladin spells as a bonus action, and enemies within 10 ft have disadvantage on saves against your paladin spells and Channel Divinity. Once per long rest.'},
+        {level:15, name:'Undying Sentinel', uses:{max:()=>1, recharge:'long'}, desc:'When reduced to 0 HP and not killed outright, drop to 1 HP instead, once per long rest. You also stop showing signs of age.'},
+        {level:20, name:'Elder Champion', type:'action', uses:{max:()=>1, recharge:'long'}, desc:'For 1 minute: regain 10 HP at the start of each turn, cast action-length paladin spells as a bonus action, and enemies within 10 ft have disadvantage on saves against your paladin spells and Channel Divinity. Once per long rest.'},
       ],
       'Oath of Vengeance': [
         {level:3, name:'Oath Spells', desc:'Always prepared; they don’t count against your prepared spells.',
           tiers: oathSpells([[3,'Bane'],[3,"Hunter's Mark"],[5,'Hold Person'],[5,'Misty Step'],[9,'Haste'],[9,'Protection from Energy'],[13,'Banishment'],[13,'Dimension Door'],[17,'Hold Monster'],[17,'Scrying']])},
-        {level:3, name:'Channel Divinity: Abjure Enemy', type:'action', save:'wis', saveNote:'Fiends and undead have disadvantage. On a failure: frightened for 1 minute (or until it takes damage), speed 0. On a success: speed halved for 1 minute.', desc:'One creature within 60 ft makes a Wisdom save or is frightened for 1 minute (or until it takes damage) with speed 0. Fiends and undead save with disadvantage. On a success its speed is halved for 1 minute.'},
-        {level:3, name:'Channel Divinity: Vow of Enmity', type:'bonus', tip:'For the next minute, pick <b>Advantage</b> when you Attack that creature.', desc:'Advantage on attack rolls against one creature within 10 ft for 1 minute.'},
+        {level:3, name:'Channel Divinity: Abjure Enemy', type:'action', spends:'channelDivinity', save:'wis', saveNote:'Fiends and undead have disadvantage. On a failure: frightened for 1 minute (or until it takes damage), speed 0. On a success: speed halved for 1 minute.', desc:'One creature within 60 ft makes a Wisdom save or is frightened for 1 minute (or until it takes damage) with speed 0. Fiends and undead save with disadvantage. On a success its speed is halved for 1 minute.'},
+        {level:3, name:'Channel Divinity: Vow of Enmity', type:'bonus', spends:'channelDivinity', tip:'For the next minute, pick <b>Advantage</b> when you Attack that creature.', desc:'Advantage on attack rolls against one creature within 10 ft for 1 minute.'},
         {level:7, name:'Relentless Avenger', desc:'When you hit with an opportunity attack, you can move up to half your speed right after, as part of the same reaction, without provoking opportunity attacks.'},
         {level:15, name:'Soul of Vengeance', type:'reaction', desc:'When the target of your Vow of Enmity attacks, make a melee weapon attack against it if it’s within reach.'},
-        {level:20, name:'Avenging Angel', type:'action', save:'wis', saveNote:'The first time in a battle an enemy enters your 30 ft aura or starts its turn there. On a failure it is frightened for 1 minute or until it takes damage.', desc:'For 1 hour: gain a 60 ft flying speed and a 30 ft aura. The first time in a battle an enemy enters it or starts its turn there, it makes a Wisdom save or is frightened for 1 minute (or until it takes damage). Once per long rest.'},
+        {level:20, name:'Avenging Angel', type:'action', uses:{max:()=>1, recharge:'long'}, save:'wis', saveNote:'The first time in a battle an enemy enters your 30 ft aura or starts its turn there. On a failure it is frightened for 1 minute or until it takes damage.', desc:'For 1 hour: gain a 60 ft flying speed and a 30 ft aura. The first time in a battle an enemy enters it or starts its turn there, it makes a Wisdom save or is frightened for 1 minute (or until it takes damage). Once per long rest.'},
       ],
     },
   },
@@ -2932,6 +3036,7 @@ document.getElementById('cfSubclass').addEventListener('change', e=>{
   classSection.loadPins();
   classSection.render();
   updateFeaturesButton();
+  renderResources();
   if(spellBody.classList.contains('open')) renderSpellList();
 });
 function setupClassFeatures(clsText){
@@ -2997,6 +3102,148 @@ function updateSpellStats(){
   atkEl.title = `Proficiency ${fmtMod(s.prof)} + ${name} modifier ${fmtMod(s.mod)}`;
 }
 function sourceTag(source){ return `<span class="src-tag src-${source.toLowerCase()}">${source}</span>`; }
+
+/* ---------- Resource tracking: HP, spell slots, limited-use features, rests ----------
+   Tracked per character (sheet ID) in localStorage as {hp, used:{id: amount spent}}.
+   Slot tables are the 2014 class tables (checked on dnd5e.wikidot.com). */
+const FULL_SLOTS = [[], [2],[3],[4,2],[4,3],[4,3,2],[4,3,3],[4,3,3,1],[4,3,3,2],[4,3,3,3,1],[4,3,3,3,2],
+  [4,3,3,3,2,1],[4,3,3,3,2,1],[4,3,3,3,2,1,1],[4,3,3,3,2,1,1],[4,3,3,3,2,1,1,1],[4,3,3,3,2,1,1,1],
+  [4,3,3,3,2,1,1,1,1],[4,3,3,3,3,1,1,1,1],[4,3,3,3,3,2,1,1,1],[4,3,3,3,3,2,2,1,1]];
+const HALF_SLOTS = [[], [],[2],[3],[3],[4,2],[4,2],[4,3],[4,3],[4,3,2],[4,3,2],
+  [4,3,3],[4,3,3],[4,3,3,1],[4,3,3,1],[4,3,3,2],[4,3,3,2],[4,3,3,3,1],[4,3,3,3,1],[4,3,3,3,2],[4,3,3,3,2]];
+function abilityScoreMod(a){ return abilityMod(document.getElementById('s_'+a).value); }
+// [{level, max, recharge, id}] for the character's class and level
+function slotTable(){
+  const l = Math.min(20, Math.max(1, charLevel())), k = cf.classKey;
+  const rows = FULL_CASTERS.includes(k) ? FULL_SLOTS[l] : (k==='paladin' || k==='ranger') ? HALF_SLOTS[l] : null;
+  if(rows) return rows.map((max,i)=>({level:i+1, max, recharge:'long', id:'slot'+(i+1)}));
+  if(k==='warlock'){ // Pact Magic: all slots are one level and come back on a short rest
+    const n = l>=17 ? 4 : l>=11 ? 3 : l>=2 ? 2 : 1;
+    return [{level:Math.min(5, Math.ceil(l/2)), max:n, recharge:'short', id:'pact', pact:true}];
+  }
+  return [];
+}
+// Slot levels a spell of this level can be cast with (Warlocks: only their pact level)
+function castableSlotLevels(spLevel){
+  return slotTable().filter(s=>s.max>0 && s.level>=spLevel).map(s=>s.level);
+}
+function slotIdFor(level){ const s = slotTable().find(x=>x.level===level); return s ? s.id : 'slot'+level; }
+
+// Every limited resource the character has right now: [{id, label, max, recharge, kind:'pips'|'pool', group}]
+function trackedResources(){
+  const out = [], lvl = charLevel();
+  const entry = CLASS_FEATURES[cf.classKey];
+  (entry && entry.resources || []).filter(r=>lvl >= r.level).forEach(r=>out.push({id:r.id, label:r.label, max:r.max(), recharge:r.recharge, kind:'pips', group:'Class'}));
+  classFeatureItems().filter(t=>lvl >= t.level).forEach(t=>{
+    if(t.uses) out.push({id:'feat:'+t.name, label:t.name, max:t.uses.max(), recharge:t.uses.recharge, kind:'pips', group:'Class'});
+    if(t.pool) out.push({id:'feat:'+t.name, label:t.name, max:t.pool.max(), recharge:t.pool.recharge, kind:'pool', group:'Class'});
+  });
+  traitsForRace(rt.raceKey).forEach(t=>{
+    if(t.uses) out.push({id:'race:'+t.name, label:t.name, max:t.uses.max(), recharge:t.uses.recharge, kind:'pips', group:'Racial'});
+    (t.tiers||[]).filter(x=>x.perRest && lvl >= x.level).forEach(x=>
+      out.push({id:'race:'+x.name, label:`${x.name} (${t.name})`, max:1, recharge:x.perRest, kind:'pips', group:'Racial'}));
+  });
+  return out;
+}
+// Resource a feature spends when used (its own uses, or a shared pool like Channel Divinity)
+function featureResourceId(t){ return t.spends || (t.uses ? 'feat:'+t.name : null); }
+
+const track = {hp:null, used:{}, sheetHp:{cur:null, max:null}};
+function trackKey(){ return `dndTracker:track:${currentCharId}`; }
+function loadTrack(){
+  let saved = null;
+  try{ saved = JSON.parse(storageGet(trackKey()) || 'null'); }catch(e){}
+  track.hp = saved && typeof saved.hp==='number' ? saved.hp : null;
+  track.used = saved && saved.used ? saved.used : {};
+}
+function saveTrack(){ if(currentCharId) storageSet(trackKey(), JSON.stringify({hp:track.hp, used:track.used})); }
+function maxFor(id){
+  const s = slotTable().find(x=>x.id===id); if(s) return s.max;
+  const r = trackedResources().find(x=>x.id===id); return r ? r.max : 0;
+}
+function remaining(id){ return Math.max(0, maxFor(id) - (track.used[id]||0)); }
+// Spend (n>0) or restore (n<0); clamped to 0..max. Returns how much actually changed.
+function spend(id, n=1){
+  const max = maxFor(id), before = Math.min(max, track.used[id]||0);
+  const after = Math.max(0, Math.min(max, before + n));
+  track.used[id] = after; saveTrack(); renderResources();
+  return after - before;
+}
+
+function hpMax(){ return track.sheetHp.max; }
+function hpNow(){ return track.hp !== null ? track.hp : track.sheetHp.cur; }
+function setHp(v){
+  const max = hpMax();
+  track.hp = Math.max(0, max !== null ? Math.min(max, v) : v);
+  saveTrack(); renderResources();
+}
+
+// Rests, with a one-step Undo in case of a mis-click
+let restUndo = null;
+function takeRest(kind){
+  restUndo = JSON.stringify({hp:track.hp, used:track.used});
+  const shortIds = new Set([...slotTable(), ...trackedResources()].filter(r=>r.recharge==='short').map(r=>r.id));
+  if(kind==='long'){ track.used = {}; if(hpMax() !== null) track.hp = hpMax(); }
+  else Object.keys(track.used).forEach(id=>{ if(shortIds.has(id)) delete track.used[id]; });
+  saveTrack(); renderResources();
+  const what = kind==='long' ? 'Long rest: hit points, spell slots and all features restored.'
+    : shortIds.size ? 'Short rest: short-rest features restored (e.g. Channel Divinity).' : 'Short rest: nothing of yours comes back on a short rest yet.';
+  const msg = document.getElementById('restMsg');
+  msg.innerHTML = `${what} <button type="button" class="sel-toggle" id="restUndo">Undo</button>`;
+  document.getElementById('restUndo').onclick = ()=>{
+    const s = JSON.parse(restUndo); track.hp = s.hp; track.used = s.used; restUndo = null;
+    saveTrack(); renderResources(); msg.textContent = 'Rest undone.';
+  };
+}
+document.getElementById('shortRestBtn').addEventListener('click', ()=>takeRest('short'));
+document.getElementById('longRestBtn').addEventListener('click', ()=>takeRest('long'));
+
+// Manual HP adjustments (falls, traps, anything the roll popups don't cover)
+function hpAmount(){ const n = parseInt(document.getElementById('hpAmount').value,10); return isNaN(n) || n < 0 ? 0 : n; }
+document.getElementById('hpDamage').addEventListener('click', ()=>{ if(hpNow()!==null) setHp(hpNow() - hpAmount()); });
+document.getElementById('hpHeal').addEventListener('click', ()=>{ if(hpNow()!==null) setHp(hpNow() + hpAmount()); });
+document.getElementById('hpReset').addEventListener('click', ()=>{ track.hp = null; saveTrack(); renderResources(); });
+
+const RECHARGE_TEXT = {long:'long rest', short:'short or long rest'};
+function pipsHtml(id, max){
+  const left = remaining(id);
+  return `<div class="pips" role="group">` + Array.from({length:max}, (_,i)=>
+    `<button type="button" class="pip${i < left ? ' on' : ''}" data-pip="${escapeHtml(id)}" data-on="${i < left}" aria-label="${i < left ? 'Available: click to use' : 'Used: click to restore'}"></button>`).join('') + `</div>`;
+}
+function renderResources(){
+  const cur = hpNow(), max = hpMax();
+  const hpEl = document.getElementById('hpNow');
+  hpEl.textContent = cur === null ? '—' : cur;
+  document.getElementById('hpMax').textContent = max === null ? '—' : max;
+  hpEl.classList.toggle('hp-zero', cur === 0);
+  hpEl.classList.toggle('hp-low', cur !== null && max && cur > 0 && cur <= max/2);
+  // Keep the summary's HP box in step with tracking
+  if(cur !== null) document.getElementById('f_hp').value = `${cur} / ${max === null ? '?' : max}`;
+
+  const rows = document.getElementById('resRows');
+  if(!currentCharId){ rows.innerHTML = `<p class="empty-note">Import a sheet to track resources.</p>`; return; }
+  let html = '';
+  const slots = slotTable().filter(s=>s.max>0);
+  if(slots.length){
+    html += `<div class="res-group">Spell slots</div>` + slots.map(s=>`<div class="res-row"><div class="res-name">${ORDINAL[s.level] || s.level+'th'} level${s.pact ? ' (Pact Magic)' : ''}<small>${remaining(s.id)} of ${s.max} left &middot; back on a ${RECHARGE_TEXT[s.recharge]}</small></div>${pipsHtml(s.id, s.max)}</div>`).join('');
+  }
+  const res = trackedResources();
+  ['Class','Racial'].forEach(g=>{
+    const list = res.filter(r=>r.group===g); if(!list.length) return;
+    html += `<div class="res-group">${g==='Class' ? 'Class features' : 'Racial'}</div>` + list.map(r=>{
+      const body = r.kind==='pool'
+        ? `<div class="pool"><b>${remaining(r.id)}</b><span>/ ${r.max}</span>
+            <button type="button" data-pool="${escapeHtml(r.id)}" data-n="5">&minus;5</button>
+            <button type="button" data-pool="${escapeHtml(r.id)}" data-n="1">&minus;1</button>
+            <button type="button" data-pool="${escapeHtml(r.id)}" data-n="-1">+1</button></div>`
+        : pipsHtml(r.id, r.max);
+      return `<div class="res-row"><div class="res-name">${escapeHtml(r.label)}<small>${r.kind==='pool' ? 'pool' : `${remaining(r.id)} of ${r.max} left`} &middot; back on a ${RECHARGE_TEXT[r.recharge]}</small></div>${body}</div>`;
+    }).join('');
+  });
+  rows.innerHTML = html || `<p class="empty-note">No spell slots or limited-use features at this level yet.</p>`;
+  rows.querySelectorAll('[data-pip]').forEach(b=>b.addEventListener('click', ()=>spend(b.dataset.pip, b.dataset.on==='true' ? 1 : -1)));
+  rows.querySelectorAll('[data-pool]').forEach(b=>b.addEventListener('click', ()=>spend(b.dataset.pool, +b.dataset.n)));
+}
 
 // Plain collapsible sections (no pinning): Saving Throws, Skills, Attacks
 document.querySelectorAll('.collapsible').forEach(wrap=>{

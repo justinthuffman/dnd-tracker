@@ -3,6 +3,25 @@
 What's new in the Crisis in Waterdeep character tracker, newest first.
 Rules follow D&D 5e (2014), checked against [dnd5e.wikidot.com](https://dnd5e.wikidot.com).
 
+## 2026-09-24 — Turnkeeper and resource tracking
+
+### Changed
+- The tracker is now called **Turnkeeper**, with its own hourglass logo in the header and
+  browser tab (replacing the borrowed D&D tab icon on both pages).
+
+### Added
+- **Resources section** (between Character Summary and the Combat Menu):
+  - **Hit points** with Damage and Heal buttons for manual adjustments, and "Reset to sheet".
+  - **Spell slots** as dots per level, from the class tables. Click a dot to use or restore it.
+  - **Limited-use features:** Channel Divinity, Divine Sense, the Lay on Hands pool, Relentless
+    Endurance, and racial spells like Hellish Rebuke (once per long rest).
+  - **Short Rest** and **Long Rest** buttons, each with an Undo. A long rest also restores HP.
+  - Everything is saved per character in your browser.
+- **The roll popups use your resources automatically:** casting a leveled spell uses a slot,
+  Divine Smite uses the slot you pick (picking None gives it back), and features use their
+  charges. Each shows how many are left, with Undo, and warns you when none are left.
+  Lay on Hands can be spent from its popup.
+
 ## 2026-09-24 — Version 2 begins: roll commands
 
 ### Fixed
