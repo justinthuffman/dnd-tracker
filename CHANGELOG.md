@@ -1,8 +1,9 @@
 # Changelog
 
-What's new in the Crisis in Waterdeep character tracker, newest first.
+What's new in Turnkeeper, the Crisis in Waterdeep character tracker, newest first.
 Rules follow D&D 5e (2014), checked against [dnd5e.wikidot.com](https://dnd5e.wikidot.com).
 
+<<<<<<< HEAD
 ## Unreleased (in progress)
 
 ### Added
@@ -21,6 +22,13 @@ Rules follow D&D 5e (2014), checked against [dnd5e.wikidot.com](https://dnd5e.wi
 - **Spells are now Player's Handbook only.** The Wizard, Bard and Paladin spell lists match
   the PHB class lists exactly; spells from later books (Xanathar's, Tasha's, and others) and
   Tasha's optional class additions have been removed everywhere, including roll commands.
+=======
+## 2026-09-24 — New address
+
+### Changed
+- The site moved to **justinthuffman.github.io/turnkeeper/**, and the tracker page is now
+  `turnkeeper.html` (it was `dnd_tracker.html`). Old links no longer work; use the new one.
+>>>>>>> main
 
 ## 2026-09-24 — Build box and Rogue
 
