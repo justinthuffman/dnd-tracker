@@ -93,10 +93,10 @@ button.ghost:hover{color:var(--ink); border-color:var(--sea-dim);}
 .rt-body.open{margin-top:6px;}
 /* Things that appear when a section closes fade in rather than popping */
 @keyframes fadeIn{from{opacity:0;} to{opacity:1;}}
-.rt-hint, .pinned-chips, #rtPinned > *, #cfPinned > *, #atPinned > *{animation:fadeIn .25s ease;}
+.rt-hint, .pinned-chips, #rtPinned > *, #cfPinned > *, #fePinned > *, #atPinned > *{animation:fadeIn .25s ease;}
 @media (prefers-reduced-motion: reduce){
   .rt-body, .spell-body, .slide, .rt-body.open, .spell-body.open, .slide.open{transition:none;}
-  .rt-hint, .pinned-chips, #rtPinned > *, #cfPinned > *, #atPinned > *{animation:none;}
+  .rt-hint, .pinned-chips, #rtPinned > *, #cfPinned > *, #fePinned > *, #atPinned > *{animation:none;}
 }
 .rt-note{font-size:0.8rem; color:var(--ink-dim); margin:0 0 6px; display:flex; flex-wrap:wrap; justify-content:space-between; align-items:baseline; gap:4px 12px;}
 /* "Select all / Select none" text toggle (deliberately not a checkbox) */
@@ -113,6 +113,9 @@ button.sel-toggle:empty{display:none;}
 .rt-name{color:var(--ink); font-weight:600;}
 .rt-desc{color:var(--ink-dim);}
 button.feature-roll{font-size:0.78rem; margin-left:4px;}
+button.feat-remove{font-size:0.78rem; margin-left:4px;}
+.feat-prereq{font-size:0.75rem; color:var(--ink-dim);}
+.feat-prereq.unmet{color:var(--orange);}
 .rt-sub{list-style:none; margin:4px 0 0; padding:0 0 0 14px; border-left:2px solid var(--border); color:var(--ink-dim);}
 .rt-sub li{padding:2px 0 2px 8px;}
 .rt-subname{color:var(--ink);}
@@ -350,6 +353,17 @@ footer{text-align:center; color:var(--ink-dim); font-size:0.75rem; margin-top:30
         <span id="cfSubclassLabel">Subclass:</span> <select id="cfSubclass"></select> <span class="rt-lvl" id="cfSubclassNote"></span>
       </div>
       <div id="cfList"></div>
+    </div>
+  </div>
+
+  <div class="racial">
+    <div class="rt-toggle" id="feToggle" role="button" tabindex="0" aria-expanded="false"><span class="arrow">&#9656;</span><span class="subhead" style="margin:0;">Feats</span></div>
+    <div class="rt-hint" id="feHint">Expand to add feats or see their details.</div>
+    <div id="fePinned"></div>
+    <div class="rt-body" id="feBody">
+      <p class="rt-note"><span>Add the feats your character has. Tick a box to pin a feat to your character sheet.</span><button type="button" class="sel-toggle" id="feSelAll"></button></p>
+      <div class="cf-subclass"><label for="featAdd">Add a feat:</label> <select id="featAdd"></select></div>
+      <div id="feList"></div>
     </div>
   </div>
 
@@ -1561,16 +1575,31 @@ function renderAttackDetail(){
     const summary = sel.kind==='weapon'
       ? `${escapeHtml(sel.attack.bonus||'—')} to hit &middot; ${escapeHtml(sel.attack.damage||'—')}`
       : `Athletics ${fmtMod(skillMod('Athletics'))}. ${MANEUVERS[sel.kind].text}`;
+    // Great Weapon Master / Sharpshooter: −5 to hit, +10 damage, decided before the attack roll
+    const power = sel.kind==='weapon' ? powerAttackFeat(sel.attack) : null;
     html += `<div class="flow-summary">${summary}</div>`
       + `<div class="flow-label">Roll with</div><div class="flow-grid">`
       + ROLL_MODES.map(([k,l])=>`<button type="button" class="flow-btn${attackFlow.mode===k?' active':''}" data-mode="${k}">${l}</button>`).join('')
-      + `</div><div class="flow-go"><button type="button" id="flowRoll">Roll</button></div>`;
+      + `</div>`
+      + (power ? `<div class="flow-label">${power} (before you roll)</div><div class="flow-grid">${toggleBtn('data-power','1','−5 to hit / +10 damage',!!attackFlow.power)}</div>` : '')
+      + `<div class="flow-go"><button type="button" id="flowRoll">Roll</button></div>`;
   }
   showDetail(html);
-  actionDetail.querySelectorAll('[data-choice]').forEach(b=>b.addEventListener('click', ()=>{ attackFlow.choice = b.dataset.choice; renderAttackDetail(); }));
+  actionDetail.querySelectorAll('[data-choice]').forEach(b=>b.addEventListener('click', ()=>{ if(attackFlow.choice !== b.dataset.choice) attackFlow.power = false; attackFlow.choice = b.dataset.choice; renderAttackDetail(); }));
   actionDetail.querySelectorAll('[data-mode]').forEach(b=>b.addEventListener('click', ()=>{ attackFlow.mode = b.dataset.mode; renderAttackDetail(); }));
+  actionDetail.querySelectorAll('[data-power]').forEach(b=>b.addEventListener('click', ()=>{ attackFlow.power = !attackFlow.power; renderAttackDetail(); }));
   const go = document.getElementById('flowRoll');
-  if(go) go.addEventListener('click', ()=>openRollPopup(sel, attackFlow.mode));
+  if(go) go.addEventListener('click', ()=>{
+    const power = sel.kind==='weapon' && attackFlow.power ? powerAttackFeat(sel.attack) : null;
+    openRollPopup(power ? {...sel, power} : sel, attackFlow.mode);
+  });
+}
+// Great Weapon Master (heavy melee weapon) or Sharpshooter (ranged weapon), if the character has it
+function powerAttackFeat(attack){
+  const p = parseWeaponDamage(attack.damage); if(!p) return null;
+  if(/melee/i.test(p.props) && hasFeat('Great Weapon Master') && (/\bheavy\b/i.test(p.props) || HEAVY_WEAPONS.test(attack.name))) return 'Great Weapon Master';
+  if(/ranged/i.test(p.props) && hasFeat('Sharpshooter')) return 'Sharpshooter';
+  return null;
 }
 
 /* ---------- Roll popup ---------- */
@@ -1581,7 +1610,7 @@ const ORDINAL = ['','1st','2nd','3rd','4th','5th'];
 
 function openRollPopup(sel, mode){
   hideTooltip();
-  Object.assign(rollState, {sel, mode, crit:false, smite:0, undead:false, alt:false, sneak:false, spendInfo:null, smiteSpent:null});
+  Object.assign(rollState, {sel, mode, crit:false, smite:0, undead:false, alt:false, sneak:false, savage:false, spendInfo:null, smiteSpent:null});
   // Using a spell slot, racial use or feature charge is tracked as soon as the popup opens
   let id = null, desc = '';
   if(sel.kind==='spell' && sel.entry.sp.level > 0){
@@ -1592,7 +1621,7 @@ function openRollPopup(sel, mode){
     // Name the pool that's actually spent (Cutting Words spends a Bardic Inspiration use)
     desc = sel.feature.spends==='channelDivinity' ? 'your Channel Divinity'
       : sel.feature.spends==='bardicInspiration' ? 'a Bardic Inspiration use'
-      : sel.feature.name;
+      : sel.feature.useDesc || sel.feature.name;
   }
   if(id && maxFor(id) > 0){
     if(remaining(id) > 0){ spend(id, 1); rollState.spendInfo = {id, desc, state:'spent'}; }
@@ -1614,7 +1643,7 @@ function toHitCommand(){
   const {sel, mode} = rollState;
   if(sel.kind==='weapon'){
     const bonus = parseInt(String(sel.attack.bonus||'0').replace(/\s/g,''),10) || 0;
-    return {cmd:d20Cmd(mode, bonus), desc:`${sel.attack.name} attack`};
+    return {cmd:d20Cmd(mode, bonus - (sel.power ? 5 : 0)), desc:`${sel.attack.name} attack${sel.power ? ` (${sel.power}: −5)` : ''}`};
   }
   if(sel.kind==='check') return {cmd:d20Cmd(mode, skillMod(sel.skill), reliableFor(sel.skill)), desc:`${sel.label} (${sel.skill})`};
   return {cmd:d20Cmd(mode, skillMod('Athletics'), reliableFor('Athletics')), desc:`${MANEUVERS[sel.kind].label} (Athletics)`};
@@ -1655,10 +1684,19 @@ function damageCommand(){
   // (Assumes the sheet's damage modifier is the ability modifier; a magic weapon bonus would also be dropped.)
   let mod = p.mod + (dueling ? 2 : 0);
   if(offhand){ mod = Math.min(p.mod, 0); notes.push('Two-Weapon Fighting: no ability modifier on off-hand damage (unless negative)'); }
+  // Great Weapon Master / Sharpshooter: a flat +10, so a crit doesn't double it
+  const power = rollState.sel.power;
+  if(power){ mod += 10; notes.push(`${power}: +10 damage (not doubled on a crit)`); }
+  // Savage Attacker: once per turn, reroll the weapon's damage dice and use either total.
+  // Avrae rolls the weapon dice twice and keeps the higher set; modifiers and extra dice are added once.
+  const savageOk = melee && hasFeat('Savage Attacker');
+  const weaponDice = `${count}d${p.die}${gwf?'ro<3':''}`;
+  const savage = savageOk && rollState.savage;
+  if(savage) notes.push('Savage Attacker: weapon dice rolled twice, the higher total is kept. Once per turn.');
   const types = [p.type, radiant ? 'radiant' : ''].filter(Boolean).join(' + ');
-  const cmd = `!r ${count}d${p.die}${gwf?'ro<3':''}${mod ? fmtMod(mod) : ''}${sneak ? `+${sneak}d6` : ''}${radiant ? `+${radiant}d8` : ''}`;
+  const cmd = `!r ${savage ? `(${weaponDice},${weaponDice})kh1` : weaponDice}${mod ? fmtMod(mod) : ''}${sneak ? `+${sneak}d6` : ''}${radiant ? `+${radiant}d8` : ''}`;
   const desc = `${a.name} damage${types ? ` (${types})` : ''}`;
-  return {cmd, desc, notes, melee, sneakOk, sneakDice};
+  return {cmd, desc, notes, melee, sneakOk, sneakDice, savageOk};
 }
 
 // Only the Avrae command goes in the box (and gets copied); the description sits beside it
@@ -1709,9 +1747,17 @@ function spellPopupHtml(){
   const empowered = wizardSpell && sp.school==='Evocation' && hasFeature('Empowered Evocation') ? Math.max(1, abilityScoreMod('int')) : 0;
   if(empowered) notes.push(`Empowered Evocation: +${empowered} (Intelligence) added to the damage.`);
   if(wizardSpell && cantrip && r.save && hasFeature('Potent Cantrip')) notes.push('Potent Cantrip: a target that succeeds on the save still takes half the damage.');
+  // Elemental Adept: 1s on the chosen damage type's dice count as 2s (Avrae: mi2), and resistance is ignored
+  const adept = hasFeat('Elemental Adept') ? getChoice('Elemental Adept').toLowerCase() : '';
+  const adeptMi = type=>adept && String(type).toLowerCase()===adept ? 'mi2' : '';
+  if(adept){
+    const types = [...(r.parts||[]), r.explosion, r.rider, r.ongoing].filter(Boolean).map(x=>String(x.type||'').toLowerCase());
+    if(types.includes(adept)) notes.push(`Elemental Adept (${adept}): 1s count as 2s on the ${adept} dice (<code>mi2</code>), and the spell ignores resistance to ${adept} damage.`);
+    else if(types.some(t=>t.includes(adept))) notes.push(`Elemental Adept: if you pick ${adept}, add <code>mi2</code> after the dice (1s count as 2s) and the spell ignores resistance to it.`);
+  }
   (r.parts||[]).forEach((p, i)=>{
     const base = p.alt && rollState.alt ? p.alt : p.d;
-    const dice = scaleDice(base, p.per, {up, cantrip, crit: r.attack && crit});
+    const dice = scaleDice(base, p.per, {up, cantrip, crit: r.attack && crit}) + adeptMi(p.type);
     let extra = r.attack ? critToggle() : '';
     if(p.alt) extra += `<div class="roll-toggles" style="margin-top:6px;">${toggleBtn('data-alt','1',r.altLabel,!!rollState.alt)}</div>`;
     html += cmdBox('Damage', {cmd:`!r ${dice}${i===0 && empowered ? fmtMod(empowered) : ''}`, desc:`${sp.name} damage (${p.type})`}, extra);
@@ -1719,7 +1765,7 @@ function spellPopupHtml(){
   if(r.explosion){
     const x = r.explosion;
     html += infoBox('Explosion', `${x.text} ${saveLine(s.dc, x.save, x.onSave)}`)
-      + cmdBox('Explosion damage', {cmd:`!r ${scaleDice(x.d, x.per, {up})}`, desc:`${sp.name} explosion (${x.type})`});
+      + cmdBox('Explosion damage', {cmd:`!r ${scaleDice(x.d, x.per, {up})}${adeptMi(x.type)}`, desc:`${sp.name} explosion (${x.type})`});
   }
   if(r.heal){ const d = scaleDice(r.heal.d, r.heal.per, {up}); html += cmdBox('Healing', {cmd:`!r ${d}${fmtMod(s.mod)}`, desc:'hit points regained'}); }
   if(r.temp) html += cmdBox('Temporary hit points', {cmd:`!r ${r.temp.d}+${r.temp.flat + r.temp.perFlat*up}`, desc:'temporary hit points for 1 hour'});
@@ -1733,14 +1779,14 @@ function spellPopupHtml(){
   if(r.rider || r.onHit){
     html += infoBox('No roll now', `This adds to ${r.rider ? r.rider.on : r.onHit}.`);
     if(r.rider){
-      html += cmdBox('Extra damage on the hit', {cmd:`!r ${scaleDice(r.rider.d, r.rider.per, {up, crit})}`, desc:r.rider.type}, critToggle());
+      html += cmdBox('Extra damage on the hit', {cmd:`!r ${scaleDice(r.rider.d, r.rider.per, {up, crit})}${adeptMi(r.rider.type)}`, desc:r.rider.type}, critToggle());
       notes.push('Roll this with your weapon damage. A crit doubles these dice too.');
     }
   }
   if(r.hitSave) html += infoBox('On a hit', `Target makes a <b>DC ${s.dc} ${ABILITY_TEXT(r.hitSave.save)}</b> saving throw or is ${r.hitSave.effect}.`);
   if(r.ongoing){
     const o = r.ongoing;
-    html += cmdBox('Later turns', {cmd:`!r ${scaleDice(o.d, o.per, {up})}`, desc:o.type},
+    html += cmdBox('Later turns', {cmd:`!r ${scaleDice(o.d, o.per, {up})}${adeptMi(o.type)}`, desc:o.type},
       `<div class="roll-notes" style="list-style:none; padding-left:0;">${o.text}${o.save ? ` (DC ${s.dc} ${ABILITY_FULL[o.save]}.)` : ''}</div>`);
   }
   if(r.note) notes.push(r.note);
@@ -1749,6 +1795,8 @@ function spellPopupHtml(){
   return html;
 }
 
+// A feature's dice: one `roll`, or several `rolls` (a list, or a function giving one)
+function featureRolls(t){ return typeof t.rolls==='function' ? t.rolls() : (t.rolls || (t.roll ? [t.roll] : [])); }
 function featurePopupHtml(){
   const t = rollState.sel.feature;
   const casting = castingFor();
@@ -1756,10 +1804,10 @@ function featurePopupHtml(){
   let html = `<p class="roll-intro">${t.desc}</p>`;
   if(/^Channel Divinity/.test(t.name)) html += `<p class="roll-intro">Uses your Channel Divinity (once per short or long rest).</p>`;
   // Dice a feature rolls (Bardic Inspiration, Portent, Song of Rest…) or a worked-out number
-  if(t.roll){
-    if(t.roll.cmd) html += cmdBox(t.roll.label, {cmd:t.roll.cmd(), desc:t.roll.desc ? t.roll.desc() : ''});
-    if(t.roll.info) html += infoBox(t.roll.label, t.roll.info());
-  }
+  featureRolls(t).forEach(r=>{
+    if(r.cmd) html += cmdBox(r.label, {cmd:r.cmd(), desc:r.desc ? r.desc() : ''});
+    if(r.info) html += infoBox(r.label, r.info());
+  });
   if(t.save && dc) html += infoBox('Saving throw', `Target makes a <b>DC ${dc} ${ABILITY_TEXT(t.save)}</b> saving throw. ${t.saveNote||''}`);
   else if(t.name==='Lay on Hands' && t.pool){
     const id = 'feat:'+t.name, left = remaining(id);
@@ -1768,7 +1816,7 @@ function featurePopupHtml(){
       + `<button type="button" class="flow-btn" data-loh="amt"${left ? '' : ' disabled'}>Spend</button>`
       + `<button type="button" class="flow-btn" data-loh="5"${left >= 5 ? '' : ' disabled'}>Cure disease/poison (5)</button></div>`);
   }
-  else if(!t.roll) html += infoBox('No roll', `${t.name} doesn’t need a roll.${t.tip ? ` ${t.tip}` : ''}`);
+  else if(!featureRolls(t).length) html += infoBox('No roll', `${t.name} doesn’t need a roll.${t.tip ? ` ${t.tip}` : ''}`);
   return html;
 }
 
@@ -1797,7 +1845,8 @@ function renderRollPopup(){
     } else {
       // Decided after seeing the to-hit roll, per the rules: crit and Divine Smite
       let toggles = `<div class="roll-after">After you see the roll:</div><div class="roll-toggles">${toggleBtn('data-crit','1','Crit',rollState.crit)}`
-        + (dmg.sneakOk ? toggleBtn('data-sneak','1',`Sneak Attack (+${dmg.sneakDice}d6)`,!!rollState.sneak) : '') + `</div>`;
+        + (dmg.sneakOk ? toggleBtn('data-sneak','1',`Sneak Attack (+${dmg.sneakDice}d6)`,!!rollState.sneak) : '')
+        + (dmg.savageOk ? toggleBtn('data-savage','1','Savage Attacker',!!rollState.savage) : '') + `</div>`;
       if(dmg.sneakOk && !rollState.sneak) toggles += `<div class="roll-after">Sneak Attack needs advantage, or another enemy of the target within 5 ft of it (and no disadvantage). Once per turn.</div>`;
       const smiteLevels = castableSlotLevels(1);
       if(dmg.melee && hasFeature('Divine Smite') && smiteLevels.length){
@@ -1824,6 +1873,7 @@ rollPopup.addEventListener('click', e=>{
   const t = e.target.closest('button'); if(!t) return;
   if(t.dataset.crit){ rollState.crit = !rollState.crit; renderRollPopup(); }
   else if(t.dataset.sneak){ rollState.sneak = !rollState.sneak; renderRollPopup(); }
+  else if(t.dataset.savage){ rollState.savage = !rollState.savage; renderRollPopup(); }
   else if(t.dataset.smite !== undefined){
     const lvl = +t.dataset.smite;
     if(rollState.smiteSpent){ spend(rollState.smiteSpent, -1); rollState.smiteSpent = null; }
@@ -1858,18 +1908,26 @@ function fallbackCopy(text){
 
 // Class features usable right now with the given action type ('action' | 'bonus')
 function usableFeatures(type){
-  return classFeatureItems().filter(t=>t.type===type && charLevel() >= t.level);
+  return [...classFeatureItems(), ...featItems()].filter(t=>t.type===type && charLevel() >= t.level);
 }
 function featureMeta(t){
-  return `Class feature (level ${t.level})${TYPE_LABELS[t.type] ? ' &middot; ' + TYPE_LABELS[t.type] : ''}`;
+  return `${t.feat ? 'Feat' : `Class feature (level ${t.level})`}${TYPE_LABELS[t.type] ? ' &middot; ' + TYPE_LABELS[t.type] : ''}`;
 }
 function showFeatureTooltip(e, t){
   tooltip.innerHTML = `<b>${t.name}</b><div class="meta">${featureMeta(t)}</div><div class="meta" style="margin-top:6px; color:var(--ink);">${t.desc}</div>`;
   tooltip.style.display='block';
   moveTooltip(e);
 }
+// "Class features", "Feats" or "Features and feats", depending on what's in the list
+function featsLabel(list, title){
+  const f = list.some(t=>t.feat), c = list.some(t=>!t.feat);
+  if(title) return f && c ? 'Features and Feats' : f ? 'Feats' : 'Class Features';
+  return f && c ? 'Features and feats' : f ? 'Feats' : 'Class features';
+}
 function updateFeaturesButton(){
-  document.getElementById('featuresBtn').style.display = usableFeatures('action').length ? '' : 'none';
+  const btn = document.getElementById('featuresBtn'), list = usableFeatures('action');
+  btn.style.display = list.length ? '' : 'none';
+  if(list.length) btn.textContent = featsLabel(list, true);
 }
 
 /* ---------- Class Features flow: pick a feature → Use → popup ----------
@@ -1888,7 +1946,7 @@ function renderFeatureActionDetail(){
   const feats = usableFeatures('action');
   if(!feats.some(t=>t.name===featureFlow.name)) featureFlow.name = null;
   const sel = feats.find(t=>t.name===featureFlow.name);
-  let html = `<h4>Class Features</h4><div class="flow-label">Choose a feature</div><div class="flow-grid">`
+  let html = `<h4>${featsLabel(feats, true)}</h4><div class="flow-label">Choose a feature</div><div class="flow-grid">`
     + feats.map(t=>`<button type="button" class="flow-btn${t===sel?' active':''}" data-feature-pick="${escapeHtml(t.name)}">${t.name}</button>`).join('')
     + `</div>`;
   if(sel) html += featureStepHtml(sel);
@@ -2015,7 +2073,7 @@ function renderBonusDetail(){
   const btn = (key, label, extra='')=>`<button type="button" class="flow-btn${bonusFlow.pick===key?' active':''}" data-bonus="${escapeHtml(key)}">${label}${extra}</button>`;
   let html = `<h4>Bonus Action Options</h4>`
     + `<div class="flow-label">Attack</div><div class="flow-grid">${btn('twf','Two-Weapon Fighting')}</div>`;
-  if(feats.length) html += `<div class="flow-label">Class features</div><div class="flow-grid">${feats.map(t=>btn('f:'+t.name, t.name)).join('')}</div>`;
+  if(feats.length) html += `<div class="flow-label">${featsLabel(feats)}</div><div class="flow-grid">${feats.map(t=>btn('f:'+t.name, t.name)).join('')}</div>`;
   if(spells.length) html += `<div class="flow-label">Spells</div><div class="flow-grid">${spells.map(e=>btn('s:'+e.sp.name, e.sp.name, e.source ? sourceTag(e.source) : '')).join('')}</div>`;
 
   const pick = bonusFlow.pick;
@@ -2444,15 +2502,13 @@ async function runImport(){
     state.attacks = extractAttacksRYAC(table, 27, 32);
 
     const perceptionMod = findSkillModifier(table, 20, 37, 'Perception', 'I', 'J');
-    if(perceptionMod !== null){
-      document.getElementById('f_senses').value = String(10 + perceptionMod);
-    }
+    basePassive = perceptionMod !== null ? 10 + perceptionMod : null;
     currentCharId = sheetId;
     // A new character: close any open Combat Menu panel/popup so nothing stale stays on screen
     if(!rollPopup.hidden) closeRollPopup();
     dashActive = false;
     if(openAct) closeDetail();
-    attackFlow.choice = null; attackFlow.mode = 'normal';
+    attackFlow.choice = null; attackFlow.mode = 'normal'; attackFlow.power = false;
     checkFlow.act = null;
     castFlow.name = null; featureFlow.name = null;
     bonusFlow.pick = null; bonusFlow.weapon = null; bonusFlow.mode = 'normal'; bonusFlow.cunning = null; bonusFlow.cmode = 'normal';
@@ -2469,6 +2525,8 @@ async function runImport(){
     racialSection.loadPins();
     racialSection.render();
     setupClassFeatures(cls);
+    featSection.loadPins(); featSection.render();
+    updateSenses();
     updateSpellStats();
 
     // Resource tracking: sheet HP is the starting point; tracked values are saved per character
@@ -2810,7 +2868,7 @@ function wireSelToggle(btn, names, isOn, setAll){
 // (traits, features, saves, skills, attacks). Prepared spells aren't pins, so they're left alone.
 function pinGroups(){
   // Sections are created further down; before they all exist there's nothing to do
-  try{ return [racialSection, classSection, savePins, skillPins, attackSection]; }catch(e){ return null; }
+  try{ return [racialSection, classSection, featSection, savePins, skillPins, attackSection]; }catch(e){ return null; }
 }
 function updateMasterToggle(){
   const groups = pinGroups(); if(!groups) return;
@@ -2888,6 +2946,8 @@ function buildChoices(){
   }
   classFeatureItems().filter(t=>t.choose && lvl >= t.level).forEach(t=>
     out.push({key:'choice:'+t.name, label:t.name, value:getChoice(t.name), options:t.tiers.map(x=>x.name), feature:t}));
+  featItems().filter(t=>t.choose).forEach(t=>
+    out.push({key:'choice:'+t.name, label:t.name, value:getChoice(t.name), options:t.tiers.map(x=>x.name), feature:t}));
   return out;
 }
 function renderBuild(){
@@ -2918,8 +2978,10 @@ function renderBuild(){
     } else {
       const name = key.slice('choice:'.length);
       setChoice(name, opt);
-      classSection.setPin(name, true);   // same as ticking it in Class Features
-      classSection.render();
+      // Same as ticking it in Class Features (or Feats)
+      const section = FEAT_BY_NAME[name] && hasFeat(name) ? featSection : classSection;
+      section.setPin(name, true);
+      section.render();
     }
     renderBuild();
   }));
@@ -2960,11 +3022,15 @@ function featureRow(section, t, withBox){
   const lvlLabel = ownLevel > 1 ? ` <span class="rt-lvl">(level ${ownLevel})</span>` : '';
   row.innerHTML = (withBox ? `<input type="checkbox" ${section.pins.has(t.name)?'checked':''}>` : '')
     + `<div><span class="rt-name">${t.name}</span>${lvlLabel}${typeLabel} <span class="rt-desc">&mdash; ${t.desc}</span>`
-    + (t.roll && level >= ownLevel ? ` <button type="button" class="sel-toggle feature-roll" data-feature-roll>Roll</button>` : '')
+    + ((t.roll || t.rolls) && level >= ownLevel ? ` <button type="button" class="sel-toggle feature-roll" data-feature-roll>Roll</button>` : '')
+    + (t.feat && withBox ? ` <button type="button" class="sel-toggle feat-remove" data-feat-remove>Remove</button>` : '')
+    + (t.feat && t.prereq && withBox ? `<div class="feat-prereq${t.meets && !t.meets() ? ' unmet' : ''}">Prerequisite: ${t.prereq}${t.meets && !t.meets() ? ' (your sheet’s score is lower)' : ''}</div>` : '')
     + (tiers ? `<ul class="rt-sub">${tiers}</ul>` : '') + `</div>`;
   // Features with dice but no place in the Combat Menu (Song of Rest, Portent, Arcane Recovery…)
   const rollBtn = row.querySelector('[data-feature-roll]');
   if(rollBtn) rollBtn.addEventListener('click', e=>{ e.preventDefault(); e.stopPropagation(); openRollPopup({kind:'feature', label:t.name, feature:t}, 'normal'); });
+  const removeBtn = row.querySelector('[data-feat-remove]');
+  if(removeBtn) removeBtn.addEventListener('click', e=>{ e.preventDefault(); e.stopPropagation(); removeFeat(t.name); });
   row.querySelectorAll('[data-spell]').forEach(el=>{
     const sp = findSpell(el.dataset.spell);
     if(sp){ el.classList.add('has-tip'); wireSpellTooltip(el, sp); }
@@ -3098,6 +3164,131 @@ function setupClassFeatures(clsText){
   renderBuild();
 }
 
+/* ---------- Feats (2014 PHB), checked on dnd5e.wikidot.com and paraphrased ----------
+   The player adds the feats their character has; they're saved per character. Feats use the
+   same hooks as class features (type, uses, roll/rolls, choose/tiers, tip). Ability score
+   increases, proficiencies, HP and initiative bonuses are already on the player's sheet. */
+const abilityScore = a=>parseInt(document.getElementById('s_'+a).value,10) || 10;
+const needs = (a, n)=>()=>abilityScore(a) >= n;
+const HEAVY_WEAPONS = /\b(glaive|greataxe|greatsword|halberd|maul|pike|heavy crossbow|longbow)\b/i;
+const POLEARMS = /\b(glaive|halberd|quarterstaff|spear)\b/i;
+function polearmAttack(){ return state.attacks.find(a=>POLEARMS.test(a.name)); }
+const FEATS = [
+  {name:'Actor', desc:'+1 Charisma. Advantage on Deception and Performance checks when passing yourself off as someone else, and you can mimic someone’s speech or sounds (a listener can spot it with Wisdom (Insight) against your Charisma (Deception)).'},
+  {name:'Alert', desc:'+5 to initiative (your sheet’s initiative should already include it). You can’t be surprised while conscious, and hidden attackers don’t get advantage against you.'},
+  {name:'Athlete', desc:'+1 Strength or Dexterity. Standing up from prone costs only 5 ft of movement, climbing doesn’t cost extra movement, and a running jump needs only a 5 ft run-up.'},
+  {name:'Charger', type:'bonus', tip:'Use Attack → your weapon (or Shove) for the roll, and add <b>+5</b> to the damage if you moved at least 10 ft in a straight line first.', desc:'When you take the Dash action, you can make one melee weapon attack or shove as a bonus action. If you moved at least 10 ft in a straight line first, the attack gets +5 damage or the shove pushes 10 ft.'},
+  {name:'Crossbow Expert', type:'bonus', tip:'Use Attack → your hand crossbow for the roll.', desc:'Ignore the loading property of crossbows you’re proficient with. Being within 5 ft of an enemy doesn’t give you disadvantage on ranged attacks. When you attack with a one-handed weapon as part of the Attack action, you can attack with a hand crossbow as a bonus action.'},
+  {name:'Defensive Duelist', prereq:'Dexterity 13', meets:needs('dex',13), type:'reaction', desc:'While wielding a finesse weapon you’re proficient with, when a melee attack would hit you, add your proficiency bonus to your AC for that attack.'},
+  {name:'Dual Wielder', desc:'+1 AC while wielding a separate melee weapon in each hand. Two-Weapon Fighting works with one-handed melee weapons that aren’t light, and you can draw or stow two one-handed weapons at once.'},
+  {name:'Dungeon Delver', desc:'Advantage on Perception and Investigation checks to find secret doors, and on saves against traps. Resistance to trap damage. You can search for traps while traveling at a normal pace.'},
+  {name:'Durable', desc:'+1 Constitution. When you roll a Hit Die to regain hit points, you regain at least twice your Constitution modifier (minimum 2).'},
+  {name:'Elemental Adept', prereq:'Can cast at least one spell', choose:true, desc:'Pick a damage type. Your spells ignore resistance to it, and when you roll damage of that type, 1s count as 2s. Turnkeeper adds <code>mi2</code> to that damage.',
+    tiers:['Acid','Cold','Fire','Lightning','Thunder'].map(n=>({level:1, name:n, text:`Your spells ignore resistance to ${n.toLowerCase()} damage; 1s on its damage dice count as 2s.`}))},
+  {name:'Grappler', prereq:'Strength 13', meets:needs('str',13), type:'action',
+    roll:{label:'Pin (Athletics, contested)', cmd:()=>d20Cmd('normal', skillMod('Athletics')), desc:()=>'Grappler: pin the creature you’re grappling'},
+    desc:'Advantage on attack rolls against a creature you’re grappling. As an action, try to pin it with another grapple check: if you win, you and it are both restrained until the grapple ends.'},
+  {name:'Great Weapon Master', type:'bonus', tip:'Use Attack → your weapon for the roll.', desc:'When you score a crit or drop a creature to 0 HP with a melee weapon, make one melee weapon attack as a bonus action. Before a melee attack with a heavy weapon you’re proficient with, you can take −5 to hit for +10 damage: Turnkeeper offers it in the Attack step.'},
+  {name:'Healer', type:'action',
+    roll:{label:'Healing', cmd:()=>'!r 1d6+4', desc:()=>'plus the creature’s maximum number of Hit Dice'},
+    desc:'When you stabilize a creature with a healer’s kit, it also regains 1 HP. As an action, spend one use of a healer’s kit to restore 1d6 + 4 HP, plus the creature’s maximum number of Hit Dice. Each creature can benefit once per short or long rest.'},
+  {name:'Heavily Armored', prereq:'Proficiency with medium armor', desc:'+1 Strength. Proficiency with heavy armor.'},
+  {name:'Heavy Armor Master', prereq:'Proficiency with heavy armor', desc:'+1 Strength. While wearing heavy armor, nonmagical bludgeoning, piercing and slashing damage you take is reduced by 3.'},
+  {name:'Inspiring Leader', prereq:'Charisma 13', meets:needs('cha',13),
+    roll:{label:'Temporary hit points', info:()=>`Each creature gets <b>${Math.max(0, charLevel() + abilityScoreMod('cha'))} temporary hit points</b> (your level ${charLevel()} + Charisma modifier ${fmtMod(abilityScoreMod('cha'))}).`},
+    desc:'Spend 10 minutes inspiring up to six friendly creatures (you can include yourself) within 30 ft that can see or hear you. Each gains temporary hit points equal to your level + your Charisma modifier. A creature can benefit once per short or long rest.'},
+  {name:'Keen Mind', desc:'+1 Intelligence. You always know which way is north and the hours until sunrise or sunset, and can recall anything you’ve seen or heard in the past month.'},
+  {name:'Lightly Armored', desc:'+1 Strength or Dexterity. Proficiency with light armor.'},
+  {name:'Linguist', desc:'+1 Intelligence. Learn three languages. You can write ciphers; others need an Intelligence check (DC your Intelligence score + proficiency bonus) to decode them without your help.'},
+  {name:'Lucky', uses:{max:()=>3, recharge:'long'}, useDesc:'a luck point',
+    roll:{label:'Your extra d20', cmd:()=>'!r 1d20', desc:()=>'pick which d20 counts'},
+    desc:'Three luck points per long rest. After you roll an attack, ability check or saving throw (before the DM says the outcome), spend one to roll another d20 and choose which to use. When you’re attacked, spend one to roll a d20 and choose whether the attacker uses it or theirs.'},
+  {name:'Mage Slayer', type:'reaction', desc:'When a creature within 5 ft casts a spell, make a melee weapon attack against it as a reaction. Creatures you damage have disadvantage on concentration saves, and you have advantage on saves against spells cast within 5 ft of you.'},
+  {name:'Magic Initiate', uses:{max:()=>1, recharge:'long'}, useDesc:'your Magic Initiate spell',
+    desc:'Learn two cantrips and one 1st-level spell from the bard, cleric, druid, sorcerer, warlock or wizard list. Cast the 1st-level spell once per long rest without a slot (track it in Resources). Your spellcasting ability for them depends on that class.'},
+  {name:'Martial Adept', uses:{max:()=>1, recharge:'short'}, useDesc:'your superiority die',
+    rolls:()=>[{label:'Superiority die', cmd:()=>'!r 1d6', desc:()=>'add to the maneuver'},
+      {label:'Maneuver save DC', info:()=>{ const m = Math.max(abilityScoreMod('str'), abilityScoreMod('dex')); return `<b>DC ${8 + proficiencyBonus() + m}</b> (8 + proficiency ${fmtMod(proficiencyBonus())} + Strength or Dexterity ${fmtMod(m)}).`; }}],
+    desc:'Learn two Battle Master maneuvers. You have one superiority die (d6) to fuel them, regained on a short or long rest. Maneuver save DC: 8 + proficiency bonus + Strength or Dexterity modifier.'},
+  {name:'Medium Armor Master', prereq:'Proficiency with medium armor', desc:'Medium armor doesn’t give you disadvantage on Stealth checks, and you can add up to +3 Dexterity to AC in it instead of +2.'},
+  {name:'Mobile', desc:'+10 ft speed. Dashing ignores difficult terrain that turn. When you make a melee attack against a creature, it can’t make opportunity attacks against you for the rest of your turn.'},
+  {name:'Moderately Armored', prereq:'Proficiency with light armor', desc:'+1 Strength or Dexterity. Proficiency with medium armor and shields.'},
+  {name:'Mounted Combatant', desc:'While mounted: advantage on melee attacks against unmounted creatures smaller than your mount, you can make an attack targeting your mount target you instead, and your mount takes no damage on a successful Dexterity save for half (half on a failure).'},
+  {name:'Observant', desc:'+1 Intelligence or Wisdom. You can read lips in a language you know. +5 to your passive Perception and passive Investigation: Turnkeeper adds it to Senses / Passive Perc.'},
+  {name:'Polearm Master', type:'bonus',
+    rolls:()=>{
+      const a = polearmAttack(), p = a && parseWeaponDamage(a.damage);
+      if(!a || !p) return [{label:'Butt end', info:()=>'No glaive, halberd, quarterstaff or spear found on your sheet.'}];
+      const bonus = parseInt(String(a.bonus||'0').replace(/\s/g,''),10) || 0;
+      return [{label:'To hit', cmd:()=>d20Cmd('normal', bonus), desc:()=>`${a.name} butt end attack`},
+              {label:'Damage', cmd:()=>`!r 1d4${p.mod ? fmtMod(p.mod) : ''}`, desc:()=>`${a.name} butt end damage (bludgeoning)`}];
+    },
+    desc:'When you take the Attack action with only a glaive, halberd, quarterstaff or spear, make a bonus action attack with its other end (1d4 bludgeoning). Creatures entering your reach with one of those (or a pike) provoke an opportunity attack.'},
+  {name:'Resilient', desc:'+1 to one ability score, and proficiency in saving throws with that ability.'},
+  {name:'Ritual Caster', prereq:'Intelligence or Wisdom 13', meets:()=>abilityScore('int') >= 13 || abilityScore('wis') >= 13, desc:'You have a ritual book with two 1st-level ritual spells from one class’s list, and can cast them (and others you copy in) as rituals.'},
+  {name:'Savage Attacker', desc:'Once per turn, when you roll damage for a melee weapon attack, you can reroll the weapon’s damage dice and use either total. Turnkeeper offers it in the attack popup.'},
+  {name:'Sentinel', type:'reaction', desc:'Your opportunity attack hits reduce the target’s speed to 0 for the turn. Creatures provoke opportunity attacks from you even if they Disengage. When a creature within 5 ft attacks someone other than you, make a melee weapon attack against it as a reaction.'},
+  {name:'Sharpshooter', desc:'No disadvantage at long range, and your ranged weapon attacks ignore half and three-quarters cover. Before an attack with a ranged weapon you’re proficient with, you can take −5 to hit for +10 damage: Turnkeeper offers it in the Attack step.'},
+  {name:'Shield Master', type:'bonus', tip:'Use Attack → Shove for the roll.', desc:'When you take the Attack action, you can shove a creature within 5 ft with your shield as a bonus action. Add your shield’s AC bonus to Dexterity saves against effects that target only you, and on a successful Dexterity save for half damage you can take none instead (reaction).'},
+  {name:'Skilled', desc:'Proficiency in any combination of three skills or tools.'},
+  {name:'Skulker', prereq:'Dexterity 13', meets:needs('dex',13), desc:'You can try to hide when only lightly obscured. Missing with a ranged weapon attack while hidden doesn’t reveal you, and dim light doesn’t give you disadvantage on sight-based Perception checks.'},
+  {name:'Spell Sniper', prereq:'Can cast at least one spell', desc:'Spells with attack rolls have double range, and your ranged spell attacks ignore half and three-quarters cover. Learn one attack-roll cantrip from any class’s list.'},
+  {name:'Tavern Brawler', type:'bonus', tip:'Use Attack → Grapple for the roll.', desc:'+1 Strength or Constitution. Proficiency with improvised weapons, your unarmed strike deals 1d4, and when you hit with an unarmed strike or improvised weapon you can try to grapple as a bonus action.'},
+  {name:'Tough', desc:'Your hit point maximum increases by 2 per level (your sheet’s HP should already include it).'},
+  {name:'War Caster', prereq:'Can cast at least one spell', type:'reaction', desc:'Advantage on Constitution saves to keep concentration. You can do somatic components with weapons or a shield in your hands. When a creature provokes an opportunity attack, you can cast a 1-action spell at it instead.'},
+  {name:'Weapon Master', desc:'+1 Strength or Dexterity. Proficiency with four weapons of your choice.'},
+].map(f=>({...f, feat:true, level:1}));
+const FEAT_BY_NAME = Object.fromEntries(FEATS.map(f=>[f.name, f]));
+
+// The character's feats, saved per character like pins (with an in-memory copy if storage is blocked)
+const featMem = new Map();
+function featsKey(){ return `dndTracker:feats:${currentCharId}`; }
+function getFeats(){
+  if(!currentCharId) return [];
+  const k = featsKey();
+  if(featMem.has(k)) return featMem.get(k);
+  let list = [];
+  try{ list = JSON.parse(storageGet(k) || '[]'); }catch(e){}
+  return Array.isArray(list) ? list.filter(n=>FEAT_BY_NAME[n]) : [];
+}
+function setFeats(list){ const k = featsKey(); featMem.set(k, list); storageSet(k, list.length ? JSON.stringify(list) : null); }
+function hasFeat(name){ return getFeats().includes(name); }
+function featItems(){ return getFeats().map(n=>FEAT_BY_NAME[n]).sort((a,b)=>a.name.localeCompare(b.name)); }
+function featsChanged(){ featSection.render(); renderBuild(); renderResources(); updateFeaturesButton(); updateSenses(); }
+function addFeat(name){
+  if(!FEAT_BY_NAME[name] || hasFeat(name)) return;
+  setFeats([...getFeats(), name]);
+  featSection.setPin(name, true);   // a feat you just added is pinned, like picking a Fighting Style
+  featsChanged();
+}
+function removeFeat(name){
+  setFeats(getFeats().filter(n=>n!==name));
+  featSection.setPin(name, false);
+  featsChanged();
+}
+const featSection = makePinSection({
+  prefix:'fe', store:'featPin',
+  items: featItems,
+  emptyText: ()=>currentCharId ? 'No feats added yet. Pick one above.' : 'Import a sheet to add feats.',
+  beforeList: ()=>{
+    const sel = document.getElementById('featAdd'), have = new Set(getFeats());
+    sel.disabled = !currentCharId;
+    sel.innerHTML = `<option value="">— choose —</option>` + FEATS.filter(f=>!have.has(f.name))
+      .map(f=>`<option value="${escapeHtml(f.name)}">${f.name}${f.prereq ? ` (needs ${f.prereq})` : ''}</option>`).join('');
+  },
+});
+document.getElementById('featAdd').addEventListener('change', e=>{ const n = e.target.value; e.target.value = ''; if(n) addFeat(n); });
+
+// Senses / Passive Perc.: 10 + Perception modifier from the sheet, +5 with Observant
+let basePassive = null;
+function updateSenses(){
+  const el = document.getElementById('f_senses');
+  if(basePassive === null) return;
+  const obs = hasFeat('Observant');
+  el.value = String(basePassive + (obs ? 5 : 0));
+  el.title = `10 + Perception ${fmtMod(basePassive - 10)}${obs ? ' + 5 (Observant)' : ''}`;
+}
+
 /* ---------- Always-prepared spells (racial + class) ---------- */
 // Each spell granted by a trait or feature, with the level it unlocks at
 function grantedSpells(source, features, defaultAbility){
@@ -3201,6 +3392,9 @@ function trackedResources(){
     if(t.uses) out.push({id:'feat:'+t.name, label:t.name, max:t.uses.max(), recharge:rechargeOf(t.uses.recharge), kind:'pips', group:'Class'});
     if(t.pool) out.push({id:'feat:'+t.name, label:t.name, max:t.pool.max(), recharge:rechargeOf(t.pool.recharge), kind:'pool', group:'Class'});
   });
+  featItems().forEach(t=>{
+    if(t.uses) out.push({id:'feat:'+t.name, label:t.name, max:t.uses.max(), recharge:rechargeOf(t.uses.recharge), kind:'pips', group:'Feats'});
+  });
   traitsForRace(rt.raceKey).forEach(t=>{
     if(t.uses) out.push({id:'race:'+t.name, label:t.name, max:t.uses.max(), recharge:rechargeOf(t.uses.recharge), kind:'pips', group:'Racial'});
     (t.tiers||[]).filter(x=>x.perRest && lvl >= x.level).forEach(x=>
@@ -3292,9 +3486,9 @@ function renderResources(){
     html += `<div class="res-group">Spell slots</div>` + slots.map(s=>`<div class="res-row"><div class="res-name">${ORDINAL[s.level] || s.level+'th'} level${s.pact ? ' (Pact Magic)' : ''}<small>${remaining(s.id)} of ${s.max} left &middot; back on a ${RECHARGE_TEXT[s.recharge]}</small></div>${pipsHtml(s.id, s.max)}</div>`).join('');
   }
   const res = trackedResources();
-  ['Class','Racial'].forEach(g=>{
+  ['Class','Racial','Feats'].forEach(g=>{
     const list = res.filter(r=>r.group===g); if(!list.length) return;
-    html += `<div class="res-group">${g==='Class' ? 'Class features' : 'Racial'}</div>` + list.map(r=>{
+    html += `<div class="res-group">${g==='Class' ? 'Class features' : g}</div>` + list.map(r=>{
       const body = r.kind==='pool'
         ? `<div class="pool"><b>${remaining(r.id)}</b><span>/ ${r.max}</span>
             <button type="button" data-pool="${escapeHtml(r.id)}" data-n="5">&minus;5</button>
@@ -3456,7 +3650,7 @@ document.querySelectorAll('.collapsible').forEach(wrap=>{
 });
 
 renderChips('savesChips', []); renderChips('skillsChips', []); renderAttacksList();
-racialSection.render(); classSection.render();
+racialSection.render(); classSection.render(); featSection.render();
 
 /* ---------- Auto-import when opened with ?sheet=<url>&name=<name> ---------- */
 (async function(){

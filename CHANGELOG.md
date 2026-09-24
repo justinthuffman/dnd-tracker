@@ -3,6 +3,24 @@
 What's new in Turnkeeper, the Crisis in Waterdeep character tracker, newest first.
 Rules follow D&D 5e (2014), checked against [dnd5e.wikidot.com](https://dnd5e.wikidot.com).
 
+## Unreleased
+
+### Added
+- **Feats section** below Class Features, with all 42 Player's Handbook feats. Add your
+  character's feats from the dropdown (prerequisites are shown, and flagged if your sheet's
+  score is too low); tick to pin them like other features, or Remove them. Saved per character.
+  - **Great Weapon Master** (heavy melee weapons) and **Sharpshooter** (ranged weapons): a
+    "−5 to hit / +10 damage" toggle in the Attack step, before you roll.
+  - **Savage Attacker:** a toggle in the attack popup that rolls the weapon dice twice and
+    keeps the higher, e.g. `!r (2d6,2d6)kh1+3`.
+  - **Elemental Adept:** pick your element in the Build box; that damage gets `mi2`
+    (1s count as 2s) in spell commands.
+  - **Lucky** (3 luck points) and **Martial Adept** (superiority die, with your maneuver DC)
+    are tracked in Resources; **Magic Initiate**'s free spell too.
+  - **Healer**, **Grappler**, **Inspiring Leader** and **Polearm Master** give their rolls or
+    numbers; bonus-action and action feats appear in the Combat Menu.
+  - **Observant** adds +5 to Senses / Passive Perception.
+
 ## 2026-09-24 — Wizard, Bard, PHB-only spells and Backup
 
 ### Added
