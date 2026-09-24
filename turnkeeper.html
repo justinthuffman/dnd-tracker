@@ -2399,14 +2399,18 @@ const spellBody = document.getElementById('spellBody');
 spellToggle.addEventListener('click', ()=>{
   spellToggle.classList.toggle('open');
   spellBody.classList.toggle('open');
-  if(spellBody.classList.contains('open')) renderSpellList();
+  const open = spellBody.classList.contains('open');
+  rememberOpen('spells', open);
+  if(open) renderSpellList();
 });
+if(wasOpen('spells')){ spellToggle.classList.add('open'); spellBody.classList.add('open'); }
 document.getElementById('spellClassSelect').addEventListener('change', renderSpellList);
 
 // Select all / none for the class spell list shown (always-prepared spells have no tick box)
 function updateSpellSelToggle(list){
   wireSelToggle(document.getElementById('spellsSelAll'), list.map(sp=>sp.name), n=>state.preparedSpells.has(n), (on, names)=>{
     names.forEach(n=>{ if(on) state.preparedSpells.add(n); else state.preparedSpells.delete(n); });
+    savePrepared();
     renderSpellList();
   });
 }
@@ -2451,6 +2455,7 @@ function renderSpellList(){
       const cb = row.querySelector('input');
       cb.addEventListener('change', ()=>{
         if(cb.checked) state.preparedSpells.add(sp.name); else state.preparedSpells.delete(sp.name);
+        savePrepared();
         updateSpellSelToggle(list);
       });
       const sname = row.querySelector('.sname');
@@ -2749,8 +2754,8 @@ async function runImport(){
     castFlow.name = null; featureFlow.name = null;
     bonusFlow.pick = null; bonusFlow.weapon = null; bonusFlow.mode = 'normal'; bonusFlow.cunning = null; bonusFlow.cmode = 'normal';
     bonusDashActive = false;
-    // Prepared spells belong to the previous character (they aren't saved yet; see NOTES backlog)
-    if(sheetId !== lastImportedId) state.preparedSpells.clear();
+    // Prepared spells are saved per character; load this one's
+    loadPrepared();
     lastImportedId = sheetId;
     dashActive = false;
     attackSection.loadPins();
@@ -3091,6 +3096,24 @@ function subclassFromText(classKey, cls){
 let currentCharId = '';
 function storageGet(key){ try{ return localStorage.getItem(key); }catch(e){ return null; } }
 function storageSet(key, val){ try{ if(val===null) localStorage.removeItem(key); else localStorage.setItem(key, val); }catch(e){} }
+// Which sections are expanded is remembered per browser (a view setting, so not per character)
+function rememberOpen(name, open){ storageSet(`dndTracker:open:${name}`, open ? '1' : null); }
+function wasOpen(name){ return storageGet(`dndTracker:open:${name}`) === '1'; }
+// Prepared spells, saved per character (with an in-memory copy if storage is blocked)
+const preparedMem = new Map();
+function preparedKey(){ return `dndTracker:prepared:${currentCharId}`; }
+function savePrepared(){
+  if(!currentCharId) return;
+  const list = [...state.preparedSpells];
+  preparedMem.set(preparedKey(), list);
+  storageSet(preparedKey(), list.length ? JSON.stringify(list) : null);
+}
+function loadPrepared(){
+  const k = preparedKey();
+  let list = preparedMem.get(k);
+  if(!list){ try{ list = JSON.parse(storageGet(k) || '[]'); }catch(e){ list = []; } }
+  state.preparedSpells = new Set(Array.isArray(list) ? list.filter(n=>findSpell(n)) : []);
+}
 
 // "Select all" / "Select none" text toggle: reads "Select none" once every eligible item is on.
 // setAll(on, names) does the work; the button hides when there's nothing to select.
@@ -3311,7 +3334,7 @@ function featureRow(section, t, withBox){
 // cfg: {prefix, store, items(), emptyText(), sort?, beforeList?(bodyEl)}
 function makePinSection(cfg){
   const $ = id=>document.getElementById(cfg.prefix + id);
-  const section = {open:false, pins:new Set()};
+  const section = {open:wasOpen(cfg.prefix), pins:new Set()};
   const key = name=>`dndTracker:${cfg.store}:${currentCharId}:${name}`;
   section.loadPins = ()=>{
     section.pins = new Set(cfg.items().filter(t=>storageGet(key(t.name))==='1').map(t=>t.name));
@@ -3346,7 +3369,7 @@ function makePinSection(cfg){
     // Pinned items show only while collapsed; the expanded list already shows them ticked
     if(!section.open) items.filter(t=>section.pins.has(t.name)).forEach(t=>pinned.appendChild(featureRow(section, t, false)));
   };
-  const toggle = ()=>{ section.open = !section.open; section.render(); };
+  const toggle = ()=>{ section.open = !section.open; rememberOpen(cfg.prefix, section.open); section.render(); };
   $('Toggle').addEventListener('click', toggle);
   $('Toggle').addEventListener('keydown', e=>{
     if(e.key==='Enter' || e.key===' '){ e.preventDefault(); toggle(); }
@@ -4084,20 +4107,23 @@ clipBox.addEventListener('input', ()=>{ restoreConfirm = null; });
 // Plain collapsible sections (no pinning): Saving Throws, Skills, Attacks
 document.querySelectorAll('.collapsible').forEach(wrap=>{
   const toggleEl = wrap.querySelector('.rt-toggle'), body = wrap.querySelector('.rt-body'), hint = wrap.querySelector('.rt-hint');
-  const toggle = ()=>{
-    const open = !body.classList.contains('open');
+  const name = toggleEl.querySelector('.subhead').textContent;
+  const setOpen = open=>{
     body.classList.toggle('open', open); toggleEl.classList.toggle('open', open);
     toggleEl.setAttribute('aria-expanded', open); hint.style.display = open ? 'none' : '';
     // Pinned chips show only while collapsed; the full list already highlights them
     const pinnedEl = wrap.querySelector('.pinned-chips');
     if(pinnedEl) pinnedEl.style.display = open ? 'none' : '';
   };
+  const toggle = ()=>{ const open = !body.classList.contains('open'); setOpen(open); rememberOpen(name, open); };
+  if(wasOpen(name)) setOpen(true);
   toggleEl.addEventListener('click', toggle);
   toggleEl.addEventListener('keydown', e=>{ if(e.key==='Enter' || e.key===' '){ e.preventDefault(); toggle(); } });
 });
 
 renderChips('savesChips', []); renderChips('skillsChips', []); renderAttacksList();
 racialSection.render(); classSection.render(); featSection.render();
+if(spellBody.classList.contains('open')) renderSpellList();   // Spells was left open last time
 
 /* ---------- Color themes: swatches at the bottom of the page ----------
    The saved theme is applied by the small script in <head> before the page draws; this

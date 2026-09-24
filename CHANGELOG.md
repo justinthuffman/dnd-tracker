@@ -3,6 +3,15 @@
 What's new in Turnkeeper, the Crisis in Waterdeep character tracker, newest first.
 Rules follow D&D 5e (2014), checked against [dnd5e.wikidot.com](https://dnd5e.wikidot.com).
 
+## Unreleased
+
+### Added
+- **Prepared spells are saved** per character in your browser, so the spells you tick are
+  still ticked after a reload or when you come back later. Each character keeps their own.
+- **Sections stay the way you left them.** Whichever sections you expand or collapse
+  (Racial Traits, Class Features, Feats, Saving Throws, Skills, Attacks, Backup, Spells)
+  stay that way after a reload.
+
 ## 2026-09-24 — Color themes
 
 ### Added
