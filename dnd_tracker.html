@@ -188,6 +188,21 @@ button.pip:hover{border-color:var(--ink);}
 .pool b{font-family:var(--font-display); font-size:1.15rem; color:var(--sea); font-weight:normal; min-width:2.5em; text-align:right;}
 .pool button{padding:3px 9px; font-size:0.8rem;}
 .res-group{font-size:0.72rem; text-transform:uppercase; letter-spacing:0.06em; color:var(--sea-dim); margin:12px 0 2px;}
+.backup{margin-top:12px; padding-top:10px; border-top:1px solid var(--border);}
+.backup button{padding:5px 12px; font-size:0.82rem;}
+/* Backup buttons look like the skill/save chips: light blue pill, orange when clicked (or, for
+   the Copy/Restore From Clipboard switch, orange while its box is open) */
+.backup button.chip-btn{background:var(--panel2); border:1px solid var(--border); border-radius:999px; color:var(--ink); padding:4px 14px; font-size:0.8rem; transition:background .15s ease, border-color .15s ease;}
+.backup button.chip-btn:hover{background:var(--panel2); border-color:var(--sea-dim);}
+.backup button.chip-btn:active,
+.backup button.chip-btn.on{background:rgba(217,123,63,0.22); border-color:var(--orange); color:var(--ink);}
+.backup .slide-inner > *{margin-bottom:8px;}
+#clipBox{width:100%; background:var(--panel2); border:1px solid var(--border); color:var(--ink); border-radius:4px; padding:8px; font-family:ui-monospace, Consolas, monospace; font-size:0.78rem; resize:vertical;}
+.backup-msg{font-size:0.8rem; color:var(--green);}
+.backup-msg.err{color:#e0574f;}
+.clip-panel{display:flex; flex-direction:column; gap:8px;}
+.clip-panel[hidden]{display:none;}
+.restore-actions{display:flex; flex-wrap:wrap; align-items:center; gap:10px;}
 .spent-line{font-size:0.82rem; color:var(--ink-dim); margin:8px 0 0; padding:6px 10px; border-left:3px solid var(--sea-dim); background:var(--panel2); border-radius:3px;}
 .spent-line.warn{border-left-color:#e0574f; color:var(--ink);}
 .spent-line button.sel-toggle{margin-left:6px;}
@@ -378,6 +393,28 @@ footer{text-align:center; color:var(--ink-dim); font-size:0.75rem; margin-top:30
     </div>
   </div>
   <div id="resRows"><p class="empty-note">Import a sheet to track resources.</p></div>
+  <div class="racial collapsible backup" id="backupBar" hidden>
+    <div class="rt-toggle" role="button" tabindex="0" aria-expanded="false"><span class="arrow">&#9656;</span><span class="subhead" style="margin:0;">Backup</span></div>
+    <div class="rt-hint">Expand to back up or restore your HP, spell slots and charges.</div>
+    <div class="rt-body">
+      <p class="rt-note"><span>Keep a backup somewhere safe, like a Google Doc, in case this browser loses it.</span></p>
+      <div class="restore-actions">
+        <button type="button" class="chip-btn" id="downloadUsageBtn">Back up to .txt</button>
+        <button type="button" class="chip-btn" id="restoreFileBtn">Restore from .txt</button>
+        <input type="file" id="restoreFile" accept=".txt,text/plain" hidden>
+        <button type="button" class="chip-btn" id="clipToggleBtn" aria-expanded="false" aria-controls="clipPanel">Copy/Restore From Clipboard</button>
+      </div>
+      <div class="clip-panel" id="clipPanel" hidden>
+        <textarea id="clipBox" rows="8" aria-label="Backup text: copy it, or clear it and paste a backup to restore" placeholder="Paste a backup here, then click Restore"></textarea>
+        <div class="restore-actions">
+          <button type="button" class="chip-btn" id="clipCopy">Copy</button>
+          <button type="button" class="chip-btn" id="clipRestore">Restore</button>
+          <button type="button" class="chip-btn" id="clipClear">Clear</button>
+        </div>
+      </div>
+      <div class="backup-msg" id="backupMsg" aria-live="polite"></div>
+    </div>
+  </div>
 </div>
 
 <!-- COMBAT MENU -->
@@ -472,193 +509,122 @@ footer{text-align:center; color:var(--ink-dim); font-size:0.75rem; margin-top:30
 const WIZARD_RAW = `0|Acid Splash|Conjuration|1 Action|60 Feet|Instantaneous|V, S
 0|Blade Ward|Abjuration|1 Action|Self|1 round|V, S
 0|Chill Touch|Necromancy|1 Action|120 feet|1 round|V, S
-0|Control Flames|Transmutation|1 Action|60 Feet|Instantaneous or 1 hour|S
-0|Create Bonfire|Conjuration|1 Action|60 Feet|Concentration, up to 1 minute|V, S
 0|Dancing Lights|Evocation|1 Action|120 feet|Concentration up to 1 minute|V, S, M
 0|Fire Bolt|Evocation|1 Action|120 feet|Instantaneous|V, S
 0|Friends|Enchantment|1 Action|Self|Concentration, up to 1 minute|S, M
-0|Frostbite|Evocation|1 Action|60 feet|Instantaneous|V, S
-0|Gust|Transmutation|1 Action|30 feet|Instantaneous|V, S
-0|Infestation|Conjuration|1 Action|30 feet|Instantaneous|V, S, M
 0|Light|Evocation|1 Action|Touch|1 hour|V, M
 0|Mage Hand|Conjuration|1 Action|30 feet|1 minute|V, S
 0|Mending|Transmutation|1 Minute|Touch|Instantaneous|V, S, M
 0|Message|Transmutation|1 Action|120 feet|1 round|V, S, M
 0|Minor Illusion|Illusion|1 Action|30 feet|1 minute|S, M
-0|Mold Earth|Transmutation|1 Action|30 feet|Instantaneous or 1 hour|S
 0|Poison Spray|Conjuration|1 Action|10 feet|Instantaneous|V, S
 0|Prestidigitation|Transmutation|1 Action|10 feet|Up to 1 hour|V, S
 0|Ray of Frost|Evocation|1 Action|60 feet|Instantaneous|V, S
-0|Sapping Sting|Necromancy|1 Action|30 feet|Instantaneous|V, S
-0|Shape Water|Transmutation|1 Action|30 feet|Instantaneous or 1 hour|S
 0|Shocking Grasp|Evocation|1 Action|Touch|Instantaneous|V, S
-0|Thunderclap|Evocation|1 Action|Self (5-foot radius)|Instantaneous|S
-0|Toll the Dead|Necromancy|1 Action|60 feet|Instantaneous|V, S
 0|True Strike|Divination|1 Action|30 feet|Concentration up to 1 round|S
-1|Absorb Elements|Abjuration|1 Reaction|Self|1 round|S
 1|Alarm|Abjuration|1 Minute|30 feet|8 Hours|V, S, M
 1|Burning Hands|Evocation|1 Action|Self (15-foot cone)|Instantaneous|V, S
-1|Catapult|Transmutation|1 Action|60 feet|Instantaneous|S
-1|Cause Fear|Necromancy|1 Action|60 feet|Concentration, up to 1 minute|V, S
 1|Charm Person|Enchantment|1 Action|30 feet|1 hour|V, S
 1|Chromatic Orb|Evocation|1 Action|90 feet|Instantaneous|V, S, M
 1|Color Spray|Illusion|1 Action|Self (15-foot cone)|1 round|V, S, M
 1|Comprehend Languages|Divination|1 Action|Self|1 hour|V, S, M
 1|Detect Magic|Divination|1 Action|Self|Concentration, up to 10 minutes|V, S
 1|Disguise Self|Illusion|1 Action|Self|1 hour|V, S
-1|Distort Value|Illusion|1 Minute|Touch|8 hours|V
-1|Earth Tremor|Evocation|1 Action|Self (10-foot radius)|Instantaneous|V, S
 1|Expeditious Retreat|Transmutation|1 Bonus Action|Self|Concentration, up to 10 minutes|V, S
 1|False Life|Necromancy|1 Action|Self|1 hour|V, S, M
 1|Feather Fall|Transmutation|1 Reaction|60 feet|1 minute|V, M
 1|Find Familiar|Conjuration|1 Hour|10 feet|Instantaneous|V, S, M
 1|Fog Cloud|Conjuration|1 Action|120 feet|Concentration, up to 1 hour|V, S
-1|Frost Fingers|Evocation|1 Action|Self (15-foot cone)|Instantaneous|V, S
-1|Gift of Alacrity|Divination|1 Minute|Touch|8 hours|V, S
 1|Grease|Conjuration|1 Action|60 feet|1 minute|V, S, M
-1|Ice Knife|Conjuration|1 Action|60 feet|Instantaneous|S, M
 1|Identify|Divination|1 Minute|Touch|Instantaneous|V, S, M
 1|Illusory Script|Illusion|1 Minute|Touch|10 days|S, M
-1|Jim's Magic Missile|Evocation|1 Action|120 feet|Instantaneous|V, S, M
 1|Jump|Transmutation|1 Action|Touch|1 minute|V, S, M
 1|Longstrider|Transmutation|1 Action|Touch|1 hour|V, S, M
 1|Mage Armor|Abjuration|1 Action|Touch|8 hours|V, S, M
 1|Magic Missile|Evocation|1 Action|120 feet|Instantaneous|V, S
-1|Magnify Gravity|Transmutation|1 Action|60 feet|1 round|V, S
 1|Protection from Evil and Good|Abjuration|1 Action|Touch|Concentration, up to 10 minutes|V, S, M
 1|Ray of Sickness|Necromancy|1 Action|60 feet|Instantaneous|V, S
 1|Shield|Abjuration|1 Reaction|Self|1 round|V, S
 1|Silent Image|Illusion|1 Action|60 feet|Concentration, up to 10 minutes|V, S, M
-1|Silvery Barbs|Enchantment|1 Reaction|60 feet|Instantaneous|V
 1|Sleep|Enchantment|1 Action|90 feet|1 minute|V, S, M
-1|Snare|Abjuration|1 Minute|Touch|8 hours|S, M
 1|Tasha's Hideous Laughter|Enchantment|1 Action|30 feet|Concentration, up to 1 minute|V, S, M
 1|Tenser's Floating Disk|Conjuration|1 Action|30 feet|1 hour|V, S, M
 1|Thunderwave|Evocation|1 Action|Self (15-foot cube)|Instantaneous|V, S
 1|Unseen Servant|Conjuration|1 Action|60 feet|1 hour|V, S, M
 1|Witch Bolt|Evocation|1 Action|30 feet|Concentration, up to 1 minute|V, S, M
-2|Aganazzar's Scorcher|Evocation|1 Action|30 Feet|Instantaneous|V, S, M
-2|Air Bubble|Conjuration|1 Action|60 Feet|24 hours|S
 2|Alter Self|Transmutation|1 Action|Self|Concentration, up to 1 hour|V, S
 2|Arcane Lock|Abjuration|1 Action|Touch|Until dispelled|V, S, M
 2|Blindness/Deafness|Necromancy|1 Action|30 Feet|1 minute|V
 2|Blur|Illusion|1 Action|Self|Concentration, up to 1 minute|V
-2|Borrowed Knowledge|Divination|1 Action|Self|1 hour|V, S, M
 2|Cloud of Daggers|Conjuration|1 Action|60 feet|Concentration, up to 1 minute|V, S, M
 2|Continual Flame|Evocation|1 Action|Touch|Until dispelled|V, S, M
 2|Crown of Madness|Enchantment|1 Action|120 feet|Concentration, up to 1 minute|V, S
 2|Darkness|Evocation|1 Action|60 feet|Concentration, up to 10 minutes|V, M
 2|Darkvision|Transmutation|1 Action|Touch|8 hours|V, S, M
 2|Detect Thoughts|Divination|1 Action|Self|Concentration, up to 1 minute|V, S, M
-2|Dragon's Breath|Transmutation|1 Bonus Action|Touch|Concentration, up to 1 minute|V, S, M
-2|Dust Devil|Conjuration|1 Action|60 feet|Concentration, up to 1 minute|V, S, M
-2|Earthbind|Transmutation|1 Action|300 feet|Concentration, up to 1 minute|V
 2|Enlarge/Reduce|Transmutation|1 Action|30 feet|Concentration, up to 1 minute|V, S, M
 2|Flaming Sphere|Conjuration|1 Action|60 feet|Concentration, up to 1 minute|V, S, M
-2|Flock of Familiars|Conjuration|1 Minute|Touch|Concentration, up to 1 hour|V, S
-2|Fortune's Favor|Divination|1 Minute|60 feet|1 hour|V, S, M
 2|Gentle Repose|Necromancy|1 Action|Touch|10 days|V, S, M
-2|Gift of Gab|Enchantment|Reaction|Self|Instantaneous|V, S, M
 2|Gust of Wind|Evocation|1 Action|Self (60-foot line)|Concentration, up to 1 minute|V, S, M
 2|Hold Person|Enchantment|1 Action|60 feet|Concentration, up to 1 minute|V, S, M
-2|Immovable Object|Transmutation|1 Action|Touch|1 hour|V, S, M
 2|Invisibility|Illusion|1 Action|Touch|Concentration, up to 1 hour|V, S, M
-2|Jim's Glowing Coin|Enchantment|1 Action|60 feet|1 minute|S, M
-2|Kinetic Jaunt|Transmutation|1 Bonus Action|Self|Concentration, up to 1 minute|S
 2|Knock|Transmutation|1 Action|60 feet|Instantaneous|V
 2|Levitate|Transmutation|1 Action|60 feet|Concentration, up to 10 minutes|V, S, M
 2|Locate Object|Divination|1 Action|Self|Concentration, up to 10 minutes|V, S, M
 2|Magic Mouth|Illusion|1 Minute|30 feet|Until dispelled|V, S, M
 2|Magic Weapon|Transmutation|1 Bonus Action|Touch|Concentration, up to 1 hour|V, S
-2|Maximillian's Earthen Grasp|Transmutation|1 Action|30 feet|Concentration, up to 1 minute|V, S, M
 2|Melf's Acid Arrow|Evocation|1 Action|90 feet|Instantaneous|V, S, M
-2|Mind Spike|Divination|1 Action|60 feet|Concentration, up to 1 hour|S
 2|Mirror Image|Illusion|1 Action|Self|1 minute|V, S
 2|Misty Step|Conjuration|1 Bonus Action|Self|Instantaneous|V
-2|Nathair's Mischief|Illusion|1 Action|60ft|Concentration, up to 1 minute|S, M
 2|Nystul's Magic Aura|Illusion|1 Action|Touch|24 hours|V, S, M
 2|Phantasmal Force|Illusion|1 Action|60 feet|Concentration, up to 1 minute|V, S, M
-2|Pyrotechnics|Transmutation|1 Action|60 feet|Instantaneous|V, S
 2|Ray of Enfeeblement|Necromancy|1 Action|60 feet|Concentration, up to 1 minute|V, S
-2|Rime's Binding Ice|Evocation|1 Action|Self (30-foot cone)|Instantaneous|S, M
 2|Rope Trick|Transmutation|1 Action|Touch|1 hour|V, S, M
 2|Scorching Ray|Evocation|1 Action|120 feet|Instantaneous|V, S
 2|See Invisibility|Divination|1 Action|Self|1 hour|V, S, M
-2|Shadow Blade|Illusion|1 Bonus Action|Self|Concentration, up to 1 minute|V, S
 2|Shatter|Evocation|1 Action|60 feet|Instantaneous|V, S, M
-2|Skywrite|Transmutation|1 Action|Sight|Concentration, up to 1 day|V, S
-2|Snilloc's Snowball Swarm|Evocation|1 Action|90 feet|Instantaneous|V, S, M
 2|Spider Climb|Transmutation|1 Action|Touch|Concentration, up to 1 hour|V, S, M
-2|Spray Of Cards|Conjuration|1 Action|Self (15-foot cone)|Instantaneous|V, S, M
 2|Suggestion|Enchantment|1 Action|30 feet|Concentration, up to 8 hours|V, M
-2|Vortex Warp|Conjuration|1 Action|90 feet|Instantaneous|V, S
-2|Warding Wind|Evocation|1 Action|Self|Concentration, up to 10 minutes|V
-2|Warp Sense|Divination|1 Action|Self|Concentration, up to 1 minute|V, S, M
 2|Web|Conjuration|1 Action|60 feet|Concentration, up to 1 hour|V, S, M
-2|Wither and Bloom|Necromancy|1 Action|60 feet|Instantaneous|V, S, M
-2|Wristpocket|Conjuration|1 Action|Self|Concentration, up to 1 hour|S
 3|Animate Dead|Necromancy|1 Minute|10 feet|Instantaneous|V, S, M
-3|Antagonize|Enchantment|1 Action|30 feet|Instantaneous|V, S, M
-3|Ashardalon's Stride|Transmutation|1 Bonus Action|Self|Concentration, up to 1 minute|V, S
 3|Bestow Curse|Necromancy|1 Action|Touch|Concentration, up to 1 minute|V, S
 3|Blink|Transmutation|1 Action|Self|1 minute|V, S
-3|Catnap|Enchantment|1 Action|30 feet|10 minutes|S, M
 3|Clairvoyance|Divination|10 Minutes|1 mile|Concentration, up to 10 minutes|V, S, M
 3|Counterspell|Abjuration|1 Reaction|60 feet|Instantaneous|S
 3|Dispel Magic|Abjuration|1 Action|120 feet|Instantaneous|V, S
-3|Enemies Abound|Enchantment|1 Action|120 feet|Concentration, up to 1 minute|V, S
-3|Erupting Earth|Transmutation|1 Action|120 feet|Instantaneous|V, S, M
-3|Fast Friends|Enchantment|1 Action|30 feet|Concentration, up to 1 hour|V
 3|Fear|Illusion|1 Action|Self (30-foot cone)|Concentration, up to 1 minute|V, S, M
 3|Feign Death|Necromancy|1 Action|Touch|1 hour|V, S, M
 3|Fireball|Evocation|1 Action|150 feet|Instantaneous|V, S, M
-3|Flame Arrows|Transmutation|1 Action|Touch|Concentration, up to 1 hour|V, S
 3|Fly|Transmutation|1 Action|Touch|Concentration, up to 10 minutes|V, S, M
-3|Galder's Tower|Conjuration|10 Minutes|30 feet|24 hours|V, S, M
 3|Gaseous Form|Transmutation|1 Action|Touch|Concentration, up to 1 hour|V, S, M
 3|Glyph of Warding|Abjuration|1 Hour|Touch|Until dispelled or triggered|V, S, M
 3|Haste|Transmutation|1 Action|30 feet|Concentration, up to 1 minute|V, S, M
 3|Hypnotic Pattern|Illusion|1 Action|120 feet|Concentration, up to 1 minute|S, M
-3|Incite Greed|Enchantment|1 Action|30 feet|Concentration, up to 1 minute|V, S, M
 3|Leomund's Tiny Hut|Evocation|1 Minute|Self (10-foot radius hemisphere)|8 hours|V, S, M
-3|Life Transference|Necromancy|1 Action|30 feet|Instantaneous|V, S
 3|Lightning Bolt|Evocation|1 Action|Self (100-foot line)|Instantaneous|V, S, M
 3|Magic Circle|Abjuration|1 Minute|10 feet|1 hour|V, S, M
 3|Major Image|Illusion|1 Action|120 feet|Concentration, up to 10 minutes|V, S, M
-3|Melf's Minute Meteors|Evocation|1 Action|Self (120 feet)|Concentration, up to 10 minutes|V, S, M
 3|Nondetection|Abjuration|1 Action|Touch|8 hours|V, S, M
 3|Phantom Steed|Illusion|1 Minute|30 feet|1 hour|V, S
 3|Protection from Energy|Abjuration|1 Action|Touch|Concentration, up to 1 hour|V, S
-3|Pulse Wave|Evocation|1 Action|Self (30-foot cone)|Instantaneous|V, S
 3|Remove Curse|Abjuration|1 Action|Touch|Instantaneous|V, S
 3|Sending|Evocation|1 Action|Unlimited|1 round|V, S, M
 3|Sleet Storm|Conjuration|1 Action|150 feet|Concentration, up to 1 minute|V, S, M
 3|Slow|Transmutation|1 Action|120 feet|Concentration, up to 1 minute|V, S, M
 3|Stinking Cloud|Conjuration|1 Action|90 feet|Concentration, up to 1 minute|V, S, M
-3|Summon Lesser Demons|Conjuration|1 Action|60 Feet|Concentration, up to 1 hour|V, S, M
-3|Thunder Step|Conjuration|1 Action|90 feet|Instantaneous|V
-3|Tidal Wave|Conjuration|1 Action|120 feet|Instantaneous|V, S, M
-3|Tiny Servant|Transmutation|1 Minute|Touch|8 hours|V, S
 3|Tongues|Divination|1 Action|Touch|1 hour|V, M
 3|Vampiric Touch|Necromancy|1 Action|Self|Concentration, up to 1 minute|V, S
-3|Wall of Sand|Evocation|1 Action|90 feet|Concentration, up to 10 minutes|V, S, M
-3|Wall of Water|Evocation|1 Action|60 feet|Concentration, up to 10 minutes|V, S, M
 3|Water Breathing|Transmutation|1 Action|30 feet|24 hours|V, S, M
 4|Arcane Eye|Divination|1 Action|30 feet|Concentration, up to 1 hour|V, S, M
 4|Banishment|Abjuration|1 Action|60 feet|Concentration, up to 1 minutes|V, S, M
 4|Blight|Necromancy|1 Action|30 feet|Instantaneous|V, S
-4|Charm Monster|Enchantment|1 Action|30 feet|1 hour|V, S
 4|Confusion|Enchantment|1 Action|90 feet|Concentration, up to 1 minute|V, S, M
 4|Conjure Minor Elementals|Conjuration|1 Minute|90 feet|Concentration, up to 1 hour|V, S
 4|Control Water|Transmutation|1 Action|300 feet|Concentration, up to 10 minutes|V, S, M
 4|Dimension Door|Conjuration|1 Action|500 feet|Instantaneous|V
-4|Elemental Bane|Transmutation|1 Action|90 feet|Concentration, up to 1 minute|V, S
 4|Evard's Black Tentacles|Conjuration|1 Action|90 feet|Concentration, up to 1 minute|V, S, M
 4|Fabricate|Transmutation|10 Minutes|120 feet|Instantaneous|V, S
 4|Fire Shield|Evocation|1 Action|Self|10 minutes|V, S, M
-4|Galder's Speedy Courier|Conjuration|1 Action|10 feet|10 minutes|V, S, M
-4|Gate Seal|Abjuration|1 Minute|60 feet|24 hours|V, S, M
-4|Gravity Sinkhole|Evocation|1 Action|120 feet|Instantaneous|V, S, M
 4|Greater Invisibility|Illusion|1 Action|Touch|Concentration, up to 1 minute|V, S
 4|Hallucinatory Terrain|Illusion|10 Minutes|300 feet|24 hours|V, S, M
 4|Ice Storm|Evocation|1 Action|300 feet|Instantaneous|V, S, M
@@ -669,90 +635,53 @@ const WIZARD_RAW = `0|Acid Splash|Conjuration|1 Action|60 Feet|Instantaneous|V, 
 4|Otiluke's Resilient Sphere|Evocation|1 Action|30 feet|Concentration, up to 1 minute|V, S, M
 4|Phantasmal Killer|Illusion|1 Action|120 feet|Concentration, up to 1 minute|V, S
 4|Polymorph|Transmutation|1 Action|60 feet|Concentration, up to 1 hour|V, S, M
-4|Raulothim's Psychic Lance|Enchantment|1 Action|120 feet|Instantaneous|V
-4|Sickening Radiance|Evocation|1 Action|120 Feet|Concentration, up to 10 minutes|V, S
-4|Spirit Of Death|Necromancy|1 Action|60 feet|Concentration, up to 1 hour|V, S, M
 4|Stone Shape|Transmutation|1 Action|Touch|Instantaneous|V, S, M
 4|Stoneskin|Abjuration|1 Action|Touch|Concentration, up to 1 hour|V, S, M
-4|Storm Sphere|Evocation|1 Action|150 feet|Concentration, up to 1 minute|V, S
-4|Summon Greater Demon|Conjuration|1 Action|60 Feet|Concentration, up to 1 hour|V, S, M
-4|Vitriolic Sphere|Evocation|1 Action|150 feet|Instantaneous|V, S, M
 4|Wall of Fire|Evocation|1 Action|120 feet|Concentration, up to 1 minute|V, S, M
-4|Watery Sphere|Conjuration|1 Action|90 feet|Concentration, up to 1 minute|V, S, M
 5|Animate Objects|Transmutation|1 Action|120 feet|Concentration, up to 1 minute|V, S
 5|Bigby's Hand|Evocation|1 Action|120 feet|Concentration, up to 1 minute|V, S, M
 5|Cloudkill|Conjuration|1 Action|120 feet|Concentration, up to 10 minutes|V, S
 5|Cone of Cold|Evocation|1 Action|Self (60-foot cone)|Instantaneous|V, S, M
 5|Conjure Elemental|Conjuration|1 Minute|90 feet|Concentration, up to 1 hour|V, S, M
 5|Contact Other Plane|Divination|1 Minute|Self|1 minute|V
-5|Control Winds|Transmutation|1 Action|300 feet|Concentration, up to 1 hour|V, S
-5|Create Spelljamming Helm|Transmutation|1 Action|Touch|Instantaneous|V, S, M
 5|Creation|Illusion|1 Minute|30 feet|Special|V, S, M
-5|Danse Macabre|Necromancy|1 Action|60 Feet|Concentration, up to 1 hour|V, S
-5|Dawn|Evocation|1 Action|60 Feet|Concentration, up to 1 minute|V, S, M
 5|Dominate Person|Enchantment|1 Action|60 feet|Concentration, up to 1 minute|V, S
 5|Dream|Illusion|1 Minute|Special|8 hours|V, S, M
-5|Enervation|Necromancy|1 Action|60 feet|Concentration, up to 1 minute|V, S
-5|Far Step|Conjuration|1 Bonus Action|Self|Concentration, up to 1 minute|V
 5|Geas|Enchantment|1 Minute|60 feet|30 days|V
 5|Hold Monster|Enchantment|1 Action|90 feet|Concentration, up to 1 minute|V, S, M
-5|Immolation|Evocation|1 Action|90 feet|Concentration, up to 1 minute|V
-5|Infernal Calling|Conjuration|1 Minute|90 feet|Concentration, up to 1 hour|V, S, M
 5|Legend Lore|Divination|10 Minutes|Self|Instantaneous|V, S, M
 5|Mislead|Illusion|1 Action|Self|Concentration, up to 1 hour|S
 5|Modify Memory|Enchantment|1 Action|30 feet|Concentration, up to 1 minute|V, S
-5|Negative Energy Flood|Necromancy|1 Action|60 feet|Instantaneous|V, M
 5|Passwall|Transmutation|1 Action|30 feet|1 hour|V, S, M
 5|Planar Binding|Abjuration|1 Hour|60 feet|24 hours|V, S, M
 5|Rary's Telepathic Bond|Divination|1 Action|30 feet|1 hour|V, S, M
 5|Scrying|Divination|10 Minutes|Self|Concentration, up to 10 minutes|V, S, M
 5|Seeming|Illusion|1 Action|30 feet|8 hours|V, S
-5|Skill Empowerment|Transmutation|1 Action|Touch|Concentration, up to 1 hour|V, S
-5|Steel Wind Strike|Conjuration|1 Action|30 feet|Instantaneous|S, M
-5|Summon Draconic Spirit|Conjuration|1 Action|60 feet|Concentration, up to 1 hour|V, S, M
-5|Synaptic Static|Enchantment|1 Action|120 feet|Instantaneous|V, S
 5|Telekinesis|Transmutation|1 Action|60 feet|Concentration, up to 10 minutes|V, S
 5|Teleportation Circle|Conjuration|1 Minute|10 feet|1 round|V, M
-5|Temporal Shunt|Transmutation|1 Reaction|120 feet|1 round|V, S
-5|Transmute Rock|Transmutation|1 Action|120 feet|Instantaneous|V, S, M
 5|Wall of Force|Evocation|1 Action|120 feet|Concentration, up to 10 minutes|V, S, M
-5|Wall of Light|Evocation|1 Action|120 feet|Concentration, up to 10 minutes|V, S, M
 5|Wall of Stone|Evocation|1 Action|120 feet|Concentration, up to 10 minutes|V, S, M
 6|Arcane Gate|Conjuration|1 Action|500 feet|Concentration, up to 10 minutes|V, S
 6|Chain Lightning|Evocation|1 Action|150 feet|Instantaneous|V, S, M
 6|Circle of Death|Necromancy|1 Action|150 feet|Instantaneous|V, S, M
 6|Contingency|Evocation|10 Minutes|Self|10 days|V, S, M
-6|Create Homunculus|Transmutation|1 Hour|120 feet|Instantaneous|V, S, M
 6|Create Undead|Necromancy|1 Minute|10 feet|Instantaneous|V, S, M
 6|Disintegrate|Transmutation|1 Action|60 feet|Instantaneous|V, S, M
 6|Drawmij's Instant Summons|Conjuration|1 Minute|Touch|Until dispelled|V, S, M
 6|Eyebite|Necromancy|1 Action|Self|Concentration, up to 1 minute|V, S
-6|Fizban's Platinum Shield|Abjuration|1 Bonus Action|60ft|Concentration, up to 1 minute|V, S, M
 6|Flesh to Stone|Transmutation|1 Action|60 feet|Concentration, up to 1 minute|V, S, M
 6|Globe of Invulnerability|Abjuration|1 Action|Self (10-foot radius)|Concentration, up to 1 minute|V, S, M
-6|Gravity Fissure|Evocation|1 Action|Self (100-foot line)|Instantaneous|V, S, M
 6|Guards and Wards|Abjuration|10 Minutes|Touch|24 hours|V, S, M
-6|Investiture of Flame|Transmutation|1 Action|Self|Concentration, up to 10 minutes|V, S
-6|Investiture of Ice|Transmutation|1 Action|Self|Concentration, up to 10 minutes|V, S
-6|Investiture of Stone|Transmutation|1 Action|Self|Concentration, up to 10 minutes|V, S
-6|Investiture of Wind|Transmutation|1 Action|Self|Concentration, up to 10 minutes|V, S
 6|Magic Jar|Necromancy|1 Minute|Self|Until dispelled|V, S, M
 6|Mass Suggestion|Enchantment|1 Action|60 feet|24 hours|V, M
-6|Mental Prison|Illusion|1 Action|60 feet|Concentration, up to 1 minute|S
 6|Move Earth|Transmutation|1 Action|120 feet|Concentration, up to 2 hours|V, S, M
 6|Otiluke's Freezing Sphere|Evocation|1 Action|300 feet|Instantaneous|V, S, M
 6|Otto's Irresistible Dance|Enchantment|1 Action|30 feet|Concentration, up to 1 minute|V
 6|Programmed Illusion|Illusion|1 Action|120 feet|Until dispelled|V, S, M
-6|Scatter|Conjuration|1 Action|30 feet|Instantaneous|V
-6|Soul Cage|Necromancy|Special|60 feet|8 hours|V, S, M
 6|Sunbeam|Evocation|1 Action|Self (60-foot line)|Concentration, up to 1 minute|V, S, M
-6|Tenser's Transformation|Transmutation|1 Action|Self|Concentration, up to 10 minutes|V, S, M
 6|True Seeing|Divination|1 Action|Touch|1 hour|V, S, M
 6|Wall of Ice|Evocation|1 Action|120 feet|Concentration, up to 10 minutes|V, S, M
-7|Create Magen|Transmutation|1 Hour|Touch|Instantaneous|V, S, M
-7|Crown of Stars|Evocation|1 Action|Self|1 hour|V, S
 7|Delayed Blast Fireball|Evocation|1 Action|150 feet|Concentration, up to 1 minute|V, S, M
-7|Draconic Transformation|Transmutation|1 Bonus Action|Self|Concentration, up to 1 minute|V, S, M
 7|Etherealness|Transmutation|1 Action|Self|Up to 8 hours|V, S
 7|Finger of Death|Necromancy|1 Action|60 feet|Instantaneous|V, S
 7|Forcecage|Evocation|1 Action|100 feet|1 hour|V, S, M
@@ -760,7 +689,6 @@ const WIZARD_RAW = `0|Acid Splash|Conjuration|1 Action|60 Feet|Instantaneous|V, 
 7|Mordenkainen's Magnificent Mansion|Conjuration|1 Minute|300 feet|24 hours|V, S, M
 7|Mordenkainen's Sword|Evocation|1 Action|60 feet|Concentration, up to 1 minute|V, S, M
 7|Plane Shift|Conjuration|1 Action|Touch|Instantaneous|V, S, M
-7|Power Word: Pain|Enchantment|1 Action|60 feet|Instantaneous|V
 7|Prismatic Spray|Evocation|1 Action|Self (60-foot cone)|Instantaneous|V, S
 7|Project Image|Illusion|1 Action|500 Miles|Concentration, up to 1 day|V, S, M
 7|Reverse Gravity|Transmutation|1 Action|100 feet|Concentration, up to 1 minute|V, S, M
@@ -768,47 +696,33 @@ const WIZARD_RAW = `0|Acid Splash|Conjuration|1 Action|60 Feet|Instantaneous|V, 
 7|Simulacrum|Illusion|12 hours|Touch|Until dispelled|V, S, M
 7|Symbol|Abjuration|1 Minute|Touch|Until dispelled or triggered|V, S, M
 7|Teleport|Conjuration|1 Action|10 feet|Instantaneous|V
-7|Tether Essence|Necromancy|1 Action|60 feet|Concentration, up to 1 hour|V, S, M
-7|Whirlwind|Evocation|1 Action|300 feet|Concentration, up to 1 minute|V, M
-8|Abi-Dalzim's Horrid Wilting|Necromancy|1 Action|150 feet|Instantaneous|V, S, M
 8|Antimagic Field|Abjuration|1 Action|Self (10-foot radius sphere)|Concentration, up to 1 hour|V, S, M
 8|Antipathy/Sympathy|Enchantment|1 Hour|60 feet|10 Days|V, S, M
 8|Clone|Necromancy|1 Hour|Touch|Instantaneous|V, S, M
 8|Control Weather|Transmutation|10 Minutes|Self (5 mile radius)|Concentration, Up to 8 hours|V, S, M
-8|Dark Star|Evocation|1 Action|150 Feet|Concentration, up to 1 minute|V, S, M
 8|Demiplane|Conjuration|1 Action|60 feet|1 hour|S
 8|Dominate Monster|Enchantment|1 Action|60 feet|Concentration, up to 1 hour|V, S
 8|Feeblemind|Enchantment|1 Action|150 feet|Instantaneous|V, S, M
-8|Illusory Dragon|Illusion|1 Action|120 feet|Concentration, up to 1 minute|S
 8|Incendiary Cloud|Conjuration|1 Action|150 feet|Concentration, up to 1 minute|V, S
-8|Maddening Darkness|Evocation|1 Action|150 feet|Concentration, up to 10 minutes|V, M
 8|Maze|Conjuration|1 Action|60 feet|Concentration, up to 10 minutes|V, S
-8|Mighty Fortress|Conjuration|1 Minute|1 mile|Instantaneous|V, S, M
 8|Mind Blank|Abjuration|1 Action|Touch|24 hours|V, S
 8|Power Word: Stun|Enchantment|1 Action|60 feet|Instantaneous|V, S
-8|Reality Break|Conjuration|1 Action|60 feet|Concentration, up to 1 minute|V, S, M
 8|Sunburst|Evocation|1 Action|150 feet|Instantaneous|V, S, M
 8|Telepathy|Evocation|1 Action|Unlimited|24 hours|V, S, M
 9|Astral Projection|Evocation|1 Hour|10 feet|Special|V, S, M
 9|Foresight|Divination|1 Minute|Touch|8 hours|V, S, M
 9|Gate|Conjuration|1 Action|60 feet|Concentration, up to 1 minute|V, S, M
 9|Imprisonment|Abjuration|1 Minute|30 feet|Until dispelled|V, S, M
-9|Invulnerability|Abjuration|1 Action|Self|Concentration, up to 10 minutes|V, S, M
-9|Mass Polymorph|Transmutation|1 Action|120 feet|Concentration, up to 1 hour|V, S, M
 9|Meteor Swarm|Evocation|1 Action|1 mile|Instantaneous|V, S
 9|Power Word: Kill|Enchantment|1 Action|60 feet|Instantaneous|V
 9|Prismatic Wall|Abjuration|1 Action|60 feet|10 minutes|V, S
-9|Psychic Scream|Enchantment|1 Action|90 feet|Instantaneous|S
-9|Ravenous Void|Evocation|1 Action|1000 feet|Concentration, up to 1 minute|V, S, M
 9|Shapechange|Transmutation|1 Action|Self|Concentration, up to 1 hour|V, S, M
-9|Time Ravage|Necromancy|1 Action|90 feet|Instantaneous|V, S, M
 9|Time Stop|Transmutation|1 Action|Self|Instantaneous|V
 9|True Polymorph|Transmutation|1 Action|30 feet|Concentration, up to 1 hour|V, S, M
 9|Weird|Illusion|1 Action|120 feet|Concentration, up to 1 minute|V, S
 9|Wish|Conjuration|1 Action|Self|Instantaneous|V`;
 
 const PALADIN_RAW = `1|Bless|Enchantment|1 Action|30 feet|Concentration, up to 1 minute|V, S, M
-1|Ceremony|Abjuration|1 Action|Touch|Instantaneous|V, S, M
 1|Command|Enchantment|1 Action|60 feet|1 round|V
 1|Compelled Duel|Enchantment|1 Bonus Action|30 feet|Concentration, up to 1 minute|V
 1|Cure Wounds|Evocation|1 Action|Touch|Instantaneous|V, S
@@ -845,7 +759,6 @@ const PALADIN_RAW = `1|Bless|Enchantment|1 Action|30 feet|Concentration, up to 1
 4|Aura of Purity|Abjuration|1 Action|Self (30-foot radius)|Concentration, up to 10 minutes|V
 4|Banishment|Abjuration|1 Action|60 feet|Concentration, up to 1 minutes|V, S, M
 4|Death Ward|Abjuration|1 Action|Touch|8 hours|V, S
-4|Find Greater Steed|Conjuration|10 Minutes|30 feet|Instantaneous|V, S
 4|Locate Creature|Divination|1 Action|Self|Concentration, up to 1 hour|V, S, M
 4|Staggering Smite|Evocation|1 Bonus Action|Self|Concentration, up to 1 minute|V
 5|Banishing Smite|Abjuration|1 Bonus Action|Self|Concentration, up to 1 minute|V
@@ -853,7 +766,6 @@ const PALADIN_RAW = `1|Bless|Enchantment|1 Action|30 feet|Concentration, up to 1
 5|Destructive Wave|Evocation|1 Action|Self (30-foot radius)|Instantaneous|V
 5|Dispel Evil and Good|Abjuration|1 Action|Self|Concentration, up to 1 minute|V, S, M
 5|Geas|Enchantment|1 Minute|60 feet|30 days|V
-5|Holy Weapon|Evocation|1 Bonus Action|Touch|Concentration, up to 1 hour|V, S
 5|Raise Dead|Necromancy|1 Hour|Touch|Instantaneous|V, S, M`;
 
 const BARD_RAW = `0|Blade Ward|Abjuration|1 Action|Self|1 round|V, S
@@ -865,7 +777,6 @@ const BARD_RAW = `0|Blade Ward|Abjuration|1 Action|Self|1 round|V, S
 0|Message|Transmutation|1 Action|120 feet|1 round|V, S, M
 0|Minor Illusion|Illusion|1 Action|30 feet|1 minute|S, M
 0|Prestidigitation|Transmutation|1 Action|10 feet|Up to 1 hour|V, S
-0|Thunderclap|Evocation|1 Action|Self (5-foot radius)|Instantaneous|S
 0|True Strike|Divination|1 Action|30 feet|Concentration up to 1 round|S
 0|Vicious Mockery|Enchantment|1 Action|60 feet|Instantaneous|V
 1|Animal Friendship|Enchantment|1 Action|30 feet|24 hours|V, S, M
@@ -876,8 +787,6 @@ const BARD_RAW = `0|Blade Ward|Abjuration|1 Action|Self|1 round|V, S
 1|Detect Magic|Divination|1 Action|Self|Concentration, up to 10 minutes|V, S
 1|Disguise Self|Illusion|1 Action|Self|1 hour|V, S
 1|Dissonant Whispers|Enchantment|1 Action|60 feet|Instantaneous|V
-1|Distort Value|Illusion|1 Minute|Touch|8 hours|V
-1|Earth Tremor|Evocation|1 Action|Self (10-foot radius)|Instantaneous|V, S
 1|Faerie Fire|Evocation|1 Action|60 feet|Concentration, up to 1 minute|V
 1|Feather Fall|Transmutation|1 Reaction|60 feet|1 minute|V, M
 1|Healing Word|Evocation|1 Bonus Action|60 feet|Instantaneous|V
@@ -886,7 +795,6 @@ const BARD_RAW = `0|Blade Ward|Abjuration|1 Action|Self|1 round|V, S
 1|Illusory Script|Illusion|1 Minute|Touch|10 days|S, M
 1|Longstrider|Transmutation|1 Action|Touch|1 hour|V, S, M
 1|Silent Image|Illusion|1 Action|60 feet|Concentration, up to 10 minutes|V, S, M
-1|Silvery Barbs|Enchantment|1 Reaction|60 feet|Instantaneous|V
 1|Sleep|Enchantment|1 Action|90 feet|1 minute|V, S, M
 1|Speak with Animals|Divination|1 Action|Self|10 minutes|V, S
 1|Tasha's Hideous Laughter|Enchantment|1 Action|30 feet|Concentration, up to 1 minute|V, S, M
@@ -894,49 +802,35 @@ const BARD_RAW = `0|Blade Ward|Abjuration|1 Action|Self|1 round|V, S
 1|Unseen Servant|Conjuration|1 Action|60 feet|1 hour|V, S, M
 2|Animal Messenger|Enchantment|1 Action|30 Feet|24 hours|V, S, M
 2|Blindness/Deafness|Necromancy|1 Action|30 Feet|1 minute|V
-2|Borrowed Knowledge|Divination|1 Action|Self|1 hour|V, S, M
 2|Calm Emotions|Enchantment|1 Action|60 feet|Concentration, up to 1 minute|V, S
 2|Cloud of Daggers|Conjuration|1 Action|60 feet|Concentration, up to 1 minute|V, S, M
 2|Crown of Madness|Enchantment|1 Action|120 feet|Concentration, up to 1 minute|V, S
 2|Detect Thoughts|Divination|1 Action|Self|Concentration, up to 1 minute|V, S, M
 2|Enhance Ability|Transmutation|1 Action|Touch|Concentration, up to 1 hour|V, S, M
 2|Enthrall|Enchantment|1 Action|60 feet|1 minute|V, S
-2|Gift of Gab|Enchantment|Reaction|Self|Instantaneous|V, S, M
 2|Heat Metal|Transmutation|1 Action|60 feet|Concentration, up to 1 minute|V, S, M
 2|Hold Person|Enchantment|1 Action|60 feet|Concentration, up to 1 minute|V, S, M
 2|Invisibility|Illusion|1 Action|Touch|Concentration, up to 1 hour|V, S, M
-2|Kinetic Jaunt|Transmutation|1 Bonus Action|Self|Concentration, up to 1 minute|S
 2|Knock|Transmutation|1 Action|60 feet|Instantaneous|V
 2|Lesser Restoration|Abjuration|1 Action|Touch|Instantaneous|V, S
 2|Locate Animals or Plants|Divination|1 Action|Self|Instantaneous|V, S, M
 2|Locate Object|Divination|1 Action|Self|Concentration, up to 10 minutes|V, S, M
 2|Magic Mouth|Illusion|1 Minute|30 feet|Until dispelled|V, S, M
-2|Mirror Image|Illusion|1 Action|Self|1 minute|V, S
-2|Nathair's Mischief|Illusion|1 Action|60ft|Concentration, up to 1 minute|S, M
 2|Phantasmal Force|Illusion|1 Action|60 feet|Concentration, up to 1 minute|V, S, M
-2|Pyrotechnics|Transmutation|1 Action|60 feet|Instantaneous|V, S
 2|See Invisibility|Divination|1 Action|Self|1 hour|V, S, M
 2|Shatter|Evocation|1 Action|60 feet|Instantaneous|V, S, M
 2|Silence|Illusion|1 Action|120 feet|Concentration, up to 10 minutes|V, S
-2|Skywrite|Transmutation|1 Action|Sight|Concentration, up to 1 day|V, S
-2|Spray Of Cards|Conjuration|1 Action|Self (15-foot cone)|Instantaneous|V, S, M
 2|Suggestion|Enchantment|1 Action|30 feet|Concentration, up to 8 hours|V, M
-2|Warding Wind|Evocation|1 Action|Self|Concentration, up to 10 minutes|V
 2|Zone of Truth|Enchantment|1 Action|60 feet|10 minutes|V, S
-3|Antagonize|Enchantment|1 Action|30 feet|Instantaneous|V, S, M
 3|Bestow Curse|Necromancy|1 Action|Touch|Concentration, up to 1 minute|V, S
-3|Catnap|Enchantment|1 Action|30 feet|10 minutes|S, M
 3|Clairvoyance|Divination|10 Minutes|1 mile|Concentration, up to 10 minutes|V, S, M
 3|Dispel Magic|Abjuration|1 Action|120 feet|Instantaneous|V, S
-3|Enemies Abound|Enchantment|1 Action|120 feet|Concentration, up to 1 minute|V, S
-3|Fast Friends|Enchantment|1 Action|30 feet|Concentration, up to 1 hour|V
 3|Fear|Illusion|1 Action|Self (30-foot cone)|Concentration, up to 1 minute|V, S, M
 3|Feign Death|Necromancy|1 Action|Touch|1 hour|V, S, M
 3|Glyph of Warding|Abjuration|1 Hour|Touch|Until dispelled or triggered|V, S, M
 3|Hypnotic Pattern|Illusion|1 Action|120 feet|Concentration, up to 1 minute|S, M
 3|Leomund's Tiny Hut|Evocation|1 Minute|Self (10-foot radius hemisphere)|8 hours|V, S, M
 3|Major Image|Illusion|1 Action|120 feet|Concentration, up to 10 minutes|V, S, M
-3|Motivational Speech|Enchantment|1 Minute|60 feet|1 hour|V
 3|Nondetection|Abjuration|1 Action|Touch|8 hours|V, S, M
 3|Plant Growth|Transmutation|1 Action or 8 Hours|150 feet|Instantaneous|V, S
 3|Sending|Evocation|1 Action|Unlimited|1 round|V, S, M
@@ -944,7 +838,6 @@ const BARD_RAW = `0|Blade Ward|Abjuration|1 Action|Self|1 round|V, S
 3|Speak with Plants|Transmutation|1 Action|Self (30-foot radius)|10 minutes|V, S
 3|Stinking Cloud|Conjuration|1 Action|90 feet|Concentration, up to 1 minute|V, S, M
 3|Tongues|Divination|1 Action|Touch|1 hour|V, M
-4|Charm Monster|Enchantment|1 Action|30 feet|1 hour|V, S
 4|Compulsion|Enchantment|1 Action|30 feet|Concentration, up to 1 minute|V, S
 4|Confusion|Enchantment|1 Action|90 feet|Concentration, up to 1 minute|V, S, M
 4|Dimension Door|Conjuration|1 Action|500 feet|Instantaneous|V
@@ -953,7 +846,6 @@ const BARD_RAW = `0|Blade Ward|Abjuration|1 Action|Self|1 round|V, S
 4|Hallucinatory Terrain|Illusion|10 Minutes|300 feet|24 hours|V, S, M
 4|Locate Creature|Divination|1 Action|Self|Concentration, up to 1 hour|V, S, M
 4|Polymorph|Transmutation|1 Action|60 feet|Concentration, up to 1 hour|V, S, M
-4|Raulothim's Psychic Lance|Enchantment|1 Action|120 feet|Instantaneous|V
 5|Animate Objects|Transmutation|1 Action|120 feet|Concentration, up to 1 minute|V, S
 5|Awaken|Transmutation|8 Hours|Touch|Instantaneous|V, S, M
 5|Dominate Person|Enchantment|1 Action|60 feet|Concentration, up to 1 minute|V, S
@@ -969,8 +861,6 @@ const BARD_RAW = `0|Blade Ward|Abjuration|1 Action|Self|1 round|V, S
 5|Raise Dead|Necromancy|1 Hour|Touch|Instantaneous|V, S, M
 5|Scrying|Divination|10 Minutes|Self|Concentration, up to 10 minutes|V, S, M
 5|Seeming|Illusion|1 Action|30 feet|8 hours|V, S
-5|Skill Empowerment|Transmutation|1 Action|Touch|Concentration, up to 1 hour|V, S
-5|Synaptic Static|Enchantment|1 Action|120 feet|Instantaneous|V, S
 5|Teleportation Circle|Conjuration|1 Minute|10 feet|1 round|V, M
 6|Eyebite|Necromancy|1 Action|Self|Concentration, up to 1 minute|V, S
 6|Find the Path|Divination|1 Minute|Self|Concentration, up to 1 day|V, S, M
@@ -996,208 +886,135 @@ const BARD_RAW = `0|Blade Ward|Abjuration|1 Action|Self|1 round|V, S
 8|Mind Blank|Abjuration|1 Action|Touch|24 hours|V, S
 8|Power Word: Stun|Enchantment|1 Action|60 feet|Instantaneous|V, S
 9|Foresight|Divination|1 Minute|Touch|8 hours|V, S, M
-9|Mass Polymorph|Transmutation|1 Action|120 feet|Concentration, up to 1 hour|V, S, M
 9|Power Word: Heal|Evocation|1 Action|Touch|Instantaneous|V, S
 9|Power Word: Kill|Enchantment|1 Action|60 feet|Instantaneous|V
-9|Psychic Scream|Enchantment|1 Action|90 feet|Instantaneous|S
 9|True Polymorph|Transmutation|1 Action|30 feet|Concentration, up to 1 hour|V, S, M`;
 
 const RITUAL_SPELLS = new Set(['Alarm','Comprehend Languages','Detect Magic','Find Familiar','Identify','Illusory Script',
-  "Tenser's Floating Disk",'Unseen Servant','Gentle Repose','Magic Mouth','Skywrite','Wristpocket','Feign Death',
-  "Leomund's Tiny Hut",'Phantom Steed','Water Breathing',"Drawmij's Instant Summons",'Ceremony','Detect Poison and Disease',
+  "Tenser's Floating Disk",'Unseen Servant','Gentle Repose','Magic Mouth','Feign Death',
+  "Leomund's Tiny Hut",'Phantom Steed','Water Breathing',"Drawmij's Instant Summons",'Detect Poison and Disease',
   'Purify Food and Drink','Speak with Animals','Animal Messenger','Locate Animals or Plants',
   'Commune','Commune with Nature']);
 
 const DESCRIPTIONS_RAW = `Acid Splash::Ranged spray of acid; one or two creatures make a Dex save or take acid damage.
 Blade Ward::Self-buff granting resistance to bludgeoning, piercing, and slashing weapon damage until your next turn.
 Chill Touch::Ghostly hand attacks for necrotic damage and stops the target healing until your next turn.
-Control Flames::Minor manipulation of an existing nonmagical fire — expand, extinguish, shape, or recolor it.
-Create Bonfire::Conjures a bonfire in a space that burns creatures who enter or start their turn there.
 Dancing Lights::Create up to four torch-sized lights you can move around within range.
 Fire Bolt::Ranged fire attack dealing fire damage, and it can ignite flammable objects.
 Friends::Advantage on Charisma checks toward one creature; it becomes hostile after if it learns of the trick.
-Frostbite::Target makes a Con save or takes cold damage and has disadvantage on its next weapon attack.
-Gust::Blow a target back and knock it prone, or clear fog/gas or douse small flames.
-Infestation::A tiny swarm of insects deals poison damage and may force the target to move.
 Light::An object you touch sheds bright light in a 20-foot radius for an hour.
 Mage Hand::A spectral hand that can manipulate, carry, or retrieve small objects at range.
 Mending::Repairs a single break or tear in an object.
 Message::Whisper a short message to a target out of others' hearing, who can reply.
 Minor Illusion::Create a minor visual or sound illusion in range.
-Mold Earth::Minor manipulation of loose earth — excavate, shape, or camouflage a small area.
 Poison Spray::Target makes a Con save or takes poison damage.
 Prestidigitation::A minor magical trick — small sensory effects, cleaning, flavoring, or lighting a small flame.
 Ray of Frost::Ranged cold attack dealing cold damage and reducing the target's speed.
-Sapping Sting::Target makes a Con save or falls prone and takes necrotic damage.
-Shape Water::Minor manipulation of water in range — move, shape, color, or freeze it.
 Shocking Grasp::Melee lightning attack with advantage vs. metal-armored foes; stops the target taking reactions this turn.
-Thunderclap::A thunderous burst deals damage to creatures within 5 feet of you.
-Toll the Dead::Target makes a Wis save or takes necrotic damage, worse if already wounded.
 True Strike::Study a target to gain advantage on your next attack roll against it.
-Absorb Elements::Reaction that absorbs incoming acid/cold/fire/lightning/thunder damage, adding it to your next melee hit.
 Alarm::Sets a magical or mental alarm that alerts you when a creature enters the warded area.
 Burning Hands::A cone of fire deals fire damage, Dex save for half.
-Catapult::Hurl a loose object at a target, dealing damage on a failed Dex save.
-Cause Fear::Target makes a Wis save or becomes frightened of you.
 Charm Person::A humanoid target makes a Wis save or regards you as a friend for the duration.
 Chromatic Orb::Hurl a sphere of a chosen damage type at a target for a heavy hit.
 Color Spray::Blinds creatures in a cone, based on total hit points affected, randomly.
 Comprehend Languages::Understand the literal meaning of any spoken or written language for the duration.
 Detect Magic::Sense the presence and school of magic within range for the duration.
 Disguise Self::Change your appearance, including clothing and gear, for an hour.
-Distort Value::Alter the apparent value of an item you touch for the duration.
-Earth Tremor::Shake the ground in a small radius, knocking creatures prone.
 Expeditious Retreat::Bonus-action Dash each turn for the duration.
 False Life::Gain temporary hit points for the duration.
 Feather Fall::Slow the fall of up to five creatures to prevent fall damage.
 Find Familiar::Summon a spirit that takes an animal form to serve as your familiar.
 Fog Cloud::Create a heavily obscuring fog sphere that spreads around corners.
-Frost Fingers::A cone of freezing wind deals cold damage, Con save for half.
-Gift of Alacrity::Grant a creature a bonus to initiative rolls for the next 8 hours.
 Grease::Cover a surface in slick grease, forcing Dex saves or falling prone.
-Ice Knife::A shard of ice deals piercing damage, then explodes in a burst of cold.
 Identify::Learn the properties of a magic item, spell, or effect on a creature or object.
 Illusory Script::Write a message only readable by creatures you designate.
-Jim's Magic Missile::Three darts automatically strike targets for force damage.
 Jump::Triple a creature's jump distance for the duration.
 Longstrider::Increase a creature's walking speed by 10 feet for an hour.
 Mage Armor::Grant a base AC of 13 + Dex modifier to an unarmored target.
 Magic Missile::Three darts of force automatically hit targets you choose, dealing force damage.
-Magnify Gravity::Increase gravity on a target, dealing damage and reducing its speed.
 Protection from Evil and Good::Ward a creature against aberrations, celestials, elementals, fey, fiends, and undead.
 Ray of Sickness::Ranged poison attack that deals damage and may poison the target.
 Shield::Reaction granting +5 AC and immunity to magic missile until your next turn.
 Silent Image::Create a purely visual illusion that you can shape and move within range.
-Silvery Barbs::Reaction that forces a creature to reroll a successful attack, save, or check.
 Sleep::Puts creatures within range to sleep based on total hit points, weakest first.
-Snare::Rig a trap that restrains the first creature to trigger it.
 Tasha's Hideous Laughter::Target makes a Wis save or falls prone laughing uncontrollably.
 Tenser's Floating Disk::Create an invisible disk that carries up to 500 pounds and follows you.
 Thunderwave::Thunderous force pushes creatures back and deals thunder damage in a cube.
 Unseen Servant::Create an invisible, mindless force that can perform simple tasks for you.
 Witch Bolt::Lash a target with lightning, dealing ongoing damage each turn while concentrating.
-Aganazzar's Scorcher::A line of fire deals fire damage to creatures in its path.
-Air Bubble::Create a bubble of air around a creature's head, letting it breathe.
 Alter Self::Change your appearance or grow a natural weapon or gills for the duration.
 Arcane Lock::Magically lock a door, chest, or portal against opening.
 Blindness/Deafness::Target makes a Con save or becomes blinded or deafened.
 Blur::Your outline blurs, giving attackers disadvantage on attack rolls against you.
-Borrowed Knowledge::Gain proficiency in one skill of your choice for the duration.
 Cloud of Daggers::Fill a space with spinning daggers that damage creatures passing through.
 Continual Flame::Create a flame that sheds light but produces no heat or needs fuel.
 Crown of Madness::Charm a creature and control which creature it attacks each turn.
 Darkness::Create magical darkness in a radius that spreads around corners.
 Darkvision::Grant a creature darkvision out to 60 feet for the duration.
 Detect Thoughts::Read the surface thoughts of a creature you can see.
-Dragon's Breath::Grant a creature a breath weapon of a chosen damage type.
-Dust Devil::Conjure a whirling column of dust that damages and pushes creatures.
-Earthbind::Slam a creature to the ground, negating flight for the duration.
 Enlarge/Reduce::Grow or shrink a creature or object, altering its size, damage, or strength.
 Flaming Sphere::Conjure a rolling sphere of fire you can move to damage creatures.
-Flock of Familiars::Summon up to three temporary familiars for the duration.
-Fortune's Favor::Grant advantage on a future save, check, or attack, or curse an attacker.
 Gentle Repose::Preserve a corpse from decay and prevent it becoming undead.
-Gift of Gab::Reaction to reword a recent statement, changing its meaning or tone.
 Gust of Wind::Create a strong wind that pushes creatures and extinguishes small flames.
 Hold Person::A humanoid target makes a Wis save or becomes paralyzed for the duration.
-Immovable Object::Make an object immovable, able to bear great weight or serve as an anchor.
 Invisibility::Target becomes invisible until the spell ends or it attacks or casts a spell.
-Jim's Glowing Coin::Enchant a coin that can flare with light or deal damage when thrown.
-Kinetic Jaunt::Turn into a whirlwind of air, moving through tight spaces without provoking attacks.
 Knock::Open a locked or stuck door, chest, or container loudly.
 Levitate::Make a creature or object float up and down at your direction.
 Locate Object::Sense the direction to a familiar object or object type within range.
 Magic Mouth::Plant a message an object delivers when a specific trigger occurs.
 Magic Weapon::A weapon you touch becomes magical, gaining a bonus to attack and damage.
-Maximillian's Earthen Grasp::A hand of animated earth grapples and crushes a target.
 Melf's Acid Arrow::Ranged acid attack dealing damage immediately and again the following turn.
-Mind Spike::Target makes a Wis save or takes psychic damage; you sense its location.
 Mirror Image::Create three illusory duplicates of yourself to absorb attacks.
 Misty Step::Teleport up to 30 feet to an unoccupied space you can see.
-Nathair's Mischief::A burst of illusory magic dazes creatures in the area.
 Nystul's Magic Aura::Disguise an object or creature's magical aura or make it appear nonmagical.
 Phantasmal Force::Create an illusion only one creature perceives, which can seem to deal damage.
-Pyrotechnics::Turn a fire into fireworks (blinding) or smoke (obscuring and choking).
 Ray of Enfeeblement::Target makes a Con save or deals half damage with weapon attacks.
-Rime's Binding Ice::A cone of ice deals cold damage and can restrain creatures.
 Rope Trick::An extradimensional space opens at the top of a rope for shelter.
 Scorching Ray::Hurl three rays of fire, each making a ranged attack for fire damage.
 See Invisibility::See invisible creatures and objects, and see into the Ethereal Plane.
-Shadow Blade::Weave shadow into a sword of pure darkness dealing psychic damage.
 Shatter::A loud ringing noise deals thunder damage to creatures in a sphere.
-Skywrite::Cause clouds to form words or images legible from the ground.
-Snilloc's Snowball Swarm::Hurl a ball of ice that deals cold damage in a small area.
 Spider Climb::Grant a creature the ability to climb on walls and ceilings.
-Spray Of Cards::A cone of razor-sharp cards deals slashing damage to creatures.
 Suggestion::Suggest a reasonable-sounding course of action a target follows on a failed save.
-Vortex Warp::Teleport a creature you can see up to 30 feet away.
-Warding Wind::A wind swirls around you, muffling sound and hampering ranged attacks and flight.
-Warp Sense::Distort a creature's senses so its next attack or save uses your choice of modifier.
 Web::Fill an area with sticky webbing that restrains creatures.
-Wither and Bloom::Deal necrotic damage in a small area, then heal one creature there.
-Wristpocket::Store a small object in an extradimensional pocket for instant retrieval later.
 Animate Dead::Raise a corpse or bones as an undead skeleton or zombie under your control.
-Antagonize::Taunt creatures into disadvantage on attacks against anyone but you, or frighten/anger them.
-Ashardalon's Stride::Wreathe your legs in fire, boosting your speed and damaging creatures near you as you move.
 Bestow Curse::Curse a target with one of several debilitating effects.
 Blink::Randomly flicker between the Ethereal Plane and the material plane each turn.
-Catnap::Grant up to three willing creatures the benefit of a short rest in 10 minutes.
 Clairvoyance::Create an invisible sensor that lets you see or hear at a distant location.
 Counterspell::Interrupt a creature casting a spell, potentially negating it.
 Dispel Magic::End one spell effect on a target creature, object, or magical effect.
-Enemies Abound::Force a creature to attack the nearest creature, ally or not, on a failed save.
-Erupting Earth::Spikes of stone erupt in an area, dealing damage and creating difficult terrain.
-Fast Friends::Charm a creature into aiding you as it can, defending itself only in combat.
 Fear::A cone of illusory horror makes creatures drop items and flee.
 Feign Death::Feign death, becoming undetectable by most means of detecting life for the duration.
 Fireball::An explosive burst of fire deals a large amount of fire damage in a sphere.
-Flame Arrows::Imbue ammunition with fire, adding bonus fire damage on hit.
 Fly::Grant a creature a flying speed for the duration.
-Galder's Tower::Conjure a small magical tower that provides shelter for the duration.
 Gaseous Form::Transform a willing creature into a misty cloud, immune to most damage.
 Glyph of Warding::Inscribe a glyph that triggers a spell or explosion when a condition is met.
 Haste::Double a creature's speed, add to AC and Dex saves, and grant an extra action.
 Hypnotic Pattern::A twisting pattern of colors charms and incapacitates creatures who view it.
-Incite Greed::Nearby creatures who covet wealth are drawn toward it, becoming charmed.
 Leomund's Tiny Hut::Create a dome of protection that shelters you and allies for 8 hours.
-Life Transference::Sacrifice some of your own hit points to heal another creature.
 Lightning Bolt::A stroke of lightning deals damage to creatures in a line.
 Magic Circle::Create a 10-foot cylinder that bars or traps certain creature types.
 Major Image::Create a detailed illusion with sound, smell, and even minor motion.
-Melf's Minute Meteors::Conjure tiny meteors you can hurl one at a time for fire damage.
 Nondetection::Hide a target from divination magic and scrying for the duration.
 Phantom Steed::Conjure a spectral mount that can travel quickly overland.
 Protection from Energy::Grant resistance to one damage type for the duration.
-Pulse Wave::A burst of force either damages or pushes creatures in a cone.
 Remove Curse::End all curses on a creature, or break the curse on an object.
 Sending::Send a short telepathic message to a creature anywhere, and receive a reply.
 Sleet Storm::Create a slippery, icy storm that douses flames and knocks creatures prone.
 Slow::Slow up to six creatures, reducing their speed, AC, and actions.
 Stinking Cloud::Fill an area with nauseating gas that can incapacitate creatures.
-Summon Lesser Demons::Summon lesser demons to fight for you for the duration.
-Thunder Step::Teleport and unleash a thunderous boom that damages creatures near your destination.
-Tidal Wave::A wave of water damages and knocks prone creatures in its path.
-Tiny Servant::Animate a tiny object into a servant that follows simple commands.
 Tongues::Understand and speak any language for the duration.
 Vampiric Touch::Melee necrotic attack that heals you for half the damage dealt.
-Wall of Sand::Create a shifting wall of sand that blocks sight and movement.
-Wall of Water::Create a wall of water that douses fire and slows projectiles.
 Water Breathing::Grant up to ten creatures the ability to breathe underwater.
 Arcane Eye::Create an invisible, movable sensor you can see through.
 Banishment::Target makes a Charisma save or is banished to a harmless demiplane.
 Blight::Wither a target with necrotic energy, dealing heavy damage (extra to plants).
-Charm Monster::Target makes a Wis save or regards you as a friendly acquaintance.
 Confusion::Creatures in an area act randomly, wandering or attacking nearby creatures.
 Conjure Minor Elementals::Summon minor elementals to fight for you for the duration.
 Control Water::Manipulate a body of water — flood, part, redirect, or whirlpool it.
 Dimension Door::Teleport yourself, and possibly one other, to a location you can visualize.
-Elemental Bane::Weaken a creature's resistance to a chosen damage type and boost your next hit.
 Evard's Black Tentacles::Writhing tentacles fill an area, grappling and damaging creatures.
 Fabricate::Convert raw materials into a finished product of your design.
 Fire Shield::Wreathe yourself in flame or frost, granting resistance and damaging attackers.
-Galder's Speedy Courier::Send a small magical courier to deliver an item quickly.
-Gate Seal::Permanently or temporarily seal a specific location against planar travel.
-Gravity Sinkhole::A burst of gravity pulls creatures together and damages them.
 Greater Invisibility::Target becomes invisible even while attacking or casting spells.
 Hallucinatory Terrain::Make natural terrain look like other natural terrain for the duration.
 Ice Storm::Hail and ice deal bludgeoning and cold damage across an area.
@@ -1208,90 +1025,53 @@ Mordenkainen's Private Sanctum::Ward an area against sound, sight, and teleporta
 Otiluke's Resilient Sphere::Encase a creature or object in a nearly impervious force sphere.
 Phantasmal Killer::Fill a target's mind with a phantasmal monster that deals psychic damage.
 Polymorph::Transform a creature into a different beast form for the duration.
-Raulothim's Psychic Lance::A lance of psychic energy damages and briefly stuns a named target.
-Sickening Radiance::A beam of radiation deals damage and causes exhaustion.
-Spirit Of Death::Summon a spectral hunter that pursues and damages a chosen target.
 Stone Shape::Reshape a piece of stone into a form of your choosing.
 Stoneskin::Grant a creature resistance to nonmagical bludgeoning, piercing, and slashing damage.
-Storm Sphere::Conjure a sphere of storm that damages and can trigger lightning.
-Summon Greater Demon::Summon a greater demon to fight for you for the duration.
-Vitriolic Sphere::A glob of acid explodes, dealing damage now and lingering damage after.
 Wall of Fire::Create a wall of fire that damages creatures who pass through or start there.
-Watery Sphere::Conjure a sphere of water that engulfs and restrains creatures.
 Animate Objects::Bring up to ten objects to life to fight at your command.
 Bigby's Hand::Create a Large spectral hand that can punch, grasp, push, or block.
 Cloudkill::A sphere of poison gas moves with you, damaging creatures inside.
 Cone of Cold::A blast of frigid air deals heavy cold damage in a cone.
 Conjure Elemental::Summon an elemental to fight for you for the duration.
 Contact Other Plane::Contact an extraplanar entity to ask questions, at a risk to your sanity.
-Control Winds::Shape wind in a large area — gusts, downdrafts, or updrafts.
-Create Spelljamming Helm::Create a helm that lets a ship travel through the void of space.
 Creation::Fabricate an object of nonliving matter out of raw materials of light and shadow.
-Danse Macabre::Animate up to five corpses as zombies or skeletons under your control.
-Dawn::Summon a globe of sunlight that damages undead and fiends who linger in it.
 Dominate Person::Target makes a Wis save or you control its actions for the duration.
 Dream::Enter a creature's dreams to deliver a message, or plague it with nightmares.
-Enervation::A tendril of negative energy saps a target's life force each turn.
-Far Step::Bonus-action teleport up to 60 feet each turn for the duration.
 Geas::Compel a creature to follow a course of conduct for up to 30 days.
 Hold Monster::Target makes a Wis save or becomes paralyzed for the duration.
-Immolation::Wreathe a target in flames, dealing ongoing fire damage.
-Infernal Calling::Summon a devil to fight for you for the duration.
 Legend Lore::Learn lore about a famous person, place, or object.
 Mislead::Turn invisible and create an illusory double you can control elsewhere.
 Modify Memory::Alter a creature's memory of an event.
-Negative Energy Flood::Deal necrotic damage to a target and risk raising it as a zombie if it dies.
 Passwall::Create a passage through a wall, floor, or ceiling.
 Planar Binding::Bind a celestial, elemental, fey, or fiend to service.
 Rary's Telepathic Bond::Link the minds of several willing creatures for telepathic communication.
 Scrying::See and hear a chosen creature anywhere on the plane.
 Seeming::Disguise the appearance of any number of creatures for the duration.
-Skill Empowerment::Grant a creature expertise in a skill of your choice.
-Steel Wind Strike::Teleport to strike up to five creatures with a spectral blade.
-Summon Draconic Spirit::Summon a draconic spirit to fight for you for the duration.
-Synaptic Static::Psychic energy in an area deals damage and muddles thoughts.
 Telekinesis::Move or manipulate a creature or object with your mind.
 Teleportation Circle::Create a portal linking to a permanent teleportation circle you know.
-Temporal Shunt::Reaction that briefly removes a creature from time to avoid an attack.
-Transmute Rock::Turn stone to mud or mud to stone in an area.
 Wall of Force::Create an invisible wall of pure force that nothing can pass through.
-Wall of Light::Create a wall of searing light that blinds and damages creatures.
 Wall of Stone::Conjure a wall of solid stone in any shape you choose.
 Arcane Gate::Create two linked portals that creatures can pass through.
 Chain Lightning::A bolt of lightning arcs between multiple targets, dealing damage.
 Circle of Death::A sphere of negative energy deals heavy necrotic damage in an area.
 Contingency::Store a spell that triggers automatically when a chosen condition occurs.
-Create Homunculus::Create a small homunculus servant linked to your life force.
 Create Undead::Create up to three ghouls, or worse at higher levels, under your control.
 Disintegrate::A green ray reduces a target to dust on a failed save.
 Drawmij's Instant Summons::Prepare an item to teleport to your hand later when you speak a word.
 Eyebite::Target makes a Wis save or becomes asleep, panicked, or sickened for the duration.
-Fizban's Platinum Shield::Wreathe yourself or an ally in silvery light for protection and resistance.
 Flesh to Stone::Target makes a Con save or begins turning to stone.
 Globe of Invulnerability::Create a sphere that blocks spells of 5th level or lower.
-Gravity Fissure::A line of intense gravity crushes creatures with force damage.
 Guards and Wards::Ward a large area with a variety of magical defenses.
-Investiture of Flame::Wreathe yourself in fire, granting resistance and a fire whip attack.
-Investiture of Ice::Wreathe yourself in ice, granting resistance and a frost effect on hit.
-Investiture of Stone::Turn your skin to stone, granting resistance and the ability to move through earth.
-Investiture of Wind::Wreathe yourself in wind, granting resistance and a flying speed.
 Magic Jar::Trap your soul in a container and possess a nearby creature's body.
 Mass Suggestion::Suggest a course of action to up to twelve creatures at once.
-Mental Prison::Trap a creature's mind in an illusory prison of its own making.
 Move Earth::Reshape large sections of earth — hills, trenches, and terrain.
 Otiluke's Freezing Sphere::A ball of freezing energy explodes for cold damage and can freeze water.
 Otto's Irresistible Dance::A target is compelled to dance, provoking attacks and hindering itself.
 Programmed Illusion::Create an illusion that activates on a trigger you define.
-Scatter::Teleport up to five creatures to random nearby locations.
-Soul Cage::Trap a dying creature's soul to draw on for later benefits.
 Sunbeam::A line of radiant light damages and can blind creatures.
-Tenser's Transformation::Infuse yourself with martial power, granting extra attacks and combat bonuses.
 True Seeing::Grant a creature truesight and the ability to see through illusions.
 Wall of Ice::Create a wall of ice that can trap or block creatures.
-Create Magen::Construct a small magen servant to store and deliver a spell later.
-Crown of Stars::Surround your head with motes of light you can hurl as attacks.
 Delayed Blast Fireball::A globe of fire grows more powerful the longer you delay its detonation.
-Draconic Transformation::Transform to gain wings, a breath weapon, and other draconic traits.
 Etherealness::Step into the Ethereal Plane, unable to affect or be affected by the material world.
 Finger of Death::A blast of negative energy deals heavy damage and can raise the slain as a zombie.
 Forcecage::Create an invisible cage or barrier of force that traps a creature.
@@ -1299,7 +1079,6 @@ Mirage Arcane::Make a large area of terrain look and sound like different terrai
 Mordenkainen's Magnificent Mansion::Create an extradimensional dwelling with rooms, food, and servants for the duration.
 Mordenkainen's Sword::Conjure a sentient, spectral sword that attacks on your command.
 Plane Shift::Transport yourself and others to a different plane of existence.
-Power Word: Pain::A word of power afflicts a target with crippling pain and reduced speed.
 Prismatic Spray::Eight rays of light spray in a cone, each with a different damaging effect.
 Project Image::Create an illusory duplicate of yourself elsewhere that you can see and speak through.
 Reverse Gravity::Reverse gravity in an area, causing creatures and objects to fall upward.
@@ -1307,46 +1086,32 @@ Sequester::Hide a creature or object in suspended animation until a trigger occu
 Simulacrum::Create a duplicate of a creature from snow or ice, loyal to you.
 Symbol::Inscribe a glyph that triggers a powerful magical effect when triggered.
 Teleport::Instantly transport yourself and others to a familiar location.
-Tether Essence::Link your fate to a creature's, sharing damage between you.
-Whirlwind::Conjure a whirlwind that damages and can fling creatures into the air.
-Abi-Dalzim's Horrid Wilting::Draw the moisture from creatures in an area, dealing heavy necrotic damage.
 Antimagic Field::Create a sphere where spells and magic items don't function.
 Antipathy/Sympathy::Make a location or object attract or repel a chosen type of creature.
 Clone::Grow a duplicate body that your soul transfers into if you die.
 Control Weather::Change the weather in a large area over the following hours.
-Dark Star::A sphere of dark energy pulls creatures in and deals necrotic damage.
 Demiplane::Create a shadowy extradimensional door or room that you can enter.
 Dominate Monster::Target makes a Wis save or you control its actions for the duration.
 Feeblemind::Blast a target's mind with psychic energy, potentially reducing Int and Cha to 1.
-Illusory Dragon::Create the illusion of a terrifying dragon that frightens and can deal psychic damage.
 Incendiary Cloud::A cloud of roiling smoke and cinders deals fire damage to creatures inside.
-Maddening Darkness::Fill an area with magical darkness that deals psychic damage to those within.
 Maze::Banish a creature to a labyrinthine demiplane until it escapes or the spell ends.
-Mighty Fortress::Instantly raise a stone fortress on ground you can see.
 Mind Blank::Grant a creature immunity to psychic damage and most forms of mind-reading.
 Power Word: Stun::A word of power stuns a target outright if its hit points are low enough.
-Reality Break::Tear a rift in reality, dealing psychic damage and warping the area around it.
 Sunburst::A burst of brilliant sunlight deals radiant damage and can blind creatures.
 Telepathy::Establish a telepathic link with a creature anywhere on the same plane.
 Astral Projection::Project your astral form to the Astral Plane, leaving your body behind.
 Foresight::Grant a creature near-precognitive insight, advantage on rolls and immunity to surprise.
 Gate::Open a portal to another plane, or summon a specific creature through it.
 Imprisonment::Bind a creature in one of several inescapable forms of imprisonment.
-Invulnerability::Grant yourself immunity to all damage for the duration.
-Mass Polymorph::Transform up to ten creatures into harmless beast forms.
 Meteor Swarm::Blazing orbs of fire crash down, dealing massive damage across a wide area.
 Power Word: Kill::A word of power instantly slays a target if its hit points are low enough.
 Prismatic Wall::Create a wall of shimmering, multicolored light with varied defensive effects per layer.
-Psychic Scream::Unleash a psychic assault on up to ten creatures, potentially stunning them.
-Ravenous Void::Tear open a portal to the Void, pulling creatures in and dealing force damage.
 Shapechange::Transform into any creature you have seen, gaining its abilities.
-Time Ravage::Rapidly age a target, dealing necrotic damage and reducing its abilities.
 Time Stop::Stop time for everyone but yourself for a short string of turns.
 True Polymorph::Transform a creature or object into another form, potentially permanently.
 Weird::Fill the minds of creatures in an area with their deepest fears.
 Wish::The most powerful spell — alter reality to nearly any effect you can describe.
 Bless::Up to three creatures add a d4 to attack rolls and saving throws for the duration.
-Ceremony::Perform one of several minor religious rites — blessing a newborn, wedding, or the dead.
 Command::Target makes a Wis save or obeys a one-word command (drop, flee, halt, grovel, approach).
 Compelled Duel::Compel a creature to fight only you, at disadvantage against others, for the duration.
 Cure Wounds::Touch a creature to restore a modest amount of hit points.
@@ -1375,13 +1140,11 @@ Revivify::Touch a creature dead no longer than a minute to return it to life wit
 Aura of Life::An aura wards allies against necrotic damage and can stabilize dying allies each turn.
 Aura of Purity::An aura grants allies resistance to disease and advantage on saves vs. poison and conditions.
 Death Ward::Grant a creature protection against dying — it drops to 1 hp instead of 0 once.
-Find Greater Steed::Summon a more powerful spirit mount, such as a griffon or pegasus.
 Staggering Smite::Your next weapon hit deals extra psychic damage and can stun the target.
 Banishing Smite::Your weapon attacks deal extra force damage, and a reduced foe may be banished.
 Circle of Power::An aura grants allies advantage on saves against spells and halves failed-save effects.
 Destructive Wave::Slam the ground, dealing thunder plus radiant or necrotic damage and knocking nearby creatures prone.
 Dispel Evil and Good::Ward yourself against aberrations, celestials, elementals, fey, fiends, and undead, with offensive options too.
-Holy Weapon::Imbue a weapon with radiant power, adding damage and emitting bright light.
 Raise Dead::Return a creature dead no more than 10 days to life, healing major harm.
 Vicious Mockery::Hurl insults that deal psychic damage and give disadvantage on the target's next attack.
 Dissonant Whispers::Whisper a discordant phrase that deals psychic damage and forces the target to flee.
@@ -1408,7 +1171,6 @@ Enhance Ability::Grant a creature advantage on checks with one chosen ability sc
 Enthrall::Captivate a crowd's attention with your words, giving others advantage on Stealth against them.
 Heat Metal::Cause a metal object to glow red-hot, damaging whoever holds or wears it.
 Silence::Create an area of total silence that blocks sound and verbal spellcasting.
-Motivational Speech::Give a rousing speech that grants temporary hit points and removes fear from listeners.
 Plant Growth::Overgrow an area with vegetation, or enrich plants to boost food yield.
 Speak with Dead::Ask a corpse up to five questions it can answer from what it knew in life.
 Speak with Plants::Communicate with plants, which can also animate to entangle creatures nearby.
@@ -1479,33 +1241,20 @@ const EXTRA_SPELLS = parseSpells(RACIAL_SPELL_RAW);
 const SPELL_ROLLS = {
   'Acid Splash': {save:'dex', onSave:'none', cantrip:true, parts:[{d:'1d6', type:'acid'}], note:'One creature, or two within 5 ft of each other.'},
   'Chill Touch': {attack:'ranged', cantrip:true, parts:[{d:'1d8', type:'necrotic'}], note:'On a hit, the target can’t regain hit points until the start of your next turn. An undead target also has disadvantage on attacks against you until the end of your next turn.'},
-  'Create Bonfire': {save:'dex', onSave:'none', cantrip:true, parts:[{d:'1d8', type:'fire'}], note:'Also applies when a creature moves into the bonfire or ends its turn there.'},
   'Fire Bolt': {attack:'ranged', cantrip:true, parts:[{d:'1d10', type:'fire'}]},
-  'Frostbite': {save:'con', onSave:'none', cantrip:true, parts:[{d:'1d6', type:'cold'}], effect:'Disadvantage on its next weapon attack roll before the end of its next turn.'},
-  'Gust': {save:'str', effect:'A Medium or smaller creature is pushed up to 5 ft away.'},
-  'Infestation': {save:'con', onSave:'none', cantrip:true, parts:[{d:'1d6', type:'poison'}], effect:'It moves 5 ft in a random direction (no opportunity attacks).'},
   'Poison Spray': {save:'con', onSave:'none', cantrip:true, parts:[{d:'1d12', type:'poison'}]},
   'Ray of Frost': {attack:'ranged', cantrip:true, parts:[{d:'1d8', type:'cold'}], note:'On a hit, its speed drops by 10 ft until the start of your next turn.'},
-  'Sapping Sting': {save:'con', onSave:'none', cantrip:true, parts:[{d:'1d4', type:'necrotic'}], effect:'It falls prone.'},
   'Shocking Grasp': {attack:'melee', cantrip:true, parts:[{d:'1d8', type:'lightning'}], note:'Advantage if the target wears metal armor. On a hit, it can’t take reactions until the start of its next turn.'},
-  'Thunderclap': {save:'con', onSave:'none', cantrip:true, parts:[{d:'1d6', type:'thunder'}], note:'Every creature within 5 ft of you except you.'},
-  'Toll the Dead': {save:'wis', onSave:'none', cantrip:true, parts:[{d:'1d8', type:'necrotic', alt:'1d12'}], altLabel:'Target is missing hit points'},
   'Vicious Mockery': {save:'wis', onSave:'none', cantrip:true, parts:[{d:'1d4', type:'psychic'}], effect:'Disadvantage on its next attack roll before the end of its next turn.'},
 
   'Burning Hands': {save:'dex', onSave:'half', parts:[{d:'3d6', type:'fire', per:'1d6'}], note:'15 ft cone.'},
-  'Catapult': {save:'dex', onSave:'none', parts:[{d:'3d8', type:'bludgeoning', per:'1d8'}], note:'The object takes the same damage. Max object weight +5 lb per slot level above 1st.'},
   'Chromatic Orb': {attack:'ranged', parts:[{d:'3d8', type:'acid, cold, fire, lightning, poison or thunder (your choice)', per:'1d8'}]},
   'Color Spray': {pool:{d:'6d10', per:'2d10', what:'hit points of creatures blinded, lowest current hit points first'}},
   'Cure Wounds': {heal:{d:'1d8', per:'1d8'}},
   'Dissonant Whispers': {save:'wis', onSave:'half', parts:[{d:'3d6', type:'psychic', per:'1d6'}], effect:'It must use its reaction to move as far away from you as it can.'},
-  'Earth Tremor': {save:'dex', onSave:'none', parts:[{d:'1d6', type:'bludgeoning', per:'1d6'}], effect:'It is knocked prone.'},
   'False Life': {temp:{d:'1d4', flat:4, perFlat:5}},
-  'Frost Fingers': {save:'con', onSave:'half', parts:[{d:'2d8', type:'cold', per:'1d8'}]},
   'Healing Word': {heal:{d:'1d4', per:'1d4'}},
-  'Ice Knife': {attack:'ranged', parts:[{d:'1d10', type:'piercing'}],
-    explosion:{save:'dex', onSave:'none', d:'2d6', type:'cold', per:'1d6', text:'Hit or miss, the shard explodes: the target and each creature within 5 ft of it.'}},
   'Magic Missile': {darts:{n:3, d:'1d4', bonus:1, type:'force'}},
-  'Magnify Gravity': {save:'con', onSave:'half', parts:[{d:'2d8', type:'force', per:'1d8'}], effect:'Its speed is halved.'},
   'Ray of Sickness': {attack:'ranged', parts:[{d:'2d8', type:'poison', per:'1d8'}], hitSave:{save:'con', effect:'poisoned until the end of your next turn'}},
   'Sleep': {pool:{d:'5d8', per:'2d8', what:'hit points of creatures that fall asleep, lowest current hit points first'}},
   'Thunderwave': {save:'con', onSave:'half', parts:[{d:'2d8', type:'thunder', per:'1d8'}], effect:'It is pushed 10 ft away from you.'},
@@ -1519,30 +1268,27 @@ const SPELL_ROLLS = {
   'Wrathful Smite': {rider:{d:'1d6', type:'psychic', on:'your next melee weapon hit'}, hitSave:{save:'wis', effect:'frightened of you until the spell ends'}},
   'Divine Favor': {rider:{d:'1d4', type:'radiant', on:'every weapon hit for the next minute (concentration)'}},
   "Hunter's Mark": {rider:{d:'1d6', type:'same type as your weapon', on:'every weapon hit on the marked creature (concentration)'}},
-  'Absorb Elements': {rider:{d:'1d6', type:'the triggering damage type', per:'1d6', on:'your first melee hit on your next turn'}, note:'Reaction when you take acid, cold, fire, lightning or thunder damage: resistance to it until the start of your next turn.'},
   'Ensnaring Strike': {rider:null, hitSave:{save:'str', effect:'restrained by thorny vines'}, onHit:'your next weapon hit',
     ongoing:{d:'1d6', type:'piercing', per:'1d6', text:'While restrained, it takes this at the start of each of its turns.'}},
 
   // Save only, no damage
   'Animal Friendship': {save:'wis', effect:'Charmed for 24 hours. Beasts only; fails on Intelligence 4 or higher.', upcastNote:'+1 beast per slot level above 1st.'},
   'Bane': {save:'cha', effect:'For the duration, it subtracts 1d4 from attack rolls and saving throws.', upcastNote:'+1 target per slot level above 1st.'},
-  'Cause Fear': {save:'wis', effect:'Frightened of you; it repeats the save at the end of each of its turns. Constructs and undead are immune.', upcastNote:'+1 target per slot level above 1st (within 30 ft of each other).'},
   'Charm Person': {save:'wis', effect:'Charmed by you (advantage on the save if you or your companions are fighting it).', upcastNote:'+1 target per slot level above 1st.'},
   'Command': {save:'wis', effect:'It follows your one-word command on its next turn. Undead and creatures that don’t understand your language are unaffected.', upcastNote:'+1 target per slot level above 1st.'},
   'Compelled Duel': {save:'wis', effect:'Disadvantage on attacks against anyone but you, and it must save again to move more than 30 ft from you.'},
   'Faerie Fire': {save:'dex', effect:'Outlined in light: attacks against it have advantage and it can’t benefit from being invisible.'},
   'Grease': {save:'dex', effect:'It falls prone. Also when a creature enters the area or ends its turn there.'},
   'Sanctuary': {save:'wis', effect:'Made by any creature that targets the warded creature with an attack or harmful spell: on a failure it must choose a new target or lose the attack.'},
-  'Snare': {save:'dex', effect:'When triggered: hoisted upside down and restrained. Anyone can use an action on an Arcana check against the same DC to free it.'},
   "Tasha's Hideous Laughter": {save:'wis', effect:'Prone and incapacitated with laughter. Creatures with Intelligence 4 or less are unaffected.'},
 };
 // Checked: these don't involve any roll by the caster
-const NO_ROLL_SPELLS = new Set(['Blade Ward','Control Flames','Dancing Lights','Friends','Light','Mage Hand','Mending','Message',
-  'Minor Illusion','Mold Earth','Prestidigitation','Shape Water','True Strike','Thaumaturgy','Alarm','Bless','Ceremony',
-  'Comprehend Languages','Detect Evil and Good','Detect Magic','Detect Poison and Disease','Disguise Self','Distort Value',
-  'Expeditious Retreat','Feather Fall','Find Familiar','Fog Cloud','Gift of Alacrity','Heroism','Identify','Illusory Script',
+const NO_ROLL_SPELLS = new Set(['Blade Ward','Dancing Lights','Friends','Light','Mage Hand','Mending','Message',
+  'Minor Illusion','Prestidigitation','True Strike','Thaumaturgy','Alarm','Bless',
+  'Comprehend Languages','Detect Evil and Good','Detect Magic','Detect Poison and Disease','Disguise Self',
+  'Expeditious Retreat','Feather Fall','Find Familiar','Fog Cloud','Heroism','Identify','Illusory Script',
   'Jump','Longstrider','Mage Armor','Protection from Evil and Good','Purify Food and Drink','Shield','Shield of Faith',
-  'Silent Image','Silvery Barbs','Speak with Animals',"Tenser's Floating Disk",'Unseen Servant','Darkness']);
+  'Silent Image','Speak with Animals',"Tenser's Floating Disk",'Unseen Servant','Darkness']);
 
 function findSpell(name){
   for(const list of [...Object.values(SPELL_DATA), EXTRA_SPELLS]){
@@ -1788,10 +1534,13 @@ function renderCheckDetail(act){
 
 function hasFeature(name){ return classFeatureItems().some(t=>t.name===name && charLevel() >= t.level); }
 function skillMod(name){ const s = state.skills.find(x=>x.name===name); return s && typeof s.mod==='number' ? s.mod : 0; }
-// minTen: Reliable Talent (a d20 roll of 9 or lower counts as 10) → Avrae's `mi10` on each die
-function d20For(mode, minTen){
-  const mi = minTen ? 'mi10' : '';
-  return mode==='adv' ? `2d20${mi}kh1` : mode==='dis' ? `2d20${mi}kl1` : `1d20${mi}`;
+// A d20 roll command: "!r 1d20+5", with Avrae's own ` adv` / ` dis` word for advantage and
+// disadvantage (Avrae's !roll help: "!r 1d20+1 adv"; it turns the first 1d20 into 2d20kh1 / kl1).
+// minTen: Reliable Talent (a d20 roll of 9 or lower counts as 10) → `mi10`, which Avrae keeps
+// when it applies advantage.
+function d20Cmd(mode, bonus, minTen){
+  const word = mode==='adv' ? ' adv' : mode==='dis' ? ' dis' : '';
+  return `!r 1d20${minTen ? 'mi10' : ''}${fmtMod(bonus)}${word}`;
 }
 // Reliable Talent applies to ability checks you're proficient in
 function reliableFor(skill){
@@ -1861,10 +1610,10 @@ function toHitCommand(){
   const {sel, mode} = rollState;
   if(sel.kind==='weapon'){
     const bonus = parseInt(String(sel.attack.bonus||'0').replace(/\s/g,''),10) || 0;
-    return {cmd:`!r ${d20For(mode)}${fmtMod(bonus)}`, desc:`${sel.attack.name} attack`};
+    return {cmd:d20Cmd(mode, bonus), desc:`${sel.attack.name} attack`};
   }
-  if(sel.kind==='check') return {cmd:`!r ${d20For(mode, reliableFor(sel.skill))}${fmtMod(skillMod(sel.skill))}`, desc:`${sel.label} (${sel.skill})`};
-  return {cmd:`!r ${d20For(mode, reliableFor('Athletics'))}${fmtMod(skillMod('Athletics'))}`, desc:`${MANEUVERS[sel.kind].label} (Athletics)`};
+  if(sel.kind==='check') return {cmd:d20Cmd(mode, skillMod(sel.skill), reliableFor(sel.skill)), desc:`${sel.label} (${sel.skill})`};
+  return {cmd:d20Cmd(mode, skillMod('Athletics'), reliableFor('Athletics')), desc:`${MANEUVERS[sel.kind].label} (Athletics)`};
 }
 // Damage command plus a list of what's included, following the 2014 rules
 function damageCommand(){
@@ -1948,7 +1697,7 @@ function spellPopupHtml(){
       : infoBox('Not added yet', `Roll details for ${sp.name} haven’t been added to the tracker yet. Your spell attack is ${fmtMod(s.atk)} and your save DC is ${s.dc}.`));
   }
   const notes = [];
-  if(r.attack) html += cmdBox('Spell attack', {cmd:`!r ${d20For(mode)}${fmtMod(s.atk)}`, desc:`${sp.name} (${r.attack} spell attack)`});
+  if(r.attack) html += cmdBox('Spell attack', {cmd:d20Cmd(mode, s.atk), desc:`${sp.name} (${r.attack} spell attack)`});
   if(r.save) html += infoBox('Saving throw', saveLine(s.dc, r.save, r.onSave, r.effect));
   (r.parts||[]).forEach(p=>{
     const base = p.alt && rollState.alt ? p.alt : p.d;
@@ -2713,6 +2462,8 @@ async function runImport(){
     loadTrack();
     renderResources();
     document.getElementById('restMsg').textContent = '';
+    document.getElementById('backupMsg').textContent = '';
+    closeClipPanel(); clipBox.value = ''; restoreConfirm = null;
 
     updateMoveLine();
 
@@ -3391,6 +3142,7 @@ function renderResources(){
   if(cur !== null) document.getElementById('f_hp').value = `${cur} / ${max === null ? '?' : max}`;
 
   const rows = document.getElementById('resRows');
+  document.getElementById('backupBar').hidden = !currentCharId;
   if(!currentCharId){ rows.innerHTML = `<p class="empty-note">Import a sheet to track resources.</p>`; return; }
   let html = '';
   const slots = slotTable().filter(s=>s.max>0);
@@ -3414,6 +3166,137 @@ function renderResources(){
   rows.querySelectorAll('[data-pip]').forEach(b=>b.addEventListener('click', ()=>spend(b.dataset.pip, b.dataset.on==='true' ? 1 : -1)));
   rows.querySelectorAll('[data-pool]').forEach(b=>b.addEventListener('click', ()=>spend(b.dataset.pool, +b.dataset.n)));
 }
+
+/* ---------- Usage notes: a copy-and-paste backup of what changes between rests ----------
+   "Copy usage notes" copies readable lines (HP, slots and charges left) plus a restore code, to
+   paste somewhere safe (e.g. a Google Doc). "Restore from notes" accepts the whole paste, just
+   the code, or just the readable lines. Only rest-related state: never pins or choices. */
+function usageItems(){
+  return [
+    ...slotTable().filter(s=>s.max>0).map(s=>({id:s.id, max:s.max,
+      label: s.pact ? `Pact Magic slots (${ORDINAL[s.level]} level)` : `${ORDINAL[s.level] || s.level+'th'}-level slots`})),
+    ...trackedResources().map(r=>({id:r.id, max:r.max, label: r.kind==='pool' ? `${r.label} pool` : r.label})),
+  ];
+}
+const charDisplayName = ()=>document.getElementById('f_name').value.trim() || 'Unnamed character';
+function encodeUsage(obj){ return btoa(unescape(encodeURIComponent(JSON.stringify(obj)))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,''); }
+function decodeUsage(s){
+  const b = s.replace(/-/g,'+').replace(/_/g,'/'); const pad = b + '==='.slice((b.length + 3) % 4);
+  return JSON.parse(decodeURIComponent(escape(atob(pad))));
+}
+function usageNotesText(){
+  const items = usageItems(), used = {};
+  items.forEach(i=>{ const u = Math.min(i.max, track.used[i.id] || 0); if(u) used[i.id] = u; });
+  const when = new Date().toLocaleString(undefined, {month:'short', day:'numeric', year:'numeric', hour:'numeric', minute:'2-digit'});
+  const lines = [`Turnkeeper usage notes: ${charDisplayName()} (level ${charLevel()}), ${when}`];
+  if(hpNow() !== null) lines.push(`Hit points: ${hpNow()} / ${hpMax() === null ? '?' : hpMax()}`);
+  items.forEach(i=>lines.push(`${i.label}: ${remaining(i.id)} of ${i.max} left`));
+  lines.push(`Restore code: TK1:${encodeUsage({v:1, c:currentCharId, n:charDisplayName(), hp:hpNow(), u:used})}`);
+  return lines.join('\n');
+}
+// Returns {charId, name, hp, used:{id:n}, full} or null. `full` (from a code) means ids it
+// doesn't mention were unused; readable lines only change what they mention.
+function parseUsageNotes(text){
+  const m = text.match(/TK1:([A-Za-z0-9_-]+)/);
+  if(m){
+    try{ const o = decodeUsage(m[1]); return {charId:o.c || null, name:o.n || '', hp: typeof o.hp==='number' ? o.hp : null, used:o.u || {}, full:true}; }
+    catch(e){ /* fall back to the readable lines */ }
+  }
+  const out = {charId:null, name:'', hp:null, used:{}, full:false}; let found = 0;
+  const head = text.match(/usage notes:\s*(.+?)\s*\(level/i); if(head) out.name = head[1];
+  const hp = text.match(/Hit points:\s*(\d+)/i); if(hp){ out.hp = +hp[1]; found++; }
+  usageItems().forEach(i=>{
+    const esc = i.label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const lm = text.match(new RegExp('^\\s*' + esc + ':\\s*(\\d+)\\s*of\\s*(\\d+)', 'mi'));
+    if(lm){ out.used[i.id] = Math.max(0, i.max - (+lm[1])); found++; }
+  });
+  return found ? out : null;
+}
+// Backup UI: "Back up to .txt", "Restore from .txt", and "Copy/Restore From Clipboard", which opens
+// ONE box (filled with the current backup) with Copy, Restore (from what's in the box) and Clear
+// (empty it to paste a backup in). Layout per Justin, 2026-09-24.
+let restoreConfirm = null, usageUndo = null;   // restoreConfirm: text waiting for "use it anyway"
+function setBackupMsg(html, err){ const m = document.getElementById('backupMsg'); m.innerHTML = html; m.classList.toggle('err', !!err); }
+// Restore from backup text. `again` says how to confirm a different character's backup.
+function restoreFromText(text, again){
+  const parsed = parseUsageNotes(text || '');
+  if(!parsed){ setBackupMsg('No backup found. Use a backup made with "Back up to .txt" or "Copy", or just its restore code.', true); return false; }
+  const other = parsed.charId ? parsed.charId !== currentCharId : (parsed.name && parsed.name !== charDisplayName());
+  if(other && restoreConfirm !== text){
+    restoreConfirm = text;
+    setBackupMsg(`This backup is for ${escapeHtml(parsed.name || 'a different character')}, not ${escapeHtml(charDisplayName())}. ${again} to use it anyway.`, true);
+    return false;
+  }
+  restoreConfirm = null;
+  usageUndo = JSON.stringify({hp:track.hp, used:track.used});
+  const known = new Set(usageItems().map(i=>i.id));
+  const used = parsed.full ? {} : {...track.used};
+  Object.entries(parsed.used).forEach(([id, n])=>{ if(known.has(id)) used[id] = n; });
+  track.used = used;
+  if(parsed.hp !== null) track.hp = hpMax() !== null ? Math.max(0, Math.min(hpMax(), parsed.hp)) : parsed.hp;
+  saveTrack(); renderResources();
+  setBackupMsg(`Restored from your backup${parsed.hp !== null ? ` (HP ${hpNow()} / ${hpMax()})` : ''}. <button type="button" class="sel-toggle" id="usageUndo">Undo</button>`);
+  document.getElementById('usageUndo').onclick = ()=>{
+    const s = JSON.parse(usageUndo); track.hp = s.hp; track.used = s.used; usageUndo = null;
+    saveTrack(); renderResources(); setBackupMsg('Restore undone.');
+  };
+  return true;
+}
+
+// Back up to .txt, e.g. turnkeeper-Krunk-usage-2026-09-24.txt
+document.getElementById('downloadUsageBtn').addEventListener('click', ()=>{
+  const url = URL.createObjectURL(new Blob([usageNotesText() + '\n'], {type:'text/plain'}));
+  const safe = charDisplayName().replace(/[^A-Za-z0-9]+/g,'-').replace(/^-+|-+$/g,'') || 'character';
+  const a = document.createElement('a');
+  a.href = url; a.download = `turnkeeper-${safe}-usage-${new Date().toISOString().slice(0,10)}.txt`;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url), 2000);
+  setBackupMsg('Backup file downloaded. Keep it somewhere safe.');
+});
+
+// Restore from .txt (choosing the same file again confirms a different character's backup)
+document.getElementById('restoreFileBtn').addEventListener('click', ()=>document.getElementById('restoreFile').click());
+document.getElementById('restoreFile').addEventListener('change', e=>{
+  const file = e.target.files && e.target.files[0]; e.target.value = '';
+  if(!file) return;
+  if(file.size > 100000){ setBackupMsg('That file is too big to be a Turnkeeper backup.', true); return; }
+  const reader = new FileReader();
+  reader.onload = ()=>restoreFromText(String(reader.result || ''), 'Choose the same file again');
+  reader.onerror = ()=>setBackupMsg('Couldn’t read that file. Try Copy/Restore From Clipboard instead.', true);
+  reader.readAsText(file);
+});
+
+// Copy/Restore From Clipboard: one box
+const clipPanel = document.getElementById('clipPanel'), clipBox = document.getElementById('clipBox');
+function closeClipPanel(){
+  clipPanel.hidden = true;
+  const t = document.getElementById('clipToggleBtn'); t.setAttribute('aria-expanded','false'); t.classList.remove('on');
+}
+// One-click buttons flash orange briefly so the click registers, like tapping a chip
+document.querySelectorAll('.backup button.chip-btn:not(#clipToggleBtn)').forEach(b=>b.addEventListener('click', ()=>{
+  b.classList.add('on'); clearTimeout(b._flash); b._flash = setTimeout(()=>b.classList.remove('on'), 600);
+}));
+document.getElementById('clipToggleBtn').addEventListener('click', e=>{
+  const open = clipPanel.hidden;
+  clipPanel.hidden = !open; e.currentTarget.setAttribute('aria-expanded', String(open));
+  e.currentTarget.classList.toggle('on', open);
+  restoreConfirm = null; setBackupMsg('');
+  if(open) clipBox.value = usageNotesText();   // filled once on opening, so pasting isn't overwritten
+});
+document.getElementById('clipCopy').addEventListener('click', ()=>{
+  const text = clipBox.value;
+  if(!text.trim()){ setBackupMsg('The box is empty. Close and reopen Copy/Restore From Clipboard to get your current backup.', true); return; }
+  const done = ok=>setBackupMsg(ok ? 'Copied. Paste it somewhere safe, like a Google Doc.' : 'Couldn’t copy automatically. Select the text in the box and copy it.', !ok);
+  if(navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(text).then(()=>done(true), ()=>done(fallbackCopy(text)));
+  else done(fallbackCopy(text));
+});
+document.getElementById('clipRestore').addEventListener('click', ()=>restoreFromText(clipBox.value, 'Click Restore again'));
+document.getElementById('clipClear').addEventListener('click', ()=>{
+  clipBox.value = ''; restoreConfirm = null;
+  setBackupMsg('Box cleared. Paste a backup (Ctrl+V), then click Restore.');
+  clipBox.focus();
+});
+clipBox.addEventListener('input', ()=>{ restoreConfirm = null; });
 
 // Plain collapsible sections (no pinning): Saving Throws, Skills, Attacks
 document.querySelectorAll('.collapsible').forEach(wrap=>{

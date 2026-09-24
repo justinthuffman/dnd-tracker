@@ -3,6 +3,25 @@
 What's new in the Crisis in Waterdeep character tracker, newest first.
 Rules follow D&D 5e (2014), checked against [dnd5e.wikidot.com](https://dnd5e.wikidot.com).
 
+## Unreleased (in progress)
+
+### Added
+- **Backup** for your HP, spell slots and feature charges, a collapsible section in
+  Resources, to keep somewhere safe (like a Google Doc) or move to a different browser:
+  - **Back up to .txt** downloads a backup file; **Restore from .txt** loads one.
+  - **Copy/Restore From Clipboard** opens one box holding your backup (readable lines plus a
+    restore code): **Copy** copies it, **Clear** empties the box so you can paste a backup
+    in, and **Restore** restores from what's in the box. It asks first if the notes are for a
+  different character, and has an Undo. Only things that change between rests are included.
+
+### Changed
+- **Advantage and disadvantage use Avrae's own words.** Commands now read like
+  `!r 1d20+5 adv` or `!r 1d20+5 dis`, as Avrae's `!roll` help shows, instead of
+  spelling out the dice math.
+- **Spells are now Player's Handbook only.** The Wizard, Bard and Paladin spell lists match
+  the PHB class lists exactly; spells from later books (Xanathar's, Tasha's, and others) and
+  Tasha's optional class additions have been removed everywhere, including roll commands.
+
 ## 2026-09-24 — Build box and Rogue
 
 ### Added
