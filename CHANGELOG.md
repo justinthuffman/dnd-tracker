@@ -25,6 +25,12 @@ Rules follow D&D 5e (2014), checked against [dnd5e.wikidot.com](https://dnd5e.wi
     numbers; bonus-action and action feats appear in the Combat Menu.
   - **Observant** adds +5 to Senses / Passive Perception.
 
+### Changed
+- The text beside a damage command now names everything the command includes, not just the
+  damage type, e.g. "Greatsword damage (slashing), +10 Great Weapon Master, +2d8 Divine
+  Smite (radiant)". Covers Dueling, Great Weapon Fighting, Savage Attacks, Savage Attacker,
+  Sneak Attack, Divine Smite, Improved Divine Smite, Empowered Evocation and Elemental Adept.
+
 ## 2026-09-24 — Wizard, Bard, PHB-only spells and Backup
 
 ### Added
