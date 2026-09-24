@@ -10,7 +10,8 @@ Rules follow D&D 5e (2014), checked against [dnd5e.wikidot.com](https://dnd5e.wi
   your browser. **Harbor** (the original look) stays the default. The others are
   **Midnight** (violet and gold), **Grove** (forest green and amber), **Ember** (charcoal,
   crimson and brass), **Daylight** (a light theme) and **Tome**, an old adventurer's book
-  with parchment pages, deep red ink and book lettering.
+  with parchment pages, deep red ink and book lettering. **Keep** is a medieval hall: oak
+  panels in riveted iron frames on walnut planks, with brass headings and copper buttons.
 
 ## 2026-09-24 — Feats and ability score improvements
 
