@@ -1,7 +1,13 @@
 # Changelog
 
-What's new in the Crisis in Waterdeep character tracker, newest first.
+What's new in Turnkeeper, the Crisis in Waterdeep character tracker, newest first.
 Rules follow D&D 5e (2014), checked against [dnd5e.wikidot.com](https://dnd5e.wikidot.com).
+
+## 2026-09-24 — New address
+
+### Changed
+- The site moved to **justinthuffman.github.io/turnkeeper/**, and the tracker page is now
+  `turnkeeper.html` (it was `dnd_tracker.html`). Old links no longer work; use the new one.
 
 ## 2026-09-24 — Build box and Rogue
 
