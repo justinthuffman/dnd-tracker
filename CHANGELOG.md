@@ -6,6 +6,17 @@ Rules follow D&D 5e (2014), checked against [dnd5e.wikidot.com](https://dnd5e.wi
 ## Unreleased (in progress)
 
 ### Added
+- **Wizard class features** (all eight PHB schools). The Arcane Tradition choice shows in the
+  Build box at level 2. Arcane Recovery is tracked in Resources and tells you how many slot
+  levels to recover. School features are tracked where they have uses (Arcane Ward pool,
+  Portent dice, The Third Eye, Illusory Self…). **Empowered Evocation** adds your
+  Intelligence to evocation spell damage, and **Potent Cantrip** is noted on save cantrips.
+- **Bard class features** (Colleges of Lore and Valor). **Bardic Inspiration** is tracked
+  (Charisma modifier uses, back on a short rest from level 5) and gives the command for the
+  inspired creature's die (d6, d8, d10, d12). Cutting Words and Peerless Skill spend it too.
+  Song of Rest gives its extra-healing roll.
+- Features with dice but no combat action (Song of Rest, Portent, Arcane Recovery) have a
+  **Roll** link in Class Features.
 - **Backup** for your HP, spell slots and feature charges, a collapsible section in
   Resources, to keep somewhere safe (like a Google Doc) or move to a different browser:
   - **Back up to .txt** downloads a backup file; **Restore from .txt** loads one.

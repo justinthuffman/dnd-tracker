@@ -112,6 +112,7 @@ button.sel-toggle:empty{display:none;}
 .rt-row input[type=checkbox]{accent-color:var(--orange); margin-top:3px; flex:0 0 auto;}
 .rt-name{color:var(--ink); font-weight:600;}
 .rt-desc{color:var(--ink-dim);}
+button.feature-roll{font-size:0.78rem; margin-left:4px;}
 .rt-sub{list-style:none; margin:4px 0 0; padding:0 0 0 14px; border-left:2px solid var(--border); color:var(--ink-dim);}
 .rt-sub li{padding:2px 0 2px 8px;}
 .rt-subname{color:var(--ink);}
@@ -1586,9 +1587,12 @@ function openRollPopup(sel, mode){
   if(sel.kind==='spell' && sel.entry.sp.level > 0){
     if(sel.entry.fixedLevel){ id = 'race:'+sel.entry.sp.name; desc = `${sel.entry.sp.name} (once per long rest)`; }
     else { id = slotIdFor(sel.slot); desc = `a ${ORDINAL[sel.slot]}-level spell slot`; }
-  } else if(sel.kind==='feature'){
+  } else if(sel.kind==='feature' && sel.feature.spendOnUse !== false){
     id = featureResourceId(sel.feature);
-    desc = sel.feature.spends==='channelDivinity' ? 'your Channel Divinity' : sel.feature.name;
+    // Name the pool that's actually spent (Cutting Words spends a Bardic Inspiration use)
+    desc = sel.feature.spends==='channelDivinity' ? 'your Channel Divinity'
+      : sel.feature.spends==='bardicInspiration' ? 'a Bardic Inspiration use'
+      : sel.feature.name;
   }
   if(id && maxFor(id) > 0){
     if(remaining(id) > 0){ spend(id, 1); rollState.spendInfo = {id, desc, state:'spent'}; }
@@ -1699,12 +1703,18 @@ function spellPopupHtml(){
   const notes = [];
   if(r.attack) html += cmdBox('Spell attack', {cmd:d20Cmd(mode, s.atk), desc:`${sp.name} (${r.attack} spell attack)`});
   if(r.save) html += infoBox('Saving throw', saveLine(s.dc, r.save, r.onSave, r.effect));
-  (r.parts||[]).forEach(p=>{
+  // School of Evocation (wizard spells only): Empowered Evocation adds INT (min +1) to one damage
+  // roll of a wizard evocation spell; Potent Cantrip makes a successful save still take half
+  const wizardSpell = cf.classKey==='wizard' && !e.source;
+  const empowered = wizardSpell && sp.school==='Evocation' && hasFeature('Empowered Evocation') ? Math.max(1, abilityScoreMod('int')) : 0;
+  if(empowered) notes.push(`Empowered Evocation: +${empowered} (Intelligence) added to the damage.`);
+  if(wizardSpell && cantrip && r.save && hasFeature('Potent Cantrip')) notes.push('Potent Cantrip: a target that succeeds on the save still takes half the damage.');
+  (r.parts||[]).forEach((p, i)=>{
     const base = p.alt && rollState.alt ? p.alt : p.d;
     const dice = scaleDice(base, p.per, {up, cantrip, crit: r.attack && crit});
     let extra = r.attack ? critToggle() : '';
     if(p.alt) extra += `<div class="roll-toggles" style="margin-top:6px;">${toggleBtn('data-alt','1',r.altLabel,!!rollState.alt)}</div>`;
-    html += cmdBox('Damage', {cmd:`!r ${dice}`, desc:`${sp.name} damage (${p.type})`}, extra);
+    html += cmdBox('Damage', {cmd:`!r ${dice}${i===0 && empowered ? fmtMod(empowered) : ''}`, desc:`${sp.name} damage (${p.type})`}, extra);
   });
   if(r.explosion){
     const x = r.explosion;
@@ -1745,15 +1755,20 @@ function featurePopupHtml(){
   const dc = casting ? spellStats(casting.ability).dc : null;
   let html = `<p class="roll-intro">${t.desc}</p>`;
   if(/^Channel Divinity/.test(t.name)) html += `<p class="roll-intro">Uses your Channel Divinity (once per short or long rest).</p>`;
+  // Dice a feature rolls (Bardic Inspiration, Portent, Song of Rest…) or a worked-out number
+  if(t.roll){
+    if(t.roll.cmd) html += cmdBox(t.roll.label, {cmd:t.roll.cmd(), desc:t.roll.desc ? t.roll.desc() : ''});
+    if(t.roll.info) html += infoBox(t.roll.label, t.roll.info());
+  }
   if(t.save && dc) html += infoBox('Saving throw', `Target makes a <b>DC ${dc} ${ABILITY_TEXT(t.save)}</b> saving throw. ${t.saveNote||''}`);
-  else if(t.pool){
+  else if(t.name==='Lay on Hands' && t.pool){
     const id = 'feat:'+t.name, left = remaining(id);
     html += infoBox('Healing pool', `<b>${left} of ${t.pool.max()} hit points</b> left (5 × paladin level, refilled on a long rest). Touch a creature and spend any amount; there’s nothing to roll. Or spend 5 to cure one disease or neutralize one poison.`
       + `<div class="roll-toggles" style="margin-top:8px; align-items:center;"><input type="number" id="lohAmt" min="1" max="${left}" value="${Math.min(5, left) || 1}" style="width:64px; background:var(--bg); border:1px solid var(--border); color:var(--ink); padding:5px 8px; border-radius:4px;" aria-label="Hit points to spend">`
       + `<button type="button" class="flow-btn" data-loh="amt"${left ? '' : ' disabled'}>Spend</button>`
       + `<button type="button" class="flow-btn" data-loh="5"${left >= 5 ? '' : ' disabled'}>Cure disease/poison (5)</button></div>`);
   }
-  else html += infoBox('No roll', `${t.name} doesn’t need a roll.${t.tip ? ` ${t.tip}` : ''}`);
+  else if(!t.roll) html += infoBox('No roll', `${t.name} doesn’t need a roll.${t.tip ? ` ${t.tip}` : ''}`);
   return html;
 }
 
@@ -2601,6 +2616,124 @@ const CLASS_FEATURES = {
       ],
     },
   },
+  // Wizard (2014 PHB), checked on dnd5e.wikidot.com
+  wizard: {
+    subclassLabel: 'Arcane Tradition', subclassLevel: 2,
+    base: [
+      {level:1, name:'Spellcasting', desc:'Cast wizard spells from your spellbook using Intelligence. Prepare Intelligence modifier + wizard level spells (minimum 1) after each long rest; rituals in your spellbook can be cast without preparing them.'},
+      {level:1, name:'Arcane Recovery', uses:{max:()=>1, recharge:'long'},
+        roll:{label:'Slots to recover', info:()=>`When you finish a short rest, choose spent spell slots totalling up to <b>${Math.ceil(charLevel()/2)} slot level${Math.ceil(charLevel()/2) === 1 ? '' : 's'}</b> (none 6th level or higher) and restore them in Resources.`},
+        desc:'Once per day, when you finish a short rest, recover spent spell slots whose levels add up to half your wizard level (rounded up), none of them 6th level or higher.'},
+      {level:4, name:'Ability Score Improvement', desc:'At levels 4, 8, 12, 16 and 19: raise one ability score by 2, or two scores by 1 each (max 20), or take a feat if your table allows it.'},
+      {level:18, name:'Spell Mastery', desc:'Pick one 1st-level and one 2nd-level wizard spell in your spellbook; cast them at their lowest level without a slot while prepared.'},
+      {level:20, name:'Signature Spells', uses:{max:()=>2, recharge:'short'}, desc:'Two 3rd-level wizard spells are always prepared; cast each once at 3rd level without a slot, regained on a short or long rest.'},
+    ],
+    subclasses: {
+      'School of Abjuration': [
+        {level:2, name:'Abjuration Savant', desc:'Copying an abjuration spell into your spellbook costs half the gold and time.'},
+        {level:2, name:'Arcane Ward', pool:{max:()=>2*charLevel() + abilityScoreMod('int'), recharge:'long'},
+          desc:'When you cast a 1st-level or higher abjuration spell, create a ward (once per long rest) with hit points equal to twice your wizard level + your Intelligence modifier. It takes damage for you first. Casting abjuration spells restores 2 × the spell’s level in hit points. Track it in Resources.'},
+        {level:6, name:'Projected Ward', type:'reaction', desc:'When a creature you can see within 30 ft takes damage, your Arcane Ward can absorb it instead.'},
+        {level:10, name:'Improved Abjuration', desc:'Add your proficiency bonus to ability checks made as part of an abjuration spell (e.g. Counterspell, Dispel Magic).'},
+        {level:14, name:'Spell Resistance', desc:'Advantage on saving throws against spells, and resistance to damage from spells.'},
+      ],
+      'School of Conjuration': [
+        {level:2, name:'Conjuration Savant', desc:'Copying a conjuration spell into your spellbook costs half the gold and time.'},
+        {level:2, name:'Minor Conjuration', type:'action', desc:'Conjure a nonmagical object (up to 3 ft on a side, 10 lb) that you’ve seen, in your hand or on the ground within 10 ft. It lasts 1 hour, or until it takes damage or you use this again.'},
+        {level:6, name:'Benign Transposition', type:'action', uses:{max:()=>1, recharge:'long'}, desc:'Teleport up to 30 ft to an unoccupied space you can see, or swap places with a willing Small or Medium creature. Regained on a long rest or when you cast a 1st-level or higher conjuration spell.'},
+        {level:10, name:'Focused Conjuration', desc:'While concentrating on a conjuration spell, taking damage can’t break your concentration.'},
+        {level:14, name:'Durable Summons', desc:'Creatures you summon or create with a conjuration spell have 30 temporary hit points.'},
+      ],
+      'School of Divination': [
+        {level:2, name:'Divination Savant', desc:'Copying a divination spell into your spellbook costs half the gold and time.'},
+        {level:2, name:'Portent', uses:{max:()=>charLevel() >= 14 ? 3 : 2, recharge:'long'}, spendOnUse:false,
+          roll:{label:'Roll your Portent dice after a long rest', cmd:()=>`!r ${charLevel() >= 14 ? 3 : 2}d20`, desc:()=>'note each die; the total doesn’t matter'},
+          desc:'After a long rest, roll two d20s and record them. Replace any attack roll, saving throw or ability check made by you or a creature you can see with one of them, before the roll. Once per turn. Unused dice are lost on your next long rest.'},
+        {level:6, name:'Expert Divination', desc:'When you cast a 2nd-level or higher divination spell with a slot, regain one spent slot of a lower level (up to 5th).'},
+        {level:10, name:'The Third Eye', type:'action', uses:{max:()=>1, recharge:'short'}, desc:'Gain one of: darkvision 60 ft, ethereal sight 60 ft, the ability to read any language, or see invisibility within 10 ft. Lasts until you’re incapacitated or rest.'},
+        {level:14, name:'Greater Portent', desc:'Roll three d20s for Portent instead of two.'},
+      ],
+      'School of Enchantment': [
+        {level:2, name:'Enchantment Savant', desc:'Copying an enchantment spell into your spellbook costs half the gold and time.'},
+        {level:2, name:'Hypnotic Gaze', type:'action', save:'wis', saveNote:'A creature within 5 ft that can see or hear you. On a failure it is charmed until the end of your next turn: speed 0, incapacitated and visibly dazed. You can extend it with your action each turn. When it ends, or if the creature succeeds, you can’t use this on that creature again until a long rest.',
+          desc:'Charm a creature within 5 ft that can see or hear you, leaving it incapacitated with speed 0.'},
+        {level:6, name:'Instinctive Charm', type:'reaction', save:'wis', saveNote:'When a creature you can see within 30 ft attacks you. On a failure it must target the creature closest to it (or waste the attack). On a success you can’t use this on that attacker again until a long rest.',
+          desc:'Use your reaction to make an attacker target someone else.'},
+        {level:10, name:'Split Enchantment', desc:'An enchantment spell of 1st level or higher that targets only one creature can target a second creature.'},
+        {level:14, name:'Alter Memories', type:'action', save:'int', saveNote:'Make a creature charmed by your spell forget up to 1 + your Charisma modifier hours (minimum 1) of the time it was charmed.',
+          desc:'Charmed creatures don’t know you charmed them, and you can make one forget part of its time charmed.'},
+      ],
+      'School of Evocation': [
+        {level:2, name:'Evocation Savant', desc:'Copying an evocation spell into your spellbook costs half the gold and time.'},
+        {level:2, name:'Sculpt Spells', desc:'When you cast an evocation spell that affects others you can see, choose 1 + the spell’s level of them: they automatically succeed on its saves and take no damage where they’d take half.'},
+        {level:6, name:'Potent Cantrip', desc:'A creature that succeeds on a save against your cantrip still takes half its damage (but no other effect).'},
+        {level:10, name:'Empowered Evocation', desc:'Add your Intelligence modifier (minimum +1) to one damage roll of any wizard evocation spell. Turnkeeper adds it to the damage command.'},
+        {level:14, name:'Overchannel', desc:'Deal maximum damage with a 1st- to 5th-level wizard damage spell. Free once per long rest; each further use before a long rest deals you necrotic damage (2d12 per spell level, +1d12 per level for each later use) that ignores resistance.'},
+      ],
+      'School of Illusion': [
+        {level:2, name:'Illusion Savant', desc:'Copying an illusion spell into your spellbook costs half the gold and time.'},
+        {level:2, name:'Improved Minor Illusion', desc:'You know Minor Illusion (or another wizard cantrip if you already did), and it can create a sound and an image at the same time.'},
+        {level:6, name:'Malleable Illusions', type:'action', desc:'Change the nature of one of your illusions with a duration of 1 minute or longer, within the spell’s limits.'},
+        {level:10, name:'Illusory Self', type:'reaction', uses:{max:()=>1, recharge:'short'}, desc:'When a creature attacks you, an illusory duplicate makes the attack miss automatically.'},
+        {level:14, name:'Illusory Reality', type:'bonus', desc:'When you cast an illusion spell of 1st level or higher, make one inanimate, nonmagical object in it real for 1 minute. It can’t deal damage or harm anyone directly.'},
+      ],
+      'School of Necromancy': [
+        {level:2, name:'Necromancy Savant', desc:'Copying a necromancy spell into your spellbook costs half the gold and time.'},
+        {level:2, name:'Grim Harvest', desc:'Once per turn, when your 1st-level or higher spell kills a creature (not a construct or undead), regain hit points equal to twice the spell’s level, or three times if it’s a necromancy spell.'},
+        {level:6, name:'Undead Thralls', desc:'Add Animate Dead to your spellbook; it can target one extra corpse or pile of bones. Your undead gain extra hit points equal to your wizard level and add your proficiency bonus to weapon damage.'},
+        {level:10, name:'Inured to Undeath', desc:'Resistance to necrotic damage, and your hit point maximum can’t be reduced.'},
+        {level:14, name:'Command Undead', type:'action', save:'cha', saveNote:'An undead within 60 ft that you can see. On a failure it becomes friendly and obeys you until you use this again. Intelligence 8+: advantage on the save; Intelligence 12+: repeats the save every hour.',
+          desc:'Bring an undead creature under your control.'},
+      ],
+      'School of Transmutation': [
+        {level:2, name:'Transmutation Savant', desc:'Copying a transmutation spell into your spellbook costs half the gold and time.'},
+        {level:2, name:'Minor Alchemy', desc:'Spend 10 minutes per cubic foot to turn a nonmagical object of wood, stone (not gemstone), iron, copper or silver into another of those materials, for up to 1 hour.'},
+        {level:6, name:'Transmuter’s Stone', desc:'Spend 8 hours to make a stone giving its holder one benefit: darkvision 60 ft, +10 ft speed, Constitution save proficiency, or resistance to acid, cold, fire, lightning or thunder. Change it when you cast a 1st-level or higher transmutation spell.'},
+        {level:10, name:'Shapechanger', uses:{max:()=>1, recharge:'short'}, desc:'Add Polymorph to your spellbook. Cast it on yourself without a slot, into a beast of challenge rating 1 or lower. Once per short or long rest.'},
+        {level:14, name:'Master Transmuter', type:'action', desc:'Destroy your transmuter’s stone for one effect: transform a nonmagical object, cure a creature (curses, diseases, poisons, full hit points), cast Raise Dead without a slot, or make a willing creature 3d10 years younger (minimum 13).'},
+      ],
+    },
+  },
+  // Bard (2014 PHB), checked on dnd5e.wikidot.com
+  bard: {
+    subclassLabel: 'Bard College', subclassLevel: 3,
+    // Bardic Inspiration: CHA-mod uses (min 1), long rest; short rest too from level 5 (Font of Inspiration)
+    resources: [{id:'bardicInspiration', label:'Bardic Inspiration', level:1, max:()=>Math.max(1, abilityScoreMod('cha')), recharge:()=>charLevel() >= 5 ? 'short' : 'long'}],
+    base: [
+      {level:1, name:'Spellcasting', desc:'Cast bard spells using Charisma. You know a set number of spells, and can cast any bard spell you know as a ritual if it has the ritual tag.'},
+      {level:1, name:'Bardic Inspiration', type:'bonus', spends:'bardicInspiration',
+        roll:{label:'For the creature you inspire', cmd:()=>`!r 1d${bardicDie()}`, desc:()=>`Bardic Inspiration d${bardicDie()}: add to one ability check, attack roll or saving throw`},
+        desc:'Give a creature other than you within 60 ft that can hear you an inspiration die (d6, d8 at level 5, d10 at 10, d12 at 15). Within 10 minutes, it can roll the die and add it to one ability check, attack roll or saving throw, even after seeing its d20, before the DM says whether it succeeds. Uses: Charisma modifier (minimum 1) per long rest.'},
+      {level:2, name:'Jack of All Trades', desc:'Add half your proficiency bonus (rounded down) to ability checks you aren’t proficient in. Your sheet’s skill modifiers already include it.'},
+      {level:2, name:'Song of Rest',
+        roll:{label:'Extra healing during a short rest', cmd:()=>`!r 1d${songOfRestDie()}`, desc:()=>'added to each friendly creature that spends Hit Dice'},
+        desc:'During a short rest, you and friendly creatures who hear your performance regain an extra d6 hit points (d8 at level 9, d10 at 13, d12 at 17) if they spend any Hit Dice.'},
+      {level:3, name:'Expertise', desc:'Double your proficiency bonus for two of your skill proficiencies; two more at level 10. Your sheet’s skill modifiers already include it.'},
+      {level:4, name:'Ability Score Improvement', desc:'At levels 4, 8, 12, 16 and 19: raise one ability score by 2, or two scores by 1 each (max 20), or take a feat if your table allows it.'},
+      {level:5, name:'Font of Inspiration', desc:'You regain all Bardic Inspiration uses on a short or long rest.'},
+      {level:6, name:'Countercharm', type:'action', desc:'Perform until the end of your next turn: you and friendly creatures within 30 ft who can hear you have advantage on saves against being frightened or charmed.'},
+      {level:10, name:'Magical Secrets', desc:'Learn two spells from any class’s list (two more at 14 and 18); they count as bard spells. Turnkeeper’s Spells list only shows the bard list for now.'},
+      {level:20, name:'Superior Inspiration', desc:'When you roll initiative with no Bardic Inspiration uses left, you regain one.'},
+    ],
+    subclasses: {
+      'College of Lore': [
+        {level:3, name:'Bonus Proficiencies', desc:'Proficiency with three skills of your choice.'},
+        {level:3, name:'Cutting Words', type:'reaction', spends:'bardicInspiration',
+          roll:{label:'Subtract from the creature’s roll', cmd:()=>`!r 1d${bardicDie()}`, desc:()=>'subtract this from its attack roll, ability check or damage roll'},
+          desc:'When a creature you can see within 60 ft makes an attack roll, ability check or damage roll, spend a Bardic Inspiration use to subtract your inspiration die from it, after it rolls but before the DM says whether it succeeds or before it deals damage. Creatures that can’t hear you or can’t be charmed are immune.'},
+        {level:6, name:'Additional Magical Secrets', desc:'Learn two spells from any class’s list; they count as bard spells.'},
+        {level:14, name:'Peerless Skill', spends:'bardicInspiration',
+          roll:{label:'Add to your ability check', cmd:()=>`!r 1d${bardicDie()}`, desc:()=>'add this to your ability check'},
+          desc:'When you make an ability check, spend a Bardic Inspiration use to add your inspiration die, after you roll but before the DM says whether you succeed.'},
+      ],
+      'College of Valor': [
+        {level:3, name:'Bonus Proficiencies', desc:'Proficiency with medium armor, shields and martial weapons.'},
+        {level:3, name:'Combat Inspiration', desc:'A creature with your inspiration die can also add it to a weapon damage roll it just made, or use its reaction to add it to its AC against an attack after seeing the roll but before knowing whether it hits.'},
+        {level:6, name:'Extra Attack', desc:'Attack twice when you take the Attack action.'},
+        {level:14, name:'Battle Magic', type:'bonus', desc:'When you use your action to cast a bard spell, you can make one weapon attack as a bonus action.'},
+      ],
+    },
+  },
   // Rogue (2014 PHB), checked on dnd5e.wikidot.com
   rogue: {
     subclassLabel: 'Roguish Archetype', subclassLevel: 3,
@@ -2827,7 +2960,11 @@ function featureRow(section, t, withBox){
   const lvlLabel = ownLevel > 1 ? ` <span class="rt-lvl">(level ${ownLevel})</span>` : '';
   row.innerHTML = (withBox ? `<input type="checkbox" ${section.pins.has(t.name)?'checked':''}>` : '')
     + `<div><span class="rt-name">${t.name}</span>${lvlLabel}${typeLabel} <span class="rt-desc">&mdash; ${t.desc}</span>`
+    + (t.roll && level >= ownLevel ? ` <button type="button" class="sel-toggle feature-roll" data-feature-roll>Roll</button>` : '')
     + (tiers ? `<ul class="rt-sub">${tiers}</ul>` : '') + `</div>`;
+  // Features with dice but no place in the Combat Menu (Song of Rest, Portent, Arcane Recovery…)
+  const rollBtn = row.querySelector('[data-feature-roll]');
+  if(rollBtn) rollBtn.addEventListener('click', e=>{ e.preventDefault(); e.stopPropagation(); openRollPopup({kind:'feature', label:t.name, feature:t}, 'normal'); });
   row.querySelectorAll('[data-spell]').forEach(el=>{
     const sp = findSpell(el.dataset.spell);
     if(sp){ el.classList.add('has-tip'); wireSpellTooltip(el, sp); }
@@ -3051,16 +3188,21 @@ function castableSlotLevels(spLevel){
 function slotIdFor(level){ const s = slotTable().find(x=>x.level===level); return s ? s.id : 'slot'+level; }
 
 // Every limited resource the character has right now: [{id, label, max, recharge, kind:'pips'|'pool', group}]
+// A recharge can depend on level (e.g. Bardic Inspiration: long rest, then short rest from level 5)
+function rechargeOf(r){ return typeof r === 'function' ? r() : r; }
+// Bard dice by level (2014 PHB): Bardic Inspiration d6/d8/d10/d12 at 1/5/10/15; Song of Rest at 2/9/13/17
+function bardicDie(){ const l = charLevel(); return l >= 15 ? 12 : l >= 10 ? 10 : l >= 5 ? 8 : 6; }
+function songOfRestDie(){ const l = charLevel(); return l >= 17 ? 12 : l >= 13 ? 10 : l >= 9 ? 8 : 6; }
 function trackedResources(){
   const out = [], lvl = charLevel();
   const entry = CLASS_FEATURES[cf.classKey];
-  (entry && entry.resources || []).filter(r=>lvl >= r.level).forEach(r=>out.push({id:r.id, label:r.label, max:r.max(), recharge:r.recharge, kind:'pips', group:'Class'}));
+  (entry && entry.resources || []).filter(r=>lvl >= r.level).forEach(r=>out.push({id:r.id, label:r.label, max:r.max(), recharge:rechargeOf(r.recharge), kind:'pips', group:'Class'}));
   classFeatureItems().filter(t=>lvl >= t.level).forEach(t=>{
-    if(t.uses) out.push({id:'feat:'+t.name, label:t.name, max:t.uses.max(), recharge:t.uses.recharge, kind:'pips', group:'Class'});
-    if(t.pool) out.push({id:'feat:'+t.name, label:t.name, max:t.pool.max(), recharge:t.pool.recharge, kind:'pool', group:'Class'});
+    if(t.uses) out.push({id:'feat:'+t.name, label:t.name, max:t.uses.max(), recharge:rechargeOf(t.uses.recharge), kind:'pips', group:'Class'});
+    if(t.pool) out.push({id:'feat:'+t.name, label:t.name, max:t.pool.max(), recharge:rechargeOf(t.pool.recharge), kind:'pool', group:'Class'});
   });
   traitsForRace(rt.raceKey).forEach(t=>{
-    if(t.uses) out.push({id:'race:'+t.name, label:t.name, max:t.uses.max(), recharge:t.uses.recharge, kind:'pips', group:'Racial'});
+    if(t.uses) out.push({id:'race:'+t.name, label:t.name, max:t.uses.max(), recharge:rechargeOf(t.uses.recharge), kind:'pips', group:'Racial'});
     (t.tiers||[]).filter(x=>x.perRest && lvl >= x.level).forEach(x=>
       out.push({id:'race:'+x.name, label:`${x.name} (${t.name})`, max:1, recharge:x.perRest, kind:'pips', group:'Racial'}));
   });
