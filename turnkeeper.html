@@ -1685,13 +1685,14 @@ function damageCommand(){
   if(rollState.crit) notes.push('Crit: all damage dice doubled');
   if(rollState.crit && melee && rt.raceKey==='halforc'){ count += 1; notes.push('Savage Attacks: one extra weapon die'); }
   // Radiant: Divine Smite (2d8 + 1d8/slot above 1st, max 5d8; +1d8 vs undead/fiend) and Improved Divine Smite (+1d8)
-  let radiant = 0;
+  const critX = rollState.crit ? 2 : 1;
+  let smiteDice = 0, improvedDice = 0;
   if(rollState.smite && melee){
-    radiant += Math.min(5, 1 + rollState.smite) + (rollState.undead ? 1 : 0);
+    smiteDice = (Math.min(5, 1 + rollState.smite) + (rollState.undead ? 1 : 0)) * critX;
     notes.push(`Divine Smite (${ORDINAL[rollState.smite]}-level slot${rollState.undead?', undead/fiend':''}). Uses a spell slot.`);
   }
-  if(melee && hasFeature('Improved Divine Smite')){ radiant += 1; notes.push('Improved Divine Smite: +1d8 radiant'); }
-  radiant *= rollState.crit ? 2 : 1;
+  if(melee && hasFeature('Improved Divine Smite')){ improvedDice = critX; notes.push('Improved Divine Smite: +1d8 radiant'); }
+  const radiant = smiteDice + improvedDice;
   // Sneak Attack: finesse or ranged weapon, once per turn; chosen after the hit, doubled on a crit
   const sneakOk = hasFeature('Sneak Attack') && (/finesse/i.test(p.props) || /ranged/i.test(p.props));
   const sneakDice = Math.ceil(charLevel()/2);
@@ -1710,9 +1711,20 @@ function damageCommand(){
   const weaponDice = `${count}d${p.die}${gwf?'ro<3':''}`;
   const savage = savageOk && rollState.savage;
   if(savage) notes.push('Savage Attacker: weapon dice rolled twice, the higher total is kept. Once per turn.');
-  const types = [p.type, radiant ? 'radiant' : ''].filter(Boolean).join(' + ');
   const cmd = `!r ${savage ? `(${weaponDice},${weaponDice})kh1` : weaponDice}${mod ? fmtMod(mod) : ''}${sneak ? `+${sneak}d6` : ''}${radiant ? `+${radiant}d8` : ''}`;
-  const desc = `${a.name} damage${types ? ` (${types})` : ''}`;
+  // Beside the command: the damage type, then everything the command adds or changes, e.g.
+  // "Greatsword damage (slashing), +10 Great Weapon Master, +2d8 Divine Smite (radiant)"
+  const extras = [
+    gwf && 'Great Weapon Fighting rerolls 1s and 2s',
+    savage && 'Savage Attacker (best of two)',
+    rollState.crit && melee && rt.raceKey==='halforc' && `+1d${p.die} Savage Attacks`,
+    dueling && '+2 Dueling',
+    power && `+10 ${power}`,
+    sneak && `+${sneak}d6 Sneak Attack`,
+    smiteDice && `+${smiteDice}d8 Divine Smite (radiant)`,
+    improvedDice && `+${improvedDice}d8 Improved Divine Smite (radiant)`,
+  ].filter(Boolean);
+  const desc = `${a.name} damage${p.type ? ` (${p.type})` : ''}${extras.length ? ', ' + extras.join(', ') : ''}`;
   return {cmd, desc, notes, melee, sneakOk, sneakDice, savageOk};
 }
 
@@ -1777,7 +1789,7 @@ function spellPopupHtml(){
     const dice = scaleDice(base, p.per, {up, cantrip, crit: r.attack && crit}) + adeptMi(p.type);
     let extra = r.attack ? critToggle() : '';
     if(p.alt) extra += `<div class="roll-toggles" style="margin-top:6px;">${toggleBtn('data-alt','1',r.altLabel,!!rollState.alt)}</div>`;
-    html += cmdBox('Damage', {cmd:`!r ${dice}${i===0 && empowered ? fmtMod(empowered) : ''}`, desc:`${sp.name} damage (${p.type})`}, extra);
+    html += cmdBox('Damage', {cmd:`!r ${dice}${i===0 && empowered ? fmtMod(empowered) : ''}`, desc:`${sp.name} damage (${p.type})${i===0 && empowered ? `, +${empowered} Empowered Evocation` : ''}${adeptMi(p.type) ? ', Elemental Adept (1s count as 2s)' : ''}`}, extra);
   });
   if(r.explosion){
     const x = r.explosion;
