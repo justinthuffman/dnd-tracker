@@ -10,15 +10,23 @@ Rules follow D&D 5e (2014), checked against [dnd5e.wikidot.com](https://dnd5e.wi
   spellcasting ability, ability score and level. Hover over either number to see the math.
   Shows "—" for classes that don't cast spells (and for Paladins before level 2).
 - **Pin skills and saving throws.** Click a skill or saving throw to pin it; it turns
-  orange. Pinned ones stay visible when their section is collapsed, and are saved per
+  orange (dimmed orange if you're not proficient in it). Pinned ones stay visible when their section is collapsed, and are saved per
   character in your browser. Click again to unpin.
-- **Select all / Select none** in Racial Traits, Class Features, Saving Throws, Skills and
-  Spells. In Class Features, "Select all" only pins features you've reached at your
+- **Attacks** now match the other sections: tick an attack to pin it so it stays visible
+  when collapsed, laid out as "Greatsword — +5 to hit · 2d6+3 slashing · …".
+- **Select all / Select none** in Racial Traits, Class Features, Saving Throws, Skills,
+  Attacks and Spells, plus a master **Select all / Select none** at the top of Character
+  Summary that pins or clears everything on the sheet at once (prepared spells aren't
+  affected). In Class Features, "Select all" only pins features you've reached at your
   current level.
 - Racial and class spell tooltips now include that spell's save DC and attack bonus. For
   example, a Drow wizard's Drow Magic spells use Charisma, not Intelligence.
 
 ### Changed
+- Everything that expands or collapses now slides open and closed smoothly, and pinned
+  items fade in. Turned off automatically if your device is set to reduce motion.
+- Combat Menu: clicking the same button again closes its panel. Bonus Action Options now
+  highlights while open, like the Action buttons.
 - Picking a Fighting Style now pins Fighting Style automatically. When pinned, it shows
   as one line, e.g. "Fighting Style: Great Weapon Fighting — …".
 - Cast Prepared Spell no longer says "No spells prepared yet" when you have
