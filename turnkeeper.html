@@ -113,7 +113,25 @@ button.sel-toggle:empty{display:none;}
 .rt-name{color:var(--ink); font-weight:600;}
 .rt-desc{color:var(--ink-dim);}
 button.feature-roll{font-size:0.78rem; margin-left:4px;}
-button.feat-remove{font-size:0.78rem; margin-left:4px;}
+button.feat-change{font-size:0.78rem; margin-left:4px;}
+.feat-slot{padding:6px 0 8px; border-bottom:1px solid var(--border);}
+.feat-slot:last-child{border-bottom:none;}
+.feat-slot .rt-row{border-bottom:none; padding-top:2px;}
+.feat-slot-head{font-size:0.72rem; text-transform:uppercase; letter-spacing:0.06em; color:var(--sea); margin-bottom:2px;}
+.feat-slot-empty{font-size:0.85rem; color:var(--ink-dim); padding:2px;}
+.feat-picker{border:1px solid var(--orange); background:rgba(217,123,63,0.08); border-radius:6px; padding:8px 10px; margin-top:4px;}
+.feat-tabs, .asi-grid{display:flex; flex-wrap:wrap; gap:6px; margin-bottom:8px;}
+.feat-tabs .flow-btn, .asi-grid .flow-btn{padding:5px 10px; font-size:0.82rem;}
+.feat-help{font-size:0.8rem; color:var(--ink-dim); margin:0 0 8px;}
+.feat-search{width:100%; background:var(--bg); border:1px solid var(--border); color:var(--ink); padding:6px 8px; border-radius:4px; margin-bottom:6px; font-size:0.85rem;}
+.feat-opts{max-height:380px; overflow-y:auto; display:flex; flex-direction:column; gap:4px; padding-right:2px;}
+button.feat-opt{display:block; width:100%; text-align:left; background:var(--panel2); border:1px solid var(--border); color:var(--ink-dim); padding:6px 10px; font-size:0.82rem; line-height:1.4;}
+button.feat-opt:hover{background:var(--panel2); border-color:var(--orange);}
+button.feat-opt.active{border-color:var(--orange); background:rgba(217,123,63,0.22);}
+button.feat-opt:disabled{opacity:0.4; cursor:default; border-color:var(--border);}
+button.feat-opt[hidden]{display:none;}
+.feat-actions{display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; align-items:center;}
+.feat-actions:empty{display:none;}
 .feat-prereq{font-size:0.75rem; color:var(--ink-dim);}
 .feat-prereq.unmet{color:var(--orange);}
 .rt-sub{list-style:none; margin:4px 0 0; padding:0 0 0 14px; border-left:2px solid var(--border); color:var(--ink-dim);}
@@ -358,11 +376,10 @@ footer{text-align:center; color:var(--ink-dim); font-size:0.75rem; margin-top:30
 
   <div class="racial">
     <div class="rt-toggle" id="feToggle" role="button" tabindex="0" aria-expanded="false"><span class="arrow">&#9656;</span><span class="subhead" style="margin:0;">Feats</span></div>
-    <div class="rt-hint" id="feHint">Expand to add feats or see their details.</div>
+    <div class="rt-hint" id="feHint">Expand to choose feats or see their details.</div>
     <div id="fePinned"></div>
     <div class="rt-body" id="feBody">
-      <p class="rt-note"><span>Add the feats your character has. Tick a box to pin a feat to your character sheet.</span><button type="button" class="sel-toggle" id="feSelAll"></button></p>
-      <div class="cf-subclass"><label for="featAdd">Add a feat:</label> <select id="featAdd"></select></div>
+      <p class="rt-note"><span>At each Ability Score Improvement level, choose +2 ability score points or a feat. Tick a box to pin a feat to your character sheet.</span><button type="button" class="sel-toggle" id="feSelAll"></button></p>
       <div id="feList"></div>
     </div>
   </div>
@@ -2946,6 +2963,13 @@ function buildChoices(){
   }
   classFeatureItems().filter(t=>t.choose && lvl >= t.level).forEach(t=>
     out.push({key:'choice:'+t.name, label:t.name, value:getChoice(t.name), options:t.tiers.map(x=>x.name), feature:t}));
+  // Ability Score Improvement levels: +2 ability points or a feat (picked in the Feats section)
+  const slots = getSlots();
+  openFeatSlots().forEach(l=>{
+    const s = slots[l];
+    out.push({key:'featslot:'+l, label:`Level ${l}`, featSlot:l, feature:true,
+      value: s ? (s.feat || `+${Object.entries(s.asi||{}).map(([a,n])=>`${n} ${a.toUpperCase()}`).join(', +')}`) : ''});
+  });
   featItems().filter(t=>t.choose).forEach(t=>
     out.push({key:'choice:'+t.name, label:t.name, value:getChoice(t.name), options:t.tiers.map(x=>x.name), feature:t}));
   return out;
@@ -2961,7 +2985,8 @@ function renderBuild(){
   if(pending.length){
     html += `<div class="build-pending">${pending.some(c=>!c.value) ? '<div class="build-title">Choices to make</div>' : ''}`
       + pending.map(c=>`<div class="build-row"><span class="build-label">${c.label}:</span>`
-        + c.options.map(o=>`<button type="button" class="flow-btn${c.value===o?' active':''}" data-build="${escapeHtml(c.key)}" data-opt="${escapeHtml(o)}">${o}</button>`).join('')
+        + (c.featSlot ? `<button type="button" class="flow-btn" data-feat-slot="${c.featSlot}">Choose ability score points or a feat</button>` : '')
+        + (c.options||[]).map(o=>`<button type="button" class="flow-btn${c.value===o?' active':''}" data-build="${escapeHtml(c.key)}" data-opt="${escapeHtml(o)}">${o}</button>`).join('')
         + `</div>`).join('') + `</div>`;
   }
   if(made.length){
@@ -2985,7 +3010,12 @@ function renderBuild(){
     }
     renderBuild();
   }));
-  box.querySelectorAll('[data-build-edit]').forEach(b=>b.addEventListener('click', ()=>{ buildEditing.add(b.dataset.buildEdit); renderBuild(); }));
+  box.querySelectorAll('[data-build-edit]').forEach(b=>b.addEventListener('click', ()=>{
+    const key = b.dataset.buildEdit;
+    if(key.startsWith('featslot:')){ openFeatPicker(+key.slice('featslot:'.length)); return; }
+    buildEditing.add(key); renderBuild();
+  }));
+  box.querySelectorAll('[data-feat-slot]').forEach(b=>b.addEventListener('click', ()=>openFeatPicker(+b.dataset.featSlot)));
 }
 
 const TYPE_LABELS = {action:'Action', bonus:'Bonus Action', reaction:'Reaction'};
@@ -3023,14 +3053,14 @@ function featureRow(section, t, withBox){
   row.innerHTML = (withBox ? `<input type="checkbox" ${section.pins.has(t.name)?'checked':''}>` : '')
     + `<div><span class="rt-name">${t.name}</span>${lvlLabel}${typeLabel} <span class="rt-desc">&mdash; ${t.desc}</span>`
     + ((t.roll || t.rolls) && level >= ownLevel ? ` <button type="button" class="sel-toggle feature-roll" data-feature-roll>Roll</button>` : '')
-    + (t.feat && withBox ? ` <button type="button" class="sel-toggle feat-remove" data-feat-remove>Remove</button>` : '')
+    + (t.feat && withBox ? ` <button type="button" class="sel-toggle feat-change" data-feat-row-change>Change</button>` : '')
     + (t.feat && t.prereq && withBox ? `<div class="feat-prereq${t.meets && !t.meets() ? ' unmet' : ''}">Prerequisite: ${t.prereq}${t.meets && !t.meets() ? ' (your sheet’s score is lower)' : ''}</div>` : '')
     + (tiers ? `<ul class="rt-sub">${tiers}</ul>` : '') + `</div>`;
   // Features with dice but no place in the Combat Menu (Song of Rest, Portent, Arcane Recovery…)
   const rollBtn = row.querySelector('[data-feature-roll]');
   if(rollBtn) rollBtn.addEventListener('click', e=>{ e.preventDefault(); e.stopPropagation(); openRollPopup({kind:'feature', label:t.name, feature:t}, 'normal'); });
-  const removeBtn = row.querySelector('[data-feat-remove]');
-  if(removeBtn) removeBtn.addEventListener('click', e=>{ e.preventDefault(); e.stopPropagation(); removeFeat(t.name); });
+  const changeBtn = row.querySelector('[data-feat-row-change]');
+  if(changeBtn) changeBtn.addEventListener('click', e=>{ e.preventDefault(); e.stopPropagation(); openFeatPicker(featSlotOf(t.name)); });
   row.querySelectorAll('[data-spell]').forEach(el=>{
     const sp = findSpell(el.dataset.spell);
     if(sp){ el.classList.add('has-tip'); wireSpellTooltip(el, sp); }
@@ -3075,13 +3105,14 @@ function makePinSection(cfg){
     const items = cfg.items();
     wireSelToggle($('SelAll'), section.eligible(), section.has, on=>{ section.selectAll(on); section.render(); });
     updateMasterToggle();
-    if(!items.length){
+    if(cfg.renderList) cfg.renderList(section, list);   // a section with its own layout (Feats: one block per level)
+    else if(!items.length){
       const note = document.createElement('div'); note.className='empty-note';
       note.textContent = cfg.emptyText();
       list.appendChild(note);
       return;
     }
-    items.forEach(t=>list.appendChild(featureRow(section, t, true)));
+    if(!cfg.renderList) items.forEach(t=>list.appendChild(featureRow(section, t, true)));
     // Pinned items show only while collapsed; the expanded list already shows them ticked
     if(!section.open) items.filter(t=>section.pins.has(t.name)).forEach(t=>pinned.appendChild(featureRow(section, t, false)));
   };
@@ -3240,44 +3271,132 @@ const FEATS = [
 ].map(f=>({...f, feat:true, level:1}));
 const FEAT_BY_NAME = Object.fromEntries(FEATS.map(f=>[f.name, f]));
 
-// The character's feats, saved per character like pins (with an in-memory copy if storage is blocked)
+// Feat slots: the levels a class gets an Ability Score Improvement, which can be a feat
+// instead (2014 PHB: Fighters also get 6 and 14, Rogues 10). Each slot holds {feat:name} or
+// {asi:{str:1, con:1}}, saved per character (with an in-memory copy if storage is blocked).
+const ASI_LEVELS = {fighter:[4,6,8,12,14,16,19], rogue:[4,8,10,12,16,19]};
+function featSlotLevels(){ return ASI_LEVELS[cf.classKey] || [4,8,12,16,19]; }
+function openFeatSlots(){ return featSlotLevels().filter(l=>l <= charLevel()); }
 const featMem = new Map();
 function featsKey(){ return `dndTracker:feats:${currentCharId}`; }
-function getFeats(){
-  if(!currentCharId) return [];
+function getSlots(){
+  if(!currentCharId) return {};
   const k = featsKey();
   if(featMem.has(k)) return featMem.get(k);
-  let list = [];
-  try{ list = JSON.parse(storageGet(k) || '[]'); }catch(e){}
-  return Array.isArray(list) ? list.filter(n=>FEAT_BY_NAME[n]) : [];
+  let s = {};
+  try{ s = JSON.parse(storageGet(k) || '{}'); }catch(e){}
+  return s && typeof s==='object' && !Array.isArray(s) ? s : {};
 }
-function setFeats(list){ const k = featsKey(); featMem.set(k, list); storageSet(k, list.length ? JSON.stringify(list) : null); }
+function setSlot(level, value){
+  const s = {...getSlots()};
+  if(value) s[level] = value; else delete s[level];
+  const k = featsKey(); featMem.set(k, s);
+  storageSet(k, Object.keys(s).length ? JSON.stringify(s) : null);
+}
+// Feats the character has at their current level
+function getFeats(){ const s = getSlots(); return openFeatSlots().map(l=>s[l] && s[l].feat).filter(n=>n && FEAT_BY_NAME[n]); }
 function hasFeat(name){ return getFeats().includes(name); }
 function featItems(){ return getFeats().map(n=>FEAT_BY_NAME[n]).sort((a,b)=>a.name.localeCompare(b.name)); }
+function featSlotOf(name){ const e = Object.entries(getSlots()).find(([,s])=>s.feat===name); return e ? +e[0] : null; }
+function asiText(asi){ return Object.entries(asi||{}).map(([a,n])=>`+${n} ${ABILITY_FULL[a]}`).join(', '); }
 function featsChanged(){ featSection.render(); renderBuild(); renderResources(); updateFeaturesButton(); updateSenses(); }
-function addFeat(name){
-  if(!FEAT_BY_NAME[name] || hasFeat(name)) return;
-  setFeats([...getFeats(), name]);
-  featSection.setPin(name, true);   // a feat you just added is pinned, like picking a Fighting Style
-  featsChanged();
+
+// The picker opens on the slot being changed, or else on the first empty slot ("fills down")
+const featUi = {slot:null, tab:'feat', asi:{}, query:''};
+function resetFeatUi(){ Object.assign(featUi, {slot:null, tab:'feat', asi:{}, query:''}); }
+function openFeatPicker(level){
+  const s = getSlots()[level];
+  Object.assign(featUi, {slot:level, tab:s && s.asi ? 'asi' : 'feat', asi:s && s.asi ? {...s.asi} : {}, query:''});
+  featSection.open = true; featSection.render();
+  document.getElementById('feToggle').scrollIntoView({behavior:'smooth', block:'start'});
 }
-function removeFeat(name){
-  setFeats(getFeats().filter(n=>n!==name));
-  featSection.setPin(name, false);
-  featsChanged();
+function fillSlot(level, value){
+  const old = getSlots()[level];
+  if(old && old.feat) featSection.setPin(old.feat, false);
+  setSlot(level, value);
+  if(value && value.feat) featSection.setPin(value.feat, true);   // a feat you just picked is pinned, like picking a Fighting Style
+  resetFeatUi(); featsChanged();
+}
+function featPickerEl(level){
+  const cur = getSlots()[level], div = document.createElement('div');
+  div.className = 'feat-picker';
+  const tab = (k, label)=>`<button type="button" class="flow-btn${featUi.tab===k?' active':''}" data-feat-tab="${k}">${label}</button>`;
+  let html = `<div class="feat-tabs">${tab('asi','Ability Score Improvement')}${tab('feat','Feat')}</div>`;
+  if(featUi.tab==='asi'){
+    const used = Object.values(featUi.asi).reduce((a,b)=>a+b, 0);
+    html += `<p class="feat-help">+2 to one ability score, or +1 to two (no higher than 20). ${2 - used} point${2 - used === 1 ? '' : 's'} left; click a chosen ability again to take a point back.</p><div class="asi-grid">`
+      + Object.keys(ABILITY_FULL).map(a=>{ const n = featUi.asi[a] || 0;
+          return `<button type="button" class="flow-btn${n?' active':''}" data-asi="${a}">${a.toUpperCase()} ${abilityScore(a)}${n ? ` +${n}` : ''}</button>`; }).join('')
+      + `</div><p class="feat-help">Your sheet’s ability scores should already include this; Turnkeeper records the choice.</p>`
+      + `<div class="feat-actions"><button type="button" class="flow-btn" data-asi-save${used===2 ? '' : ' disabled'}>Save</button>`;
+  } else {
+    const taken = new Set(Object.entries(getSlots()).filter(([l])=>+l !== level).map(([,s])=>s.feat).filter(Boolean));
+    html += `<input type="search" class="feat-search" placeholder="Search feats" value="${escapeHtml(featUi.query)}" aria-label="Search feats"><div class="feat-opts">`
+      + FEATS.map(f=>{
+          const unmet = f.meets && !f.meets(), on = cur && cur.feat===f.name;
+          return `<button type="button" class="feat-opt${on?' active':''}" data-pick-feat="${escapeHtml(f.name)}" data-search="${escapeHtml(f.name.toLowerCase())}"${taken.has(f.name) ? ' disabled title="Already taken at another level"' : ''}>`
+            + `<span class="rt-name">${f.name}</span>${TYPE_LABELS[f.type] ? ` <span class="ft-type ft-${f.type}">${TYPE_LABELS[f.type]}</span>` : ''}`
+            + (f.prereq ? ` <span class="feat-prereq${unmet ? ' unmet' : ''}">(Prerequisite: ${f.prereq}${unmet ? '; your sheet’s score is lower' : ''})</span>` : '')
+            + `<span class="rt-desc"> &mdash; ${f.desc}</span></button>`;
+        }).join('') + `</div><div class="feat-actions">`;
+  }
+  if(featUi.slot !== null) html += `<button type="button" class="sel-toggle" data-feat-cancel>Cancel</button>`;
+  if(featUi.slot !== null && cur) html += `<button type="button" class="sel-toggle" data-feat-clear>Clear this level</button>`;
+  div.innerHTML = html + `</div>`;
+  div.querySelectorAll('[data-feat-tab]').forEach(b=>b.addEventListener('click', ()=>{ featUi.slot = level; featUi.tab = b.dataset.featTab; featSection.render(); }));
+  div.querySelectorAll('[data-asi]').forEach(b=>b.addEventListener('click', ()=>{
+    const a = b.dataset.asi, used = Object.values(featUi.asi).reduce((x,y)=>x+y, 0);
+    featUi.slot = level;
+    if(used < 2) featUi.asi[a] = (featUi.asi[a]||0) + 1;
+    else if(featUi.asi[a]){ featUi.asi[a] -= 1; if(!featUi.asi[a]) delete featUi.asi[a]; }
+    featSection.render();
+  }));
+  const save = div.querySelector('[data-asi-save]');
+  if(save) save.addEventListener('click', ()=>fillSlot(level, {asi:{...featUi.asi}}));
+  div.querySelectorAll('[data-pick-feat]').forEach(b=>b.addEventListener('click', ()=>fillSlot(level, {feat:b.dataset.pickFeat})));
+  const search = div.querySelector('.feat-search');
+  if(search){
+    const filter = ()=>{ const q = search.value.trim().toLowerCase(); featUi.query = search.value;
+      div.querySelectorAll('.feat-opt').forEach(o=>{ o.hidden = !!q && !o.dataset.search.includes(q); }); };
+    search.addEventListener('input', filter); filter();
+  }
+  const cancel = div.querySelector('[data-feat-cancel]');
+  if(cancel) cancel.addEventListener('click', ()=>{ resetFeatUi(); featSection.render(); });
+  const clear = div.querySelector('[data-feat-clear]');
+  if(clear) clear.addEventListener('click', ()=>fillSlot(level, null));
+  return div;
+}
+// Expanded Feats section: "Level 4" and that level's choice, a divider, "Level 8"…
+function renderFeatSlots(section, list){
+  if(!currentCharId){ list.innerHTML = `<div class="empty-note">Import a sheet to choose feats.</div>`; return; }
+  const slots = getSlots(), lvl = charLevel();
+  const editing = featUi.slot !== null ? featUi.slot : openFeatSlots().find(l=>!slots[l]);
+  featSlotLevels().forEach(l=>{
+    const s = slots[l], wrap = document.createElement('div');
+    wrap.className = 'feat-slot';
+    wrap.innerHTML = `<div class="feat-slot-head">Level ${l}${l > lvl ? ' <span class="rt-lvl">(not reached yet)</span>' : ''}</div>`;
+    if(l > lvl){
+      wrap.classList.add('rt-locked');
+      wrap.insertAdjacentHTML('beforeend', `<div class="feat-slot-empty">${s ? escapeHtml(s.feat || `Ability Score Improvement: ${asiText(s.asi)}`) : 'Ability Score Improvement or a feat.'}</div>`);
+    } else if(l === editing){
+      wrap.appendChild(featPickerEl(l));
+    } else if(s && s.feat && FEAT_BY_NAME[s.feat]){
+      wrap.appendChild(featureRow(section, FEAT_BY_NAME[s.feat], true));
+    } else if(s && s.asi){
+      wrap.insertAdjacentHTML('beforeend', `<div class="rt-row"><div><span class="rt-name">Ability Score Improvement:</span> <span class="rt-desc">${asiText(s.asi)}</span> <button type="button" class="sel-toggle feat-change" data-feat-change="${l}">Change</button></div></div>`);
+    } else {
+      wrap.insertAdjacentHTML('beforeend', `<div class="feat-slot-empty">Not chosen yet. <button type="button" class="sel-toggle feat-change" data-feat-change="${l}">Choose</button></div>`);
+    }
+    list.appendChild(wrap);
+  });
+  list.querySelectorAll('[data-feat-change]').forEach(b=>b.addEventListener('click', e=>{ e.preventDefault(); e.stopPropagation(); openFeatPicker(+b.dataset.featChange); }));
 }
 const featSection = makePinSection({
   prefix:'fe', store:'featPin',
   items: featItems,
-  emptyText: ()=>currentCharId ? 'No feats added yet. Pick one above.' : 'Import a sheet to add feats.',
-  beforeList: ()=>{
-    const sel = document.getElementById('featAdd'), have = new Set(getFeats());
-    sel.disabled = !currentCharId;
-    sel.innerHTML = `<option value="">— choose —</option>` + FEATS.filter(f=>!have.has(f.name))
-      .map(f=>`<option value="${escapeHtml(f.name)}">${f.name}${f.prereq ? ` (needs ${f.prereq})` : ''}</option>`).join('');
-  },
+  emptyText: ()=>'',
+  renderList: renderFeatSlots,
 });
-document.getElementById('featAdd').addEventListener('change', e=>{ const n = e.target.value; e.target.value = ''; if(n) addFeat(n); });
 
 // Senses / Passive Perc.: 10 + Perception modifier from the sheet, +5 with Observant
 let basePassive = null;

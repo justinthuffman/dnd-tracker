@@ -6,9 +6,13 @@ Rules follow D&D 5e (2014), checked against [dnd5e.wikidot.com](https://dnd5e.wi
 ## Unreleased
 
 ### Added
-- **Feats section** below Class Features, with all 42 Player's Handbook feats. Add your
-  character's feats from the dropdown (prerequisites are shown, and flagged if your sheet's
-  score is too low); tick to pin them like other features, or Remove them. Saved per character.
+- **Feats section** below Class Features, laid out by level: at each Ability Score
+  Improvement level (4, 8, 12, 16 and 19; Fighters also get 6 and 14, Rogues 10) choose
+  **+2 ability score points** (+2 to one score or +1 to two) or **a feat** from all 42
+  Player's Handbook feats, each shown with its description and prerequisite (flagged if your
+  sheet's score is too low). Levels fill in order, and an empty level you've reached shows at
+  the top of Character Summary until you choose, like Fighting Style. Click **Change** to swap
+  a choice. Feats pin like other features, and everything is saved per character.
   - **Great Weapon Master** (heavy melee weapons) and **Sharpshooter** (ranged weapons): a
     "−5 to hit / +10 damage" toggle in the Attack step, before you roll.
   - **Savage Attacker:** a toggle in the attack popup that rolls the weapon dice twice and
