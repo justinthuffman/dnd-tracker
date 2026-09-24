@@ -3,7 +3,7 @@
 What's new in Turnkeeper, the Crisis in Waterdeep character tracker, newest first.
 Rules follow D&D 5e (2014), checked against [dnd5e.wikidot.com](https://dnd5e.wikidot.com).
 
-## Unreleased (in progress)
+## 2026-09-24 — Wizard, Bard, PHB-only spells and Backup
 
 ### Added
 - **Wizard class features** (all eight PHB schools). The Arcane Tradition choice shows in the
