@@ -151,6 +151,17 @@ button.sel-toggle:empty{display:none;}
 .weapon-row:last-child{border-bottom:none;}
 .weapon-row .wname{color:var(--ink); font-weight:600;}
 .weapon-row .wdmg{color:var(--ink-dim); font-size:0.82rem;}
+/* Build box (permanent choices) */
+.build-box{margin:0 0 14px; display:flex; flex-direction:column; gap:10px;}
+.build-pending{border:1px solid var(--orange); background:rgba(217,123,63,0.1); border-radius:6px; padding:10px 12px;}
+.build-title{font-size:0.72rem; text-transform:uppercase; letter-spacing:0.06em; color:var(--orange-bright); margin-bottom:6px;}
+.build-row{display:flex; flex-wrap:wrap; align-items:center; gap:6px 8px; padding:3px 0;}
+.build-row button.flow-btn{padding:5px 10px; font-size:0.82rem;}
+.build-label{font-size:0.82rem; color:var(--ink-dim); margin-right:2px;}
+.build-made{display:flex; flex-wrap:wrap; align-items:center; gap:6px;}
+button.build-tag{background:var(--panel2); border:1px solid var(--sea-dim); color:var(--ink); border-radius:999px; padding:3px 12px; font-size:0.8rem;}
+button.build-tag:hover{background:var(--panel2); border-color:var(--sea);}
+
 /* Resources panel */
 .rest-btns{display:flex; gap:8px;}
 .rest-btns button{padding:6px 12px; font-size:0.82rem;}
@@ -279,6 +290,7 @@ footer{text-align:center; color:var(--ink-dim); font-size:0.75rem; margin-top:30
 <!-- CHARACTER SUMMARY -->
 <div class="panel">
   <div class="panel-head"><h2>Character Summary</h2><button type="button" class="sel-toggle" id="masterSelAll" title="Pin or unpin everything: traits, features, saving throws, skills and attacks"></button></div>
+  <div id="buildBox" class="build-box" hidden></div>
   <div class="summary-grid">
     <div class="field name wide"><label>Character Name</label><input id="f_name" type="text" readonly></div>
     <div class="field"><label>Level</label><input id="f_level" type="text" readonly></div>
@@ -1687,11 +1699,14 @@ function closeDetail(){
 let dashActive = false;
 function updateMoveLine(){
   const n = parseInt(document.getElementById('f_speed').value,10), speed = isNaN(n) ? 30 : n;
-  const dashing = dashActive;
+  // Dash with your action and/or your bonus action (Rogue Cunning Action): each adds your speed
+  const bonusDash = typeof bonusDashActive !== 'undefined' && bonusDashActive;
+  const dashing = dashActive || bonusDash;
   const dashBtn = document.querySelector('.action-grid button[data-act="dash"]');
-  if(dashBtn && dashing) dashBtn.classList.add('active');
-  document.getElementById('moveFt').textContent = dashing ? speed*2 : speed;
-  document.getElementById('moveDash').textContent = dashing ? ` (${speed} + ${speed} from Dash)` : '';
+  if(dashBtn && dashActive) dashBtn.classList.add('active');
+  const parts = [dashActive ? `${speed} from Dash` : '', bonusDash ? `${speed} from Cunning Action` : ''].filter(Boolean);
+  document.getElementById('moveFt').textContent = speed * (1 + parts.length);
+  document.getElementById('moveDash').textContent = parts.length ? ` (${speed} + ${parts.join(' + ')})` : '';
   document.querySelector('.move-line').classList.toggle('dashing', dashing);
 }
 document.getElementById('actionButtons').addEventListener('click', e=>{
@@ -1773,7 +1788,16 @@ function renderCheckDetail(act){
 
 function hasFeature(name){ return classFeatureItems().some(t=>t.name===name && charLevel() >= t.level); }
 function skillMod(name){ const s = state.skills.find(x=>x.name===name); return s && typeof s.mod==='number' ? s.mod : 0; }
-function d20For(mode){ return mode==='adv' ? '2d20kh1' : mode==='dis' ? '2d20kl1' : '1d20'; }
+// minTen: Reliable Talent (a d20 roll of 9 or lower counts as 10) → Avrae's `mi10` on each die
+function d20For(mode, minTen){
+  const mi = minTen ? 'mi10' : '';
+  return mode==='adv' ? `2d20${mi}kh1` : mode==='dis' ? `2d20${mi}kl1` : `1d20${mi}`;
+}
+// Reliable Talent applies to ability checks you're proficient in
+function reliableFor(skill){
+  const s = state.skills.find(x=>x.name===skill);
+  return hasFeature('Reliable Talent') && !!(s && s.prof);
+}
 
 function renderAttackDetail(){
   const choices = attackChoices();
@@ -1807,7 +1831,7 @@ const ORDINAL = ['','1st','2nd','3rd','4th','5th'];
 
 function openRollPopup(sel, mode){
   hideTooltip();
-  Object.assign(rollState, {sel, mode, crit:false, smite:0, undead:false, alt:false, spendInfo:null, smiteSpent:null});
+  Object.assign(rollState, {sel, mode, crit:false, smite:0, undead:false, alt:false, sneak:false, spendInfo:null, smiteSpent:null});
   // Using a spell slot, racial use or feature charge is tracked as soon as the popup opens
   let id = null, desc = '';
   if(sel.kind==='spell' && sel.entry.sp.level > 0){
@@ -1839,8 +1863,8 @@ function toHitCommand(){
     const bonus = parseInt(String(sel.attack.bonus||'0').replace(/\s/g,''),10) || 0;
     return {cmd:`!r ${d20For(mode)}${fmtMod(bonus)}`, desc:`${sel.attack.name} attack`};
   }
-  if(sel.kind==='check') return {cmd:`!r ${d20For(mode)}${fmtMod(skillMod(sel.skill))}`, desc:`${sel.label} (${sel.skill})`};
-  return {cmd:`!r ${d20For(mode)}${fmtMod(skillMod('Athletics'))}`, desc:`${MANEUVERS[sel.kind].label} (Athletics)`};
+  if(sel.kind==='check') return {cmd:`!r ${d20For(mode, reliableFor(sel.skill))}${fmtMod(skillMod(sel.skill))}`, desc:`${sel.label} (${sel.skill})`};
+  return {cmd:`!r ${d20For(mode, reliableFor('Athletics'))}${fmtMod(skillMod('Athletics'))}`, desc:`${MANEUVERS[sel.kind].label} (Athletics)`};
 }
 // Damage command plus a list of what's included, following the 2014 rules
 function damageCommand(){
@@ -1851,6 +1875,7 @@ function damageCommand(){
   const style = hasFeature('Fighting Style') ? getChoice('Fighting Style') : '';
   const notes = [];
   // Great Weapon Fighting: reroll 1s and 2s once, melee weapon held in two hands
+  if(hasFeature('Fighting Style') && !style) notes.push('No Fighting Style picked yet: choose one at the top of Character Summary.');
   const gwf = style==='Great Weapon Fighting' && melee && twoHanded;
   if(gwf) notes.push('Great Weapon Fighting: 1s and 2s on the weapon dice are rerolled once');
   // Dueling: +2 damage with a melee weapon in one hand and no other weapons (so never off-hand)
@@ -1868,14 +1893,19 @@ function damageCommand(){
   }
   if(melee && hasFeature('Improved Divine Smite')){ radiant += 1; notes.push('Improved Divine Smite: +1d8 radiant'); }
   radiant *= rollState.crit ? 2 : 1;
+  // Sneak Attack: finesse or ranged weapon, once per turn; chosen after the hit, doubled on a crit
+  const sneakOk = hasFeature('Sneak Attack') && (/finesse/i.test(p.props) || /ranged/i.test(p.props));
+  const sneakDice = Math.ceil(charLevel()/2);
+  let sneak = 0;
+  if(sneakOk && rollState.sneak){ sneak = sneakDice * (rollState.crit ? 2 : 1); notes.push(`Sneak Attack: +${sneakDice}d6${rollState.crit ? ' (doubled for the crit)' : ''}. Once per turn.`); }
   // Two-Weapon Fighting: the off-hand attack adds no ability modifier to damage unless it's negative.
   // (Assumes the sheet's damage modifier is the ability modifier; a magic weapon bonus would also be dropped.)
   let mod = p.mod + (dueling ? 2 : 0);
   if(offhand){ mod = Math.min(p.mod, 0); notes.push('Two-Weapon Fighting: no ability modifier on off-hand damage (unless negative)'); }
   const types = [p.type, radiant ? 'radiant' : ''].filter(Boolean).join(' + ');
-  const cmd = `!r ${count}d${p.die}${gwf?'ro<3':''}${mod ? fmtMod(mod) : ''}${radiant ? `+${radiant}d8` : ''}`;
+  const cmd = `!r ${count}d${p.die}${gwf?'ro<3':''}${mod ? fmtMod(mod) : ''}${sneak ? `+${sneak}d6` : ''}${radiant ? `+${radiant}d8` : ''}`;
   const desc = `${a.name} damage${types ? ` (${types})` : ''}`;
-  return {cmd, desc, notes, melee};
+  return {cmd, desc, notes, melee, sneakOk, sneakDice};
 }
 
 // Only the Avrae command goes in the box (and gets copied); the description sits beside it
@@ -1962,7 +1992,7 @@ function spellPopupHtml(){
 
 function featurePopupHtml(){
   const t = rollState.sel.feature;
-  const casting = SPELLCASTING[cf.classKey];
+  const casting = castingFor();
   const dc = casting ? spellStats(casting.ability).dc : null;
   let html = `<p class="roll-intro">${t.desc}</p>`;
   if(/^Channel Divinity/.test(t.name)) html += `<p class="roll-intro">Uses your Channel Divinity (once per short or long rest).</p>`;
@@ -2002,7 +2032,9 @@ function renderRollPopup(){
       html += `<div class="roll-box"><div class="roll-box-label">Damage</div><p class="empty-note">Couldn’t read this weapon’s damage from the sheet (“${escapeHtml(sel.attack.damage||'')}”).</p></div>`;
     } else {
       // Decided after seeing the to-hit roll, per the rules: crit and Divine Smite
-      let toggles = `<div class="roll-after">After you see the roll:</div><div class="roll-toggles">${toggleBtn('data-crit','1','Crit',rollState.crit)}</div>`;
+      let toggles = `<div class="roll-after">After you see the roll:</div><div class="roll-toggles">${toggleBtn('data-crit','1','Crit',rollState.crit)}`
+        + (dmg.sneakOk ? toggleBtn('data-sneak','1',`Sneak Attack (+${dmg.sneakDice}d6)`,!!rollState.sneak) : '') + `</div>`;
+      if(dmg.sneakOk && !rollState.sneak) toggles += `<div class="roll-after">Sneak Attack needs advantage, or another enemy of the target within 5 ft of it (and no disadvantage). Once per turn.</div>`;
       const smiteLevels = castableSlotLevels(1);
       if(dmg.melee && hasFeature('Divine Smite') && smiteLevels.length){
         // Picking a slot level spends that slot; changing it or picking None gives it back
@@ -2027,6 +2059,7 @@ rollPopup.addEventListener('click', e=>{
   if(e.target===rollPopup || e.target.closest('.roll-close')){ closeRollPopup(); return; }
   const t = e.target.closest('button'); if(!t) return;
   if(t.dataset.crit){ rollState.crit = !rollState.crit; renderRollPopup(); }
+  else if(t.dataset.sneak){ rollState.sneak = !rollState.sneak; renderRollPopup(); }
   else if(t.dataset.smite !== undefined){
     const lvl = +t.dataset.smite;
     if(rollState.smiteSpent){ spend(rollState.smiteSpent, -1); rollState.smiteSpent = null; }
@@ -2117,7 +2150,7 @@ function maxSlotLevel(){
 }
 function castableSpells(){
   const listKey = document.getElementById('spellClassSelect').value;
-  const listAbility = (SPELLCASTING[cf.classKey] || SPELLCASTING[listKey] || {ability:'int'}).ability;
+  const listAbility = (castingFor() || SPELLCASTING[listKey] || {ability:'int'}).ability;
   const entries = [], seen = new Set();
   alwaysPreparedSpells().filter(x=>charLevel() >= x.unlock).forEach(x=>{
     if(seen.has(x.sp.name)) return; seen.add(x.sp.name);
@@ -2202,7 +2235,7 @@ function renderCastDetail(){
 /* ---------- Bonus Action Options flow: same path as the Action buttons ----------
    Two-Weapon Fighting (off-hand light melee weapon → roll mode → Roll), bonus-action class
    features (→ Use) and bonus-action spells (→ slot → Cast). */
-const bonusFlow = {pick:null, weapon:null, mode:'normal'};
+const bonusFlow = {pick:null, weapon:null, mode:'normal', cunning:null, cmode:'normal'};
 const isBonusSpell = sp=>/Bonus Action/i.test(sp.time);
 // Two-Weapon Fighting needs a light melee weapon in the off hand
 function lightMeleeWeapons(){
@@ -2237,6 +2270,8 @@ function renderBonusDetail(){
           + `</div><div class="flow-go"><button type="button" id="flowRoll">Roll</button></div>`;
       }
     }
+  } else if(pick==='f:Cunning Action'){
+    html += cunningStepHtml(feats.find(t=>t.name==='Cunning Action'));
   } else if(pick && pick.startsWith('f:')){
     html += featureStepHtml(feats.find(t=>'f:'+t.name===pick));
   } else if(pick && pick.startsWith('s:')){
@@ -2263,11 +2298,40 @@ function renderBonusDetail(){
       const a = state.attacks[bonusFlow.weapon];
       openRollPopup({kind:'weapon', label:`${a.name} (off-hand)`, attack:a, offhand:true}, bonusFlow.mode);
     });
+  } else if(pick==='f:Cunning Action'){
+    wireCunningStep();
   } else if(pick && pick.startsWith('f:')){
     wireFeatureStep(feats.find(t=>'f:'+t.name===pick));
   } else if(pick && pick.startsWith('s:')){
     wireSpellStep(spells.find(e=>'s:'+e.sp.name===pick), renderBonusDetail);
   }
+}
+
+// Rogue Cunning Action: the bonus action can only Dash, Disengage or Hide (one of them)
+let bonusDashActive = false;
+function cunningStepHtml(t){
+  const c = bonusFlow.cunning;
+  let html = `<div class="flow-summary">${t.desc}</div><div class="flow-label">Choose one</div><div class="flow-grid">`
+    + [['dash','Dash'],['disengage','Disengage'],['hide','Hide']].map(([k,l])=>`<button type="button" class="flow-btn${c===k?' active':''}" data-cunning="${k}">${l}</button>`).join('') + `</div>`;
+  if(c==='dash') html += `<div class="flow-summary">Your speed is added to your movement again (see "Move up to" above).</div>`;
+  if(c==='disengage') html += `<div class="flow-summary">Your movement doesn’t provoke opportunity attacks for the rest of the turn. No roll.</div>`;
+  if(c==='hide'){
+    html += `<div class="flow-summary">${CHECK_ACTIONS.hide.text}</div><div class="flow-label">Roll with</div><div class="flow-grid">`
+      + ROLL_MODES.map(([k,l])=>`<button type="button" class="flow-btn${bonusFlow.cmode===k?' active':''}" data-mode="${k}">${l}</button>`).join('')
+      + `</div><div class="flow-go"><button type="button" id="flowRoll">Roll</button></div>`;
+  }
+  return html;
+}
+function wireCunningStep(){
+  actionDetail.querySelectorAll('[data-cunning]').forEach(b=>b.addEventListener('click', ()=>{
+    const k = b.dataset.cunning;
+    bonusFlow.cunning = bonusFlow.cunning===k ? null : k;
+    bonusDashActive = bonusFlow.cunning==='dash';
+    updateMoveLine(); renderBonusDetail();
+  }));
+  actionDetail.querySelectorAll('[data-mode]').forEach(b=>b.addEventListener('click', ()=>{ bonusFlow.cmode = b.dataset.mode; renderBonusDetail(); }));
+  const go = document.getElementById('flowRoll');
+  if(go) go.addEventListener('click', ()=>openRollPopup({kind:'check', label:'Hide (Cunning Action)', skill:'Stealth'}, bonusFlow.cmode));
 }
 
 
@@ -2627,7 +2691,8 @@ async function runImport(){
     attackFlow.choice = null; attackFlow.mode = 'normal';
     checkFlow.act = null;
     castFlow.name = null; featureFlow.name = null;
-    bonusFlow.pick = null; bonusFlow.weapon = null; bonusFlow.mode = 'normal';
+    bonusFlow.pick = null; bonusFlow.weapon = null; bonusFlow.mode = 'normal'; bonusFlow.cunning = null; bonusFlow.cmode = 'normal';
+    bonusDashActive = false;
     // Prepared spells belong to the previous character (they aren't saved yet; see NOTES backlog)
     if(sheetId !== lastImportedId) state.preparedSpells.clear();
     lastImportedId = sheetId;
@@ -2785,8 +2850,49 @@ const CLASS_FEATURES = {
       ],
     },
   },
+  // Rogue (2014 PHB), checked on dnd5e.wikidot.com
+  rogue: {
+    subclassLabel: 'Roguish Archetype', subclassLevel: 3,
+    base: [
+      {level:1, name:'Expertise', desc:'Double your proficiency bonus for two skill proficiencies (or one skill and thieves’ tools); two more at level 6. Your sheet’s skill modifiers already include it.'},
+      {level:1, name:'Sneak Attack', desc:'Once per turn, deal extra damage (1d6, rising every odd level to 10d6) when you hit with a finesse or ranged weapon, if you have advantage, or if another enemy of the target is within 5 ft of it (not incapacitated) and you don’t have disadvantage. Pick it in the attack popup after you hit.'},
+      {level:1, name:'Thieves’ Cant', desc:'You know the secret mix of jargon, dialect and signs rogues use to hide messages.'},
+      {level:2, name:'Cunning Action', type:'bonus', desc:'On each of your turns, use your bonus action to Dash, Disengage or Hide.'},
+      {level:4, name:'Ability Score Improvement', desc:'At levels 4, 8, 10, 12, 16 and 19: raise one ability score by 2, or two scores by 1 each (max 20), or take a feat if your table allows it.'},
+      {level:5, name:'Uncanny Dodge', type:'reaction', desc:'When an attacker you can see hits you with an attack, use your reaction to halve the attack’s damage.'},
+      {level:7, name:'Evasion', desc:'When a Dexterity save would halve damage, you take none on a success and half on a failure.'},
+      {level:11, name:'Reliable Talent', desc:'On an ability check you’re proficient in, a d20 roll of 9 or lower counts as 10. Turnkeeper adds this to your check commands (1d20mi10).'},
+      {level:14, name:'Blindsense', desc:'While you can hear, you know where any hidden or invisible creature within 10 ft of you is.'},
+      {level:15, name:'Slippery Mind', desc:'You gain proficiency in Wisdom saving throws.'},
+      {level:18, name:'Elusive', desc:'No attack roll has advantage against you while you aren’t incapacitated.'},
+      {level:20, name:'Stroke of Luck', uses:{max:()=>1, recharge:'short'}, desc:'Turn a missed attack into a hit, or treat a failed ability check’s d20 as a 20. Once per short or long rest.'},
+    ],
+    subclasses: {
+      'Thief': [
+        {level:3, name:'Fast Hands', type:'bonus', desc:'Cunning Action can also make a Sleight of Hand check, use thieves’ tools to disarm a trap or open a lock, or take the Use an Object action.'},
+        {level:3, name:'Second-Story Work', desc:'Climbing costs no extra movement, and your running jumps go further by your Dexterity modifier in feet.'},
+        {level:9, name:'Supreme Sneak', desc:'Advantage on Stealth checks if you move no more than half your speed on the same turn.'},
+        {level:13, name:'Use Magic Device', desc:'Ignore all class, race and level requirements for using magic items.'},
+        {level:17, name:'Thief’s Reflexes', desc:'In the first round of combat, take two turns: one at your initiative and one at your initiative minus 10. Not while surprised.'},
+      ],
+      'Assassin': [
+        {level:3, name:'Bonus Proficiencies', desc:'Proficiency with the disguise kit and the poisoner’s kit.'},
+        {level:3, name:'Assassinate', desc:'Advantage on attacks against any creature that hasn’t taken a turn in the combat yet, and any hit against a surprised creature is a critical hit.', tip:'Pick Advantage when you Attack a creature that hasn’t acted yet, and Crit if it’s surprised.'},
+        {level:9, name:'Infiltration Expertise', desc:'Spend 7 days and 25 gp to build a false identity (history, profession, affiliations) that others accept.'},
+        {level:13, name:'Impostor', desc:'After 3 hours studying someone, mimic their speech, writing and behavior; advantage on Deception checks to avoid detection.'},
+        {level:17, name:'Death Strike', desc:'When you hit a surprised creature, it makes a Constitution save (DC 8 + your Dexterity modifier + proficiency bonus) or the attack’s damage is doubled.'},
+      ],
+      'Arcane Trickster': [
+        {level:3, name:'Spellcasting', desc:'Cast wizard spells using Intelligence. You know Mage Hand plus two other cantrips, and have your own spell slots (see Resources). Use the Wizard spell list in the Spells section.'},
+        {level:3, name:'Mage Hand Legerdemain', desc:'Your Mage Hand is invisible and can stow or take objects from containers, and pick locks or disarm traps at range.'},
+        {level:9, name:'Magical Ambush', desc:'If you’re hidden from a creature when you cast a spell on it, it has disadvantage on saves against that spell this turn.'},
+        {level:13, name:'Versatile Trickster', type:'bonus', desc:'Use your Mage Hand to distract a creature within 5 ft of it: you have advantage on attack rolls against that creature until the end of the turn.'},
+        {level:17, name:'Spell Thief', type:'reaction', uses:{max:()=>1, recharge:'long'}, desc:'When a creature casts a spell that targets you or includes you, force a save with its spellcasting ability against your spell save DC; on a failure you negate it and can cast it yourself for 8 hours. Once per long rest.'},
+      ],
+    },
+  },
 };
-const CLASS_NAMES = ['barbarian','bard','cleric','druid','fighter','monk','paladin','ranger','rogue','sorcerer','warlock','wizard'];
+const CLASS_NAMES =['barbarian','bard','cleric','druid','fighter','monk','paladin','ranger','rogue','sorcerer','warlock','wizard'];
 function classKeyFrom(cls){
   const c = (cls||'').toLowerCase();
   return CLASS_NAMES.find(k=>c.includes(k)) || null;
@@ -2882,6 +2988,58 @@ function setChoice(featureName, option){
   const k = choiceKey(featureName);
   choiceMem.set(k, option);
   storageSet(k, option || null);
+  renderBuild();
+}
+
+/* ---------- Build box: permanent choices that change rolls ----------
+   Choices still to make (a "pick one" feature or subclass the character has reached but not
+   picked) are highlighted with their options inline, so they can't be missed. Made choices
+   show as tags; clicking one reopens its options to change it. */
+const buildEditing = new Set();
+function buildChoices(){
+  const lvl = charLevel(), out = [];
+  const entry = CLASS_FEATURES[cf.classKey];
+  if(entry && lvl >= entry.subclassLevel){
+    out.push({key:'subclass', label:entry.subclassLabel, value:cf.subclass, options:Object.keys(entry.subclasses)});
+  }
+  classFeatureItems().filter(t=>t.choose && lvl >= t.level).forEach(t=>
+    out.push({key:'choice:'+t.name, label:t.name, value:getChoice(t.name), options:t.tiers.map(x=>x.name), feature:t}));
+  return out;
+}
+function renderBuild(){
+  const box = document.getElementById('buildBox'); if(!box) return;
+  const choices = currentCharId ? buildChoices() : [];
+  box.hidden = !choices.length;
+  if(!choices.length){ box.innerHTML = ''; return; }
+  const pending = choices.filter(c=>!c.value || buildEditing.has(c.key));
+  const made = choices.filter(c=>c.value && !buildEditing.has(c.key));
+  let html = '';
+  if(pending.length){
+    html += `<div class="build-pending">${pending.some(c=>!c.value) ? '<div class="build-title">Choices to make</div>' : ''}`
+      + pending.map(c=>`<div class="build-row"><span class="build-label">${c.label}:</span>`
+        + c.options.map(o=>`<button type="button" class="flow-btn${c.value===o?' active':''}" data-build="${escapeHtml(c.key)}" data-opt="${escapeHtml(o)}">${o}</button>`).join('')
+        + `</div>`).join('') + `</div>`;
+  }
+  if(made.length){
+    html += `<div class="build-made"><span class="build-label">Always on:</span>`
+      + made.map(c=>`<button type="button" class="build-tag" data-build-edit="${escapeHtml(c.key)}" title="Click to change">${c.feature ? `${c.label}: ` : ''}${c.value}</button>`).join('') + `</div>`;
+  }
+  box.innerHTML = html;
+  box.querySelectorAll('[data-build]').forEach(b=>b.addEventListener('click', ()=>{
+    const key = b.dataset.build, opt = b.dataset.opt;
+    buildEditing.delete(key);
+    if(key==='subclass'){
+      const sel = document.getElementById('cfSubclass');
+      if(sel){ sel.value = opt; sel.dispatchEvent(new Event('change')); }
+    } else {
+      const name = key.slice('choice:'.length);
+      setChoice(name, opt);
+      classSection.setPin(name, true);   // same as ticking it in Class Features
+      classSection.render();
+    }
+    renderBuild();
+  }));
+  box.querySelectorAll('[data-build-edit]').forEach(b=>b.addEventListener('click', ()=>{ buildEditing.add(b.dataset.buildEdit); renderBuild(); }));
 }
 
 const TYPE_LABELS = {action:'Action', bonus:'Bonus Action', reaction:'Reaction'};
@@ -3037,6 +3195,7 @@ document.getElementById('cfSubclass').addEventListener('change', e=>{
   classSection.render();
   updateFeaturesButton();
   renderResources();
+  renderBuild();
   if(spellBody.classList.contains('open')) renderSpellList();
 });
 function setupClassFeatures(clsText){
@@ -3047,6 +3206,8 @@ function setupClassFeatures(clsText){
   classSection.loadPins();
   classSection.render();
   updateFeaturesButton();
+  buildEditing.clear();
+  renderBuild();
 }
 
 /* ---------- Always-prepared spells (racial + class) ---------- */
@@ -3058,7 +3219,7 @@ function grantedSpells(source, features, defaultAbility){
   }))).filter(x=>x.sp);
 }
 function alwaysPreparedSpells(){
-  const classCasting = SPELLCASTING[cf.classKey];
+  const classCasting = castingFor();
   return [...grantedSpells('Racial', traitsForRace(rt.raceKey)),
           ...grantedSpells('Class', classFeatureItems(), classCasting && classCasting.ability)];
 }
@@ -3077,6 +3238,11 @@ const SPELLCASTING = {
   sorcerer:{ability:'cha', from:1}, warlock:{ability:'cha', from:1}, wizard:{ability:'int', from:1},
   paladin:{ability:'cha', from:2}, ranger:{ability:'wis', from:2},
 };
+// Subclasses that add spellcasting to a non-casting class (Eldritch Knight to come with Fighter)
+const SUBCLASS_CASTING = {'rogue|Arcane Trickster': {ability:'int', from:3}};
+function castingFor(){
+  return SPELLCASTING[cf.classKey] || SUBCLASS_CASTING[`${cf.classKey}|${cf.subclass}`] || null;
+}
 const ABILITY_FULL = {str:'Strength', dex:'Dexterity', con:'Constitution', int:'Intelligence', wis:'Wisdom', cha:'Charisma'};
 function proficiencyBonus(){ return 2 + Math.floor((Math.min(Math.max(charLevel(),1),20) - 1) / 4); }
 function spellStats(ability){
@@ -3084,7 +3250,7 @@ function spellStats(ability){
   return {dc: 8 + prof + mod, atk: prof + mod, mod, prof};
 }
 function updateSpellStats(){
-  const casting = SPELLCASTING[cf.classKey];
+  const casting = castingFor();
   const dcEl = document.getElementById('f_spelldc'), atkEl = document.getElementById('f_spellatk');
   const dcLabel = document.getElementById('l_spelldc'), atkLabel = document.getElementById('l_spellatk');
   if(!casting || charLevel() < casting.from){
@@ -3117,6 +3283,10 @@ function slotTable(){
   const l = Math.min(20, Math.max(1, charLevel())), k = cf.classKey;
   const rows = FULL_CASTERS.includes(k) ? FULL_SLOTS[l] : (k==='paladin' || k==='ranger') ? HALF_SLOTS[l] : null;
   if(rows) return rows.map((max,i)=>({level:i+1, max, recharge:'long', id:'slot'+(i+1)}));
+  if(k==='rogue' && cf.subclass==='Arcane Trickster'){ // third-caster table (2014)
+    const at = [null,null,null,[2],[3],[3],[3],[4,2],[4,2],[4,2],[4,3],[4,3],[4,3],[4,3,2],[4,3,2],[4,3,2],[4,3,3],[4,3,3],[4,3,3],[4,3,3,1],[4,3,3,1]][l];
+    return (at||[]).map((max,i)=>({level:i+1, max, recharge:'long', id:'slot'+(i+1)}));
+  }
   if(k==='warlock'){ // Pact Magic: all slots are one level and come back on a short rest
     const n = l>=17 ? 4 : l>=11 ? 3 : l>=2 ? 2 : 1;
     return [{level:Math.min(5, Math.ceil(l/2)), max:n, recharge:'short', id:'pact', pact:true}];

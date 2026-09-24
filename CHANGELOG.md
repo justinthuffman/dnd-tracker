@@ -3,6 +3,22 @@
 What's new in the Crisis in Waterdeep character tracker, newest first.
 Rules follow D&D 5e (2014), checked against [dnd5e.wikidot.com](https://dnd5e.wikidot.com).
 
+## 2026-09-24 — Build box and Rogue
+
+### Added
+- **Choices you can't miss.** A box at the top of Character Summary shows choices your
+  character still needs to make (e.g. Fighting Style) with the options right there. Once
+  picked, they show as "Always on" tags; click one to change it. The attack popup also warns
+  when a Fighting Style hasn't been picked.
+- **Rogue class features** (Thief, Assassin, Arcane Trickster):
+  - **Sneak Attack** in the attack popup for finesse and ranged weapons, chosen after you hit
+    (doubled on a crit).
+  - **Cunning Action** in Bonus Action Options: Dash (adds your speed again), Disengage, or
+    Hide (Stealth roll).
+  - **Reliable Talent** at level 11 adds `mi10` to proficient checks, so a roll of 9 or lower
+    counts as 10.
+  - Arcane Tricksters get Intelligence spellcasting and their own spell slots.
+
 ## 2026-09-24 — Turnkeeper and resource tracking
 
 ### Changed
