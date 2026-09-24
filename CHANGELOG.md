@@ -12,6 +12,9 @@ Rules follow D&D 5e (2014), checked against [dnd5e.wikidot.com](https://dnd5e.wi
   crimson and brass), **Daylight** (a light theme) and **Tome**, an old adventurer's book
   with parchment pages, deep red ink and book lettering. **Keep** is a medieval hall: oak
   panels in riveted iron frames on walnut planks, with brass headings and copper buttons.
+  **Inferno** is fire and brimstone: a lava glow with drifting embers, blood dripping from
+  charred-stone panels, a skull with glowing eyes on every heading, and blood-drop charges.
+  The embers hold still if your device is set to reduce motion.
 
 ## 2026-09-24 — Feats and ability score improvements
 
