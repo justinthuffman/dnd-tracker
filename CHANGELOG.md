@@ -3,6 +3,27 @@
 What's new in the Crisis in Waterdeep character tracker, newest first.
 Rules follow D&D 5e (2014), checked against [dnd5e.wikidot.com](https://dnd5e.wikidot.com).
 
+## 2026-09-24
+
+### Added
+- **Spell Save DC and Spell Attack** in the Character Summary, calculated from your class's
+  spellcasting ability, ability score and level. Hover over either number to see the math.
+  Shows "—" for classes that don't cast spells (and for Paladins before level 2).
+- **Pin skills and saving throws.** Click a skill or saving throw to pin it; it turns
+  orange. Pinned ones stay visible when their section is collapsed, and are saved per
+  character in your browser. Click again to unpin.
+- **Select all / Select none** in Racial Traits, Class Features, Saving Throws, Skills and
+  Spells. In Class Features, "Select all" only pins features you've reached at your
+  current level.
+- Racial and class spell tooltips now include that spell's save DC and attack bonus. For
+  example, a Drow wizard's Drow Magic spells use Charisma, not Intelligence.
+
+### Changed
+- Picking a Fighting Style now pins Fighting Style automatically. When pinned, it shows
+  as one line, e.g. "Fighting Style: Great Weapon Fighting — …".
+- Cast Prepared Spell no longer says "No spells prepared yet" when you have
+  always-prepared spells listed there.
+
 ## 2026-09-23
 
 ### Added
