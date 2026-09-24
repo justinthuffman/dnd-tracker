@@ -24,6 +24,14 @@ Rules follow D&D 5e (2014), checked against [dnd5e.wikidot.com](https://dnd5e.wi
   - **Healer**, **Grappler**, **Inspiring Leader** and **Polearm Master** give their rolls or
     numbers; bonus-action and action feats appear in the Combat Menu.
   - **Observant** adds +5 to Senses / Passive Perception.
+- **Ability Score Improvements and feats change your numbers.** The points you choose, and
+  the +1 from feats like Actor, Athlete or Resilient, are added to the ability scores shown
+  (in orange; hover for where they came from, capped at 20) and to everything worked out
+  from them: modifiers, skills, saving throws, weapon to-hit and damage, initiative, hit
+  points, passive Perception, spell save DC and spell attack. Resilient also makes you
+  proficient in that ability's saving throws, Alert adds +5 initiative, Mobile +10 ft speed
+  and Tough +2 hit points per level. Feats that let you pick the ability ask at the top of
+  Character Summary. Don't also add these on your sheet, or they'll count twice.
 
 ### Changed
 - The text beside a damage command now names everything the command includes, not just the
