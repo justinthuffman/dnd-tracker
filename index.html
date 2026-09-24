@@ -13,6 +13,63 @@
   --font-display: Georgia, 'Iowan Old Style', 'Palatino Linotype', serif;
   --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
+/* Color themes: the same looks as the tracker (picked there, saved in this browser under
+   dndTracker:theme). Keep these colors in step with the theme blocks in turnkeeper.html. */
+html[data-theme="midnight"]{--bg:#0f0d1a; --panel:#1a1730; --panel2:#252142; --border:#3b3563; --ink:#ece8f7; --ink-dim:#a49dc4; --sea:#b7a0f2; --sea-dim:#9a84dc; --orange:#c9962f;}
+html[data-theme="grove"]{--bg:#0e1712; --panel:#16241c; --panel2:#1f3327; --border:#30503c; --ink:#e8f0e3; --ink-dim:#9fb5a1; --sea:#9ccf6f; --sea-dim:#557f3d; --orange:#c47a35;}
+html[data-theme="ember"]{--bg:#151011; --panel:#221a1b; --panel2:#2f2425; --border:#4b3638; --ink:#f3eae7; --ink-dim:#b9a4a1; --sea:#d9a955; --sea-dim:#8a6630; --orange:#b8433a;}
+html[data-theme="daylight"]{--bg:#eef2f5; --panel:#ffffff; --panel2:#e7edf2; --border:#c3d0da; --ink:#1b2a36; --ink-dim:#5a6e7e; --sea:#1d7a6e; --sea-dim:#4aa597; --orange:#dd7d3e;}
+html[data-theme="tome"]{
+  --bg:#d8c39a; --panel:#f2e7cc; --panel2:#e7d7b2; --border:#b39b6d; --ink:#2b1c11; --ink-dim:#6b5237; --sea:#7d1a16; --sea-dim:#8a5a2b; --orange:#8e2a1e;
+  --font-display: 'Cinzel', 'Trajan Pro', 'Book Antiqua', Georgia, serif;
+  --font-body: 'EB Garamond', 'Palatino Linotype', 'Book Antiqua', Georgia, serif;
+}
+html[data-theme="tome"] body{background-image:radial-gradient(ellipse at 50% 0%, rgba(255,247,222,0.6), transparent 65%), radial-gradient(ellipse at 50% 100%, rgba(110,70,25,0.22), transparent 70%); background-attachment:fixed;}
+html[data-theme="tome"] h1{font-variant:small-caps; letter-spacing:0.08em; font-weight:600;}
+html[data-theme="tome"] .plaque{border-color:#8f7447; box-shadow:inset 0 0 0 3px var(--panel), inset 0 0 0 4px rgba(125,26,22,0.35), 0 2px 10px rgba(60,35,10,0.25);}
+html[data-theme="tome"] .plaque:hover{box-shadow:inset 0 0 0 3px var(--panel2), inset 0 0 0 4px rgba(125,26,22,0.5), 0 2px 10px rgba(60,35,10,0.3);}
+html[data-theme="keep"]{
+  --bg:#1e140c; --panel:#3a2515; --panel2:#46301c; --border:#56565c; --ink:#f0e4ca; --ink-dim:#bda98a; --sea:#d9ad56; --sea-dim:#8f6a2a; --orange:#a9572a;
+  --font-display: 'MedievalSharp', 'Cinzel', 'Book Antiqua', Georgia, serif;
+}
+html[data-theme="keep"] body{background-image:radial-gradient(ellipse at 50% 35%, transparent 35%, rgba(0,0,0,0.6) 100%), repeating-linear-gradient(90deg, rgba(0,0,0,0.45) 0 2px, rgba(255,210,150,0.04) 2px 3px, transparent 3px 170px), repeating-linear-gradient(0deg, rgba(255,215,160,0.03) 0 1px, transparent 1px 6px), linear-gradient(90deg, #21150c, #2b1b0f 50%, #21150c); background-attachment:fixed;}
+html[data-theme="keep"] h1{text-shadow:0 1px 0 rgba(0,0,0,0.85), 0 0 8px rgba(217,173,86,0.18);}
+html[data-theme="keep"] .plaque{
+  border:3px solid #4d4e54; border-radius:3px;
+  background-image:
+    radial-gradient(circle at 9px 9px, #e2ddd0 0 1.4px, #77746d 2.2px, #2b2a28 3.4px, transparent 4px),
+    radial-gradient(circle at calc(100% - 9px) 9px, #e2ddd0 0 1.4px, #77746d 2.2px, #2b2a28 3.4px, transparent 4px),
+    radial-gradient(circle at 9px calc(100% - 9px), #e2ddd0 0 1.4px, #77746d 2.2px, #2b2a28 3.4px, transparent 4px),
+    radial-gradient(circle at calc(100% - 9px) calc(100% - 9px), #e2ddd0 0 1.4px, #77746d 2.2px, #2b2a28 3.4px, transparent 4px),
+    repeating-linear-gradient(0deg, rgba(255,215,160,0.035) 0 1px, transparent 1px 5px);
+  box-shadow:inset 0 0 0 1px #8d8e94, inset 0 0 22px rgba(0,0,0,0.55), 0 5px 16px rgba(0,0,0,0.65);
+}
+html[data-theme="keep"] .plaque::before, html[data-theme="inferno"] .plaque::before{display:none;}
+html[data-theme="inferno"]{
+  --bg:#0a0505; --panel:#170c0b; --panel2:#231110; --border:#4d1812; --ink:#f0dfd3; --ink-dim:#ad8d82; --sea:#ff6a2a; --sea-dim:#a8360f; --orange:#8f1510;
+  --font-display: 'Pirata One', 'UnifrakturCook', 'Book Antiqua', Georgia, serif;
+}
+html[data-theme="inferno"] body{background-image:linear-gradient(to top, rgba(255,72,0,0.28), rgba(160,20,0,0.1) 30%, transparent 55%), radial-gradient(ellipse at 20% 110%, rgba(255,110,20,0.35), transparent 45%), radial-gradient(ellipse at 80% 115%, rgba(255,60,0,0.3), transparent 45%), radial-gradient(ellipse at 50% 0%, rgba(90,0,0,0.35), transparent 60%); background-attachment:fixed;}
+html[data-theme="inferno"] body::before{
+  content:''; position:fixed; inset:0; z-index:-1; pointer-events:none; opacity:0.75;
+  background-image:radial-gradient(circle at 20px 40px, rgba(255,170,60,0.9) 0 1.2px, transparent 2.5px), radial-gradient(circle at 150px 190px, rgba(255,110,30,0.8) 0 1.5px, transparent 3px), radial-gradient(circle at 240px 90px, rgba(255,200,90,0.7) 0 1px, transparent 2px), radial-gradient(circle at 90px 250px, rgba(255,90,20,0.8) 0 1.3px, transparent 2.6px);
+  background-size:300px 300px, 300px 300px, 300px 300px, 420px 420px;
+  animation:embersRise 18s linear infinite;
+}
+@keyframes embersRise{from{background-position:0 0, 0 0, 0 0, 0 0;} to{background-position:30px -300px, -20px -300px, 10px -300px, -40px -420px;}}
+@media (prefers-reduced-motion: reduce){ html[data-theme="inferno"] body::before{animation:none;} }
+html[data-theme="inferno"] h1{text-shadow:0 0 6px rgba(255,90,20,0.55), 0 0 18px rgba(200,20,0,0.35), 0 1px 0 #000; font-size:3rem;}
+html[data-theme="inferno"] .plaque{
+  border-color:#5a1a12; padding-top:30px;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 22' preserveAspectRatio='none'%3E%3Cpath fill='%237a0b08' d='M0 0H120V4C113 4 112 6 111 10C110 16 106 16 105 10C104 6 101 4 93 4C85 4 84 5 83 7C82 10 79 10 78 7C77 5 75 4 61 4C51 4 50 6 49 12C48 20 43 20 42 12C41 6 39 4 29 4C21 4 20 5 19 8C18 12 15 12 14 8C13 5 11 4 0 4Z'/%3E%3C/svg%3E"), radial-gradient(ellipse at 50% 120%, rgba(255,70,10,0.16), transparent 60%);
+  background-size:120px 16px, auto; background-repeat:repeat-x, no-repeat;
+  box-shadow:0 0 0 1px #1c0605, 0 0 22px rgba(255,60,10,0.16), inset 0 0 30px rgba(0,0,0,0.7);
+}
+html[data-theme="inferno"] .plaque:hover{box-shadow:0 0 0 1px #1c0605, 0 0 26px rgba(255,70,10,0.4), inset 0 0 30px rgba(0,0,0,0.7);}
+html[data-theme="inferno"] .plaque-name::before{
+  content:''; display:inline-block; width:0.9em; height:0.9em; margin-right:0.3em; vertical-align:-0.08em;
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23e2d3bd' d='M12 2C6.6 2 3 5.8 3 10.6c0 2.8 1.3 4.6 3 5.6V19a1 1 0 0 0 1 1h1.6v-2.2h1.6V20h3.6v-2.2h1.6V20H17a1 1 0 0 0 1-1v-2.8c1.7-1 3-2.8 3-5.6C21 5.8 17.4 2 12 2z'/%3E%3Ccircle cx='8.4' cy='11' r='2.4' fill='%23140404'/%3E%3Ccircle cx='15.6' cy='11' r='2.4' fill='%23140404'/%3E%3Ccircle cx='8.4' cy='11.2' r='0.9' fill='%23ff4a1a'/%3E%3Ccircle cx='15.6' cy='11.2' r='0.9' fill='%23ff4a1a'/%3E%3Cpath d='M12 13.4l-1.4 2.7h2.8z' fill='%23140404'/%3E%3C/svg%3E") center/contain no-repeat;
+}
 *{box-sizing:border-box;}
 html{-webkit-text-size-adjust:100%;}
 body{
@@ -62,6 +119,26 @@ h1{
 }
 footer{margin-top:56px; font-size:0.75rem; color:var(--ink-dim); text-align:center;}
 </style>
+<script>
+// Use the theme picked in the tracker (same browser storage). If it changes in a tracker tab
+// while this page is open, follow it straight away.
+const THEME_FONTS = {
+  tome: 'https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap',
+  keep: 'https://fonts.googleapis.com/css2?family=MedievalSharp&display=swap',
+  inferno: 'https://fonts.googleapis.com/css2?family=Pirata+One&display=swap',
+};
+function applyTheme(key){
+  const root = document.documentElement;
+  if(key && key !== 'harbor') root.setAttribute('data-theme', key); else root.removeAttribute('data-theme');
+  if(THEME_FONTS[key] && !document.getElementById('font-'+key)){
+    const l = document.createElement('link');
+    l.id = 'font-'+key; l.rel = 'stylesheet'; l.href = THEME_FONTS[key];
+    document.head.appendChild(l);
+  }
+}
+try{ applyTheme(localStorage.getItem('dndTracker:theme')); }catch(e){}
+window.addEventListener('storage', e=>{ if(e.key === 'dndTracker:theme') applyTheme(e.newValue); });
+</script>
 </head>
 <body>
 
