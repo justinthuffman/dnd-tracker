@@ -3,6 +3,15 @@
 What's new in Turnkeeper, the Crisis in Waterdeep character tracker, newest first.
 Rules follow D&D 5e (2014), checked against [dnd5e.wikidot.com](https://dnd5e.wikidot.com).
 
+## Unreleased
+
+### Added
+- **Color themes.** Swatches at the bottom of the page switch the look; your pick is saved in
+  your browser. **Harbor** (the original look) stays the default. The others are
+  **Midnight** (violet and gold), **Grove** (forest green and amber), **Ember** (charcoal,
+  crimson and brass), **Daylight** (a light theme) and **Tome**, an old adventurer's book
+  with parchment pages, deep red ink and book lettering.
+
 ## 2026-09-24 — Feats and ability score improvements
 
 ### Added

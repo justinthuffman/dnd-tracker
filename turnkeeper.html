@@ -11,9 +11,69 @@
   --ink:#e4edf2; --ink-dim:#8fa6b8; --sea:#4fb8a6; --sea-dim:#2f7d70;
   --orange:#d97b3f; --orange-bright:#ea9257; --green:#6fbf8a;
   --act-action:#d9654f; --act-bonus:#d9b34f; --act-ritual:#9b7fc4; --racial:#6aa6e0;
+  --danger:#e0574f; --on-accent:#e4edf2; --tooltip-bg:#081420; --backdrop:rgba(4,10,16,0.65);
+  --orange-tint:rgba(217,123,63,0.22); --orange-wash:rgba(217,123,63,0.09);
   --font-display: Georgia, 'Iowan Old Style', 'Palatino Linotype', serif;
   --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
+/* Color themes, picked with the swatches at the bottom of the page (saved per browser).
+   The :root colors above are the default look, "Harbor". Each theme only swaps variables,
+   except Tome, which also adds parchment texture, book fonts and a ruled panel border. */
+html[data-theme="midnight"]{
+  --bg:#0f0d1a; --panel:#1a1730; --panel2:#252142; --border:#3b3563;
+  --ink:#ece8f7; --ink-dim:#a49dc4; --sea:#b7a0f2; --sea-dim:#9a84dc;
+  --orange:#c9962f; --orange-bright:#ddab45; --green:#7fcf9a;
+  --act-action:#ef7a6a; --act-bonus:#e8c45a; --act-ritual:#c49cf0; --racial:#7fb4f2;
+  --danger:#f06a6a; --on-accent:#16121f; --tooltip-bg:#0a0914; --backdrop:rgba(6,4,14,0.7);
+  --orange-tint:rgba(201,150,47,0.22); --orange-wash:rgba(201,150,47,0.09);
+}
+html[data-theme="grove"]{
+  --bg:#0e1712; --panel:#16241c; --panel2:#1f3327; --border:#30503c;
+  --ink:#e8f0e3; --ink-dim:#9fb5a1; --sea:#9ccf6f; --sea-dim:#557f3d;
+  --orange:#c47a35; --orange-bright:#d8914b; --green:#6fc0a0;
+  --act-action:#e0765a; --act-bonus:#e2bf55; --act-ritual:#b096d6; --racial:#7fb2d9;
+  --danger:#e8634f; --on-accent:#f1f5ee; --tooltip-bg:#09110c; --backdrop:rgba(4,10,6,0.7);
+  --orange-tint:rgba(196,122,53,0.22); --orange-wash:rgba(196,122,53,0.09);
+}
+html[data-theme="ember"]{
+  --bg:#151011; --panel:#221a1b; --panel2:#2f2425; --border:#4b3638;
+  --ink:#f3eae7; --ink-dim:#b9a4a1; --sea:#d9a955; --sea-dim:#8a6630;
+  --orange:#b8433a; --orange-bright:#cf5a4f; --green:#8ec98a;
+  --act-action:#ef8062; --act-bonus:#e6c35c; --act-ritual:#c19be0; --racial:#86b6e6;
+  --danger:#ff6b5e; --on-accent:#f7eeeb; --tooltip-bg:#0e0a0b; --backdrop:rgba(10,4,4,0.7);
+  --orange-tint:rgba(184,67,58,0.25); --orange-wash:rgba(184,67,58,0.1);
+}
+html[data-theme="daylight"]{
+  --bg:#eef2f5; --panel:#ffffff; --panel2:#e7edf2; --border:#c3d0da;
+  --ink:#1b2a36; --ink-dim:#5a6e7e; --sea:#1d7a6e; --sea-dim:#4aa597;
+  --orange:#dd7d3e; --orange-bright:#e9935a; --green:#2e8b57;
+  --act-action:#c0462f; --act-bonus:#9a7408; --act-ritual:#6f4fae; --racial:#2c6fb3;
+  --danger:#c83a30; --on-accent:#1b2a36; --tooltip-bg:#ffffff; --backdrop:rgba(20,32,44,0.45);
+  --orange-tint:rgba(221,125,62,0.2); --orange-wash:rgba(221,125,62,0.08);
+}
+/* Tome: an old adventurer's book. Parchment pages, deep red ink, a leather-brown accent. */
+html[data-theme="tome"]{
+  --bg:#d8c39a; --panel:#f2e7cc; --panel2:#e7d7b2; --border:#b39b6d;
+  --ink:#2b1c11; --ink-dim:#6b5237; --sea:#7d1a16; --sea-dim:#8a5a2b;
+  --orange:#8e2a1e; --orange-bright:#a8392a; --green:#3f6a2e;
+  --act-action:#a8341f; --act-bonus:#85600c; --act-ritual:#5a3a8a; --racial:#2c5a86;
+  --danger:#a3201a; --on-accent:#f7ecd2; --tooltip-bg:#f8efd9; --backdrop:rgba(43,28,17,0.55);
+  --orange-tint:rgba(142,42,30,0.16); --orange-wash:rgba(142,42,30,0.07);
+  --font-display: 'Cinzel', 'Trajan Pro', 'Book Antiqua', Georgia, serif;
+  --font-body: 'EB Garamond', 'Palatino Linotype', 'Book Antiqua', Georgia, serif;
+  font-size:106%;
+}
+html[data-theme="tome"] body{
+  background-image:radial-gradient(ellipse at 50% 0%, rgba(255,247,222,0.6), transparent 65%),
+    radial-gradient(ellipse at 50% 100%, rgba(110,70,25,0.22), transparent 70%);
+  background-attachment:fixed;
+}
+html[data-theme="tome"] .panel{border-color:#8f7447; box-shadow:inset 0 0 0 3px var(--panel), inset 0 0 0 4px rgba(125,26,22,0.35), 0 2px 10px rgba(60,35,10,0.25);}
+html[data-theme="tome"] .panel h2, html[data-theme="tome"] header.top h1{font-variant:small-caps; letter-spacing:0.08em; font-weight:600;}
+html[data-theme="tome"] header.top{border-bottom:3px double #8f7447;}
+html[data-theme="tome"] input, html[data-theme="tome"] select, html[data-theme="tome"] textarea{font-family:var(--font-body);}
+html[data-theme="tome"] .field input{font-size:1.02rem;}
+html[data-theme="tome"] .roll-popup{box-shadow:inset 0 0 0 3px var(--panel), inset 0 0 0 4px rgba(125,26,22,0.35), 0 12px 40px rgba(40,24,10,0.45);}
 *{box-sizing:border-box;}
 body{
   margin:0; background:var(--bg); color:var(--ink); font-family:var(--font-body);
@@ -33,14 +93,14 @@ header.top h1.brand{display:flex; align-items:center; gap:10px;}
 .import-row{display:flex; gap:8px; flex-wrap:wrap; align-items:center;}
 .import-row input[type=text]{flex:1; min-width:220px; background:var(--panel2); border:1px solid var(--border); color:var(--ink); padding:9px 10px; border-radius:4px; font-size:0.9rem;}
 button{
-  background:var(--orange); color:var(--ink); border:1px solid var(--orange-bright);
+  background:var(--orange); color:var(--on-accent); border:1px solid var(--orange-bright);
   padding:9px 14px; border-radius:4px; cursor:pointer; font-size:0.9rem; font-family:var(--font-body);
 }
 button:hover{background:var(--orange-bright);}
 button.ghost{background:transparent; border:1px solid var(--border); color:var(--ink-dim);}
 button.ghost:hover{color:var(--ink); border-color:var(--sea-dim);}
 .status{font-size:0.8rem; color:var(--ink-dim); margin-top:6px;}
-.status.err{color:#e0574f;}
+.status.err{color:var(--danger);}
 .status.ok{color:var(--green);}
 
 /* Character summary */
@@ -66,7 +126,7 @@ button.ghost:hover{color:var(--ink); border-color:var(--sea-dim);}
 .chip-dim{opacity:0.4;}
 .chip-pinnable{cursor:pointer; user-select:none;}
 .chip-pinnable:hover{border-color:var(--sea-dim);}
-.chip.chip-pinned{color:var(--ink); border-color:var(--orange); background:rgba(217,123,63,0.22);}
+.chip.chip-pinned{color:var(--ink); border-color:var(--orange); background:var(--orange-tint);}
 /* Pinned but not proficient: orange, dimmed the same way as unpinned non-proficient chips */
 .chip.chip-pinned.chip-dim{opacity:0.4;}
 .pinned-chips:empty{display:none;}
@@ -121,7 +181,7 @@ button.feat-change{font-size:0.78rem; margin-left:4px;}
 .feat-slot .rt-row{border-bottom:none; padding-top:2px;}
 .feat-slot-head{font-size:0.72rem; text-transform:uppercase; letter-spacing:0.06em; color:var(--sea); margin-bottom:2px;}
 .feat-slot-empty{font-size:0.85rem; color:var(--ink-dim); padding:2px;}
-.feat-picker{border:1px solid var(--orange); background:rgba(217,123,63,0.08); border-radius:6px; padding:8px 10px; margin-top:4px;}
+.feat-picker{border:1px solid var(--orange); background:var(--orange-wash); border-radius:6px; padding:8px 10px; margin-top:4px;}
 .feat-tabs, .asi-grid{display:flex; flex-wrap:wrap; gap:6px; margin-bottom:8px;}
 .feat-tabs .flow-btn, .asi-grid .flow-btn{padding:5px 10px; font-size:0.82rem;}
 .feat-help{font-size:0.8rem; color:var(--ink-dim); margin:0 0 8px;}
@@ -129,7 +189,7 @@ button.feat-change{font-size:0.78rem; margin-left:4px;}
 .feat-opts{max-height:380px; overflow-y:auto; display:flex; flex-direction:column; gap:4px; padding-right:2px;}
 button.feat-opt{display:block; width:100%; text-align:left; background:var(--panel2); border:1px solid var(--border); color:var(--ink-dim); padding:6px 10px; font-size:0.82rem; line-height:1.4;}
 button.feat-opt:hover{background:var(--panel2); border-color:var(--orange);}
-button.feat-opt.active{border-color:var(--orange); background:rgba(217,123,63,0.22);}
+button.feat-opt.active{border-color:var(--orange); background:var(--orange-tint);}
 button.feat-opt:disabled{opacity:0.4; cursor:default; border-color:var(--border);}
 button.feat-opt[hidden]{display:none;}
 .feat-actions{display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; align-items:center;}
@@ -177,7 +237,7 @@ button.feat-opt[hidden]{display:none;}
 .weapon-row .wdmg{color:var(--ink-dim); font-size:0.82rem;}
 /* Build box (permanent choices) */
 .build-box{margin:0 0 14px; display:flex; flex-direction:column; gap:10px;}
-.build-pending{border:1px solid var(--orange); background:rgba(217,123,63,0.1); border-radius:6px; padding:10px 12px;}
+.build-pending{border:1px solid var(--orange); background:var(--orange-wash); border-radius:6px; padding:10px 12px;}
 .build-title{font-size:0.72rem; text-transform:uppercase; letter-spacing:0.06em; color:var(--orange-bright); margin-bottom:6px;}
 .build-row{display:flex; flex-wrap:wrap; align-items:center; gap:6px 8px; padding:3px 0;}
 .build-row button.flow-btn{padding:5px 10px; font-size:0.82rem;}
@@ -195,7 +255,7 @@ button.build-tag:hover{background:var(--panel2); border-color:var(--sea);}
 .res-label{font-size:0.72rem; text-transform:uppercase; letter-spacing:0.06em; color:var(--ink-dim);}
 #hpNow{font-family:var(--font-display); font-size:1.6rem; color:var(--sea);}
 #hpNow.hp-low{color:var(--orange-bright);}
-#hpNow.hp-zero{color:#e0574f;}
+#hpNow.hp-zero{color:var(--danger);}
 .hp-max{color:var(--ink-dim); font-size:1rem;}
 .hp-adjust{display:flex; flex-wrap:wrap; align-items:center; gap:8px;}
 .hp-adjust input{width:64px; background:var(--panel2); border:1px solid var(--border); color:var(--ink); padding:7px 8px; border-radius:4px; font-size:0.95rem;}
@@ -219,16 +279,16 @@ button.pip:hover{border-color:var(--ink);}
 .backup button.chip-btn{background:var(--panel2); border:1px solid var(--border); border-radius:999px; color:var(--ink); padding:4px 14px; font-size:0.8rem; transition:background .15s ease, border-color .15s ease;}
 .backup button.chip-btn:hover{background:var(--panel2); border-color:var(--sea-dim);}
 .backup button.chip-btn:active,
-.backup button.chip-btn.on{background:rgba(217,123,63,0.22); border-color:var(--orange); color:var(--ink);}
+.backup button.chip-btn.on{background:var(--orange-tint); border-color:var(--orange); color:var(--ink);}
 .backup .slide-inner > *{margin-bottom:8px;}
 #clipBox{width:100%; background:var(--panel2); border:1px solid var(--border); color:var(--ink); border-radius:4px; padding:8px; font-family:ui-monospace, Consolas, monospace; font-size:0.78rem; resize:vertical;}
 .backup-msg{font-size:0.8rem; color:var(--green);}
-.backup-msg.err{color:#e0574f;}
+.backup-msg.err{color:var(--danger);}
 .clip-panel{display:flex; flex-direction:column; gap:8px;}
 .clip-panel[hidden]{display:none;}
 .restore-actions{display:flex; flex-wrap:wrap; align-items:center; gap:10px;}
 .spent-line{font-size:0.82rem; color:var(--ink-dim); margin:8px 0 0; padding:6px 10px; border-left:3px solid var(--sea-dim); background:var(--panel2); border-radius:3px;}
-.spent-line.warn{border-left-color:#e0574f; color:var(--ink);}
+.spent-line.warn{border-left-color:var(--danger); color:var(--ink);}
 .spent-line button.sel-toggle{margin-left:6px;}
 
 /* Attack flow (V2) */
@@ -241,7 +301,7 @@ button.flow-btn.active{background:var(--sea-dim); border-color:var(--sea);}
 #flowRoll{min-width:130px; font-weight:600;}
 
 /* Roll popup */
-.roll-backdrop{position:fixed; inset:0; z-index:60; background:rgba(4,10,16,0.65); display:flex; align-items:center; justify-content:center; padding:16px; opacity:0; transition:opacity .2s ease;}
+.roll-backdrop{position:fixed; inset:0; z-index:60; background:var(--backdrop); display:flex; align-items:center; justify-content:center; padding:16px; opacity:0; transition:opacity .2s ease;}
 .roll-backdrop[hidden]{display:none;}
 .roll-backdrop.open{opacity:1;}
 .roll-popup{background:var(--panel); border:1px solid var(--border); border-radius:8px; width:min(540px,100%); max-height:90vh; overflow:auto; padding:14px 16px 16px; box-shadow:0 12px 40px rgba(0,0,0,0.45); transform:translateY(8px); transition:transform .2s ease;}
@@ -308,7 +368,7 @@ button.flow-btn .src-tag{color:var(--ink); border-color:rgba(255,255,255,0.6);}
 
 /* Tooltip */
 #tooltip{
-  position:fixed; z-index:999; max-width:min(280px, calc(100vw - 28px)); background:#081420; border:1px solid var(--sea-dim);
+  position:fixed; z-index:999; max-width:min(280px, calc(100vw - 28px)); background:var(--tooltip-bg); border:1px solid var(--sea-dim);
   color:var(--ink); font-size:0.8rem; padding:10px 12px; border-radius:6px; box-shadow:0 6px 20px rgba(0,0,0,.5);
   display:none; pointer-events:none;
 }
@@ -317,7 +377,26 @@ button.flow-btn .src-tag{color:var(--ink); border-color:rgba(255,255,255,0.6);}
 #tooltip a{color:var(--sea); pointer-events:auto;}
 
 footer{text-align:center; color:var(--ink-dim); font-size:0.75rem; margin-top:30px;}
+.theme-bar{display:flex; justify-content:center; align-items:center; gap:8px; margin-top:14px; font-size:0.75rem; color:var(--ink-dim);}
+button.theme-swatch{width:22px; height:22px; padding:0; border-radius:50%; border:2px solid var(--border); cursor:pointer; background-clip:padding-box;}
+button.theme-swatch:hover{border-color:var(--ink-dim);}
+button.theme-swatch[aria-pressed="true"]{border-color:var(--ink); box-shadow:0 0 0 2px var(--bg), 0 0 0 3px var(--ink);}
 </style>
+<script>
+// Apply the saved color theme before the page draws (no flash of the default look).
+// Tome loads its book fonts from Google Fonts only when it's picked.
+function applyTheme(key){
+  const root = document.documentElement;
+  if(key && key !== 'harbor') root.setAttribute('data-theme', key); else root.removeAttribute('data-theme');
+  if(key === 'tome' && !document.getElementById('tomeFonts')){
+    const l = document.createElement('link');
+    l.id = 'tomeFonts'; l.rel = 'stylesheet';
+    l.href = 'https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap';
+    document.head.appendChild(l);
+  }
+}
+try{ applyTheme(localStorage.getItem('dndTracker:theme')); }catch(e){}
+</script>
 </head>
 <body>
 <div class="wrap">
@@ -508,6 +587,7 @@ footer{text-align:center; color:var(--ink-dim); font-size:0.75rem; margin-top:30
 </div>
 
 <footer>Spell lists sourced from the "core" class lists at dnd5e.wikidot.com. Hover details are brief paraphrased summaries, not the original text &mdash; use the linked page for full rules text.</footer>
+<div class="theme-bar" id="themeBar" role="group" aria-label="Color theme"><span id="themeName">Theme</span></div>
 
 <!-- IMPORT (moved to bottom, collapsed and de-emphasized) -->
 <div style="margin-top:22px; padding-top:14px; border-top:1px solid var(--border);">
@@ -3893,6 +3973,33 @@ document.querySelectorAll('.collapsible').forEach(wrap=>{
 
 renderChips('savesChips', []); renderChips('skillsChips', []); renderAttacksList();
 racialSection.render(); classSection.render(); featSection.render();
+
+/* ---------- Color themes: swatches at the bottom of the page ----------
+   The saved theme is applied by the small script in <head> before the page draws; this
+   builds the swatches. Each swatch shows that theme's background and accent colors. */
+const THEMES = [
+  {key:'harbor', name:'Harbor', bg:'#13293d', accent:'#4fb8a6'},
+  {key:'midnight', name:'Midnight', bg:'#1a1730', accent:'#c9962f'},
+  {key:'grove', name:'Grove', bg:'#16241c', accent:'#9ccf6f'},
+  {key:'ember', name:'Ember', bg:'#221a1b', accent:'#b8433a'},
+  {key:'daylight', name:'Daylight', bg:'#ffffff', accent:'#1d7a6e'},
+  {key:'tome', name:'Tome', bg:'#f2e7cc', accent:'#7d1a16'},
+];
+function setTheme(key){
+  const t = THEMES.find(x=>x.key===key) || THEMES[0];
+  applyTheme(t.key);
+  storageSet('dndTracker:theme', t.key==='harbor' ? null : t.key);
+  renderThemeBar();
+}
+function renderThemeBar(){
+  const bar = document.getElementById('themeBar');
+  const cur = document.documentElement.getAttribute('data-theme') || 'harbor';
+  const t = THEMES.find(x=>x.key===cur) || THEMES[0];
+  bar.innerHTML = `<span>Theme: ${t.name}</span>` + THEMES.map(x=>
+    `<button type="button" class="theme-swatch" data-theme-pick="${x.key}" aria-pressed="${x.key===t.key}" title="${x.name}" aria-label="${x.name} theme" style="background:linear-gradient(135deg, ${x.bg} 50%, ${x.accent} 50%);"></button>`).join('');
+  bar.querySelectorAll('[data-theme-pick]').forEach(b=>b.addEventListener('click', ()=>setTheme(b.dataset.themePick)));
+}
+renderThemeBar();
 
 /* ---------- Auto-import when opened with ?sheet=<url>&name=<name> ---------- */
 (async function(){
