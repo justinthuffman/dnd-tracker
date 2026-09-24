@@ -162,11 +162,12 @@ since touch devices have no real hover state to naturally close one.
 - A Reaction slot in the Combat Menu (for reaction spells like Hellish Rebuke and
   reaction features like Soul of Vengeance)
 - Equipment/inventory and currency import (the sheet has this data; not pulled in yet)
-- More persistence. Only trait/feature pins, the chosen subclass and Fighting Style are
-  saved so far.
-  Remembering prepared spells in localStorage is the likely next step (the sheet's spell
-  section is free text and inconsistent between players); revisit once pinning has been
-  tried in a real session.
+- **Save prepared spells. Justin asked for this on 2026-09-23.** The Spells section's tick
+  boxes (`state.preparedSpells`) currently reset when the tab closes. Save them in
+  localStorage the same way as pins: per character (sheet ID), with the
+  `storageGet`/`storageSet` try/catch helpers. The sheet's spell section is free text and
+  inconsistent between players, so a local copy is the practical option. Only trait/feature
+  pins, the chosen subclass and Fighting Style are saved so far.
 - **Class Features for the other classes. Next up; Justin asked for this on 2026-09-23.**
   Only Paladin is filled in, so Bel (Bard), Ezlo (Wizard) and Venthor (Rogue) see "not
   added yet". Do the party's classes first, same structure as Paladin: base features to
