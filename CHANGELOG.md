@@ -34,6 +34,9 @@ Rules follow D&D 5e (2014), checked against [dnd5e.wikidot.com](https://dnd5e.wi
   Character Summary. Don't also add these on your sheet, or they'll count twice.
 
 ### Changed
+- Choices for levels your character hasn't reached are cleared when the sheet loads. For
+  example, if your sheet goes back from level 13 to 2, the feats or ability points chosen at
+  levels 4 and 8, and a subclass chosen at level 3, are removed.
 - The text beside a damage command now names everything the command includes, not just the
   damage type, e.g. "Greatsword damage (slashing), +10 Great Weapon Master, +2d8 Divine
   Smite (radiant)". Covers Dueling, Great Weapon Fighting, Savage Attacks, Savage Attacker,

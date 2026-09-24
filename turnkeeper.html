@@ -3208,11 +3208,27 @@ document.getElementById('cfSubclass').addEventListener('change', e=>{
   renderBuild();
   if(spellBody.classList.contains('open')) renderSpellList();
 });
+// Choices made for levels the character hasn't reached are deleted when the sheet is loaded
+// (Justin, 2026-09-24: e.g. level 13 then back to 2 drops the level 8 feat): the subclass,
+// "pick one" class features (Fighting Style), and feat levels with their own picks.
+function dropChoicesAboveLevel(){
+  const lvl = charLevel(), entry = CLASS_FEATURES[cf.classKey];
+  if(entry && cf.subclass && lvl < entry.subclassLevel){ cf.subclass = ''; storageSet(subclassStoreKey(), null); }
+  if(entry) [...entry.base, ...Object.values(entry.subclasses).flat()]
+    .filter(t=>t.choose && t.level > lvl && getChoice(t.name)).forEach(t=>setChoice(t.name, ''));
+  const slots = getSlots();
+  Object.keys(slots).filter(l=>+l > lvl).forEach(l=>{
+    const f = slots[l].feat;
+    if(f){ featSection.setPin(f, false); setChoice(f, ''); setChoice(f+' ability', ''); }
+    setSlot(l, null);
+  });
+}
 function setupClassFeatures(clsText){
   cf.classKey = classKeyFrom(clsText);
   const entry = CLASS_FEATURES[cf.classKey];
   const saved = storageGet(subclassStoreKey());
   cf.subclass = entry && saved && entry.subclasses[saved] ? saved : subclassFromText(cf.classKey, clsText);
+  dropChoicesAboveLevel();
   classSection.loadPins();
   classSection.render();
   updateFeaturesButton();
