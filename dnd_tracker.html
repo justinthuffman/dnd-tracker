@@ -10,7 +10,7 @@
   --bg:#0c1b26; --panel:#13293d; --panel2:#1b3750; --border:#2b4d68;
   --ink:#e4edf2; --ink-dim:#8fa6b8; --sea:#4fb8a6; --sea-dim:#2f7d70;
   --orange:#d97b3f; --orange-bright:#ea9257; --green:#6fbf8a;
-  --act-action:#d9654f; --act-bonus:#d9b34f; --act-ritual:#9b7fc4;
+  --act-action:#d9654f; --act-bonus:#d9b34f; --act-ritual:#9b7fc4; --racial:#6aa6e0;
   --font-display: Georgia, 'Iowan Old Style', 'Palatino Linotype', serif;
   --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
@@ -23,7 +23,6 @@ h1,h2,h3{font-family:var(--font-display); font-weight:normal; margin:0;}
 .wrap{max-width:900px; margin:0 auto;}
 header.top{display:flex; align-items:baseline; justify-content:space-between; gap:12px; margin-bottom:18px; border-bottom:1px solid var(--border); padding-bottom:14px;}
 header.top h1{font-size:1.7rem; letter-spacing:0.02em; color:var(--sea);}
-header.top .tag{color:var(--ink-dim); font-size:0.85rem;}
 
 .panel{background:var(--panel); border:1px solid var(--border); border-radius:6px; padding:16px 18px; margin-bottom:18px;}
 .panel h2{font-size:1.1rem; color:var(--sea); margin-bottom:12px; letter-spacing:0.02em;}
@@ -64,6 +63,42 @@ button.ghost:hover{color:var(--ink); border-color:var(--sea-dim);}
 .subhead{font-size:0.75rem; text-transform:uppercase; letter-spacing:0.06em; color:var(--sea-dim); margin-top:14px; margin-bottom:4px;}
 .attacks-list{font-size:0.85rem; color:var(--ink-dim);}
 .attacks-list div{padding:2px 0;}
+
+/* Racial traits */
+.racial{margin-top:14px;}
+.rt-toggle{cursor:pointer; display:inline-flex; align-items:center; gap:6px; user-select:none;}
+.rt-toggle .arrow{transition:transform .15s; color:var(--sea-dim); font-size:0.8rem;}
+.rt-toggle.open .arrow{transform:rotate(90deg);}
+.rt-hint{font-size:0.78rem; color:var(--ink-dim); font-style:italic; margin-top:2px;}
+.rt-body{display:none; margin-top:6px;}
+.rt-body.open{display:block;}
+.rt-note{font-size:0.8rem; color:var(--ink-dim); margin:0 0 6px;}
+.rt-row{display:flex; gap:8px; align-items:flex-start; padding:5px 2px; border-bottom:1px solid var(--border); font-size:0.85rem;}
+.rt-row:last-child{border-bottom:none;}
+.rt-row input[type=checkbox]{accent-color:var(--orange); margin-top:3px; flex:0 0 auto;}
+.rt-name{color:var(--ink); font-weight:600;}
+.rt-desc{color:var(--ink-dim);}
+.rt-sub{list-style:none; margin:4px 0 0; padding:0 0 0 14px; border-left:2px solid var(--border); color:var(--ink-dim);}
+.rt-sub li{padding:2px 0 2px 8px;}
+.rt-subname{color:var(--ink);}
+.rt-subname.has-tip{cursor:default; border-bottom:1px dotted currentColor;}
+.src-tag{display:inline-block; font-size:0.62rem; text-transform:uppercase; letter-spacing:0.05em; border:1px solid currentColor; border-radius:999px; padding:0 6px; margin-left:6px; line-height:1.5; vertical-align:middle;}
+.src-racial{color:var(--racial);}
+.src-class{color:var(--green);}
+.ft-type{font-size:0.72rem; font-weight:600;}
+.ft-action{color:var(--act-action);}
+.ft-bonus{color:var(--act-bonus);}
+.ft-reaction{color:var(--ink);}
+.cf-subclass{font-size:0.82rem; color:var(--ink-dim); margin:0 0 8px; display:flex; flex-wrap:wrap; gap:6px; align-items:center;}
+.cf-subclass select{background:var(--panel2); border:1px solid var(--border); color:var(--ink); padding:4px 6px; border-radius:4px;}
+.spell-locked{opacity:0.45;}
+.rspell-note{font-size:0.75rem; color:var(--ink-dim); margin-left:6px;}
+.rt-lvl{font-size:0.75rem;}
+.rt-locked{opacity:0.45;}
+.rt-unchosen{opacity:0.55;}
+.rt-choice{display:flex; gap:6px; align-items:flex-start; cursor:pointer;}
+.rt-choice input{accent-color:var(--orange); margin-top:3px; flex:0 0 auto;}
+#rtPinned .rt-row{padding-left:0;}
 
 /* Combat menu */
 .turn-note{font-size:0.82rem; color:var(--ink-dim); font-style:italic; margin:0 0 12px;}
@@ -137,7 +172,6 @@ footer{text-align:center; color:var(--ink-dim); font-size:0.75rem; margin-top:30
 
 <header class="top">
   <h1>Character Tracker</h1>
-  <span class="tag">offline &middot; nothing is saved between sessions</span>
 </header>
 
 <!-- CHARACTER SUMMARY -->
@@ -164,14 +198,46 @@ footer{text-align:center; color:var(--ink-dim); font-size:0.75rem; margin-top:30
     <div class="stat-box"><div class="abbr">CHA</div><input id="s_cha" type="text" value="10" readonly><div class="mod" id="m_cha">+0</div></div>
   </div>
 
-  <div class="subhead">Saving Throw Proficiencies</div>
-  <div class="chips" id="savesChips"><span class="empty-note">none yet</span></div>
+  <div class="racial">
+    <div class="rt-toggle" id="rtToggle" role="button" tabindex="0" aria-expanded="false"><span class="arrow">&#9656;</span><span class="subhead" style="margin:0;">Racial Traits</span></div>
+    <div class="rt-hint" id="rtHint">Expand to see full list of racial traits.</div>
+    <div id="rtPinned"></div>
+    <div class="rt-body" id="rtBody">
+      <p class="rt-note">Tick a box to pin a trait to your character sheet.</p>
+      <div id="rtList"></div>
+    </div>
+  </div>
 
-  <div class="subhead">Skill Proficiencies</div>
-  <div class="chips" id="skillsChips"><span class="empty-note">none yet</span></div>
+  <div class="racial">
+    <div class="rt-toggle" id="cfToggle" role="button" tabindex="0" aria-expanded="false"><span class="arrow">&#9656;</span><span class="subhead" style="margin:0;">Class Features</span></div>
+    <div class="rt-hint" id="cfHint">Expand to see full list of class features.</div>
+    <div id="cfPinned"></div>
+    <div class="rt-body" id="cfBody">
+      <p class="rt-note">Tick a box to pin a feature to your character sheet.</p>
+      <div class="cf-subclass" id="cfSubclassWrap" style="display:none;">
+        <span id="cfSubclassLabel">Subclass:</span> <select id="cfSubclass"></select> <span class="rt-lvl" id="cfSubclassNote"></span>
+      </div>
+      <div id="cfList"></div>
+    </div>
+  </div>
 
-  <div class="subhead">Attacks</div>
-  <div class="attacks-list" id="attacksList"><div class="empty-note">none yet</div></div>
+  <div class="racial collapsible">
+    <div class="rt-toggle" role="button" tabindex="0" aria-expanded="false"><span class="arrow">&#9656;</span><span class="subhead" style="margin:0;">Saving Throw Proficiencies</span></div>
+    <div class="rt-hint">Expand to see saving throw proficiencies.</div>
+    <div class="rt-body"><div class="chips" id="savesChips"><span class="empty-note">none yet</span></div></div>
+  </div>
+
+  <div class="racial collapsible">
+    <div class="rt-toggle" role="button" tabindex="0" aria-expanded="false"><span class="arrow">&#9656;</span><span class="subhead" style="margin:0;">Skill Proficiencies</span></div>
+    <div class="rt-hint">Expand to see skill proficiencies.</div>
+    <div class="rt-body"><div class="chips" id="skillsChips"><span class="empty-note">none yet</span></div></div>
+  </div>
+
+  <div class="racial collapsible">
+    <div class="rt-toggle" role="button" tabindex="0" aria-expanded="false"><span class="arrow">&#9656;</span><span class="subhead" style="margin:0;">Attacks</span></div>
+    <div class="rt-hint">Expand to see attacks.</div>
+    <div class="rt-body"><div class="attacks-list" id="attacksList"><div class="empty-note">none yet</div></div></div>
+  </div>
 </div>
 
 <!-- COMBAT MENU -->
@@ -184,6 +250,7 @@ footer{text-align:center; color:var(--ink-dim); font-size:0.75rem; margin-top:30
   <div class="action-grid" id="actionButtons">
     <button data-act="attack">Attack</button>
     <button data-act="spell">Cast Prepared Spell</button>
+    <button data-act="features" id="featuresBtn" style="display:none;">Class Features</button>
     <button data-act="dash">Dash</button>
     <button data-act="disengage">Disengage</button>
     <button data-act="dodge">Dodge</button>
@@ -221,6 +288,8 @@ footer{text-align:center; color:var(--ink-dim); font-size:0.75rem; margin-top:30
       <span class="legend-item"><span class="dot" style="background:var(--act-bonus);"></span>Bonus Action</span>
       <span class="legend-item"><span class="dot" style="background:var(--act-ritual);"></span>Ritual</span>
       <span class="legend-item">Plain text = Reaction or a longer casting time (Minutes/Hours)</span>
+      <span class="legend-item"><span class="src-tag src-racial" style="margin-left:0;">Racial</span>From your race; always prepared</span>
+      <span class="legend-item"><span class="src-tag src-class" style="margin-left:0;">Class</span>From your class or subclass; always prepared</span>
     </div>
     <p class="prep-hint">Tick the box next to each spell you have prepared. Checked spells appear under <b>Cast Prepared Spell</b> in the Combat Menu.</p>
     <div id="spellListArea"></div>
@@ -790,7 +859,8 @@ const BARD_RAW = `0|Blade Ward|Abjuration|1 Action|Self|1 round|V, S
 const RITUAL_SPELLS = new Set(['Alarm','Comprehend Languages','Detect Magic','Find Familiar','Identify','Illusory Script',
   "Tenser's Floating Disk",'Unseen Servant','Gentle Repose','Magic Mouth','Skywrite','Wristpocket','Feign Death',
   "Leomund's Tiny Hut",'Phantom Steed','Water Breathing',"Drawmij's Instant Summons",'Ceremony','Detect Poison and Disease',
-  'Purify Food and Drink','Speak with Animals','Animal Messenger','Locate Animals or Plants']);
+  'Purify Food and Drink','Speak with Animals','Animal Messenger','Locate Animals or Plants',
+  'Commune','Commune with Nature']);
 
 const DESCRIPTIONS_RAW = `Acid Splash::Ranged spray of acid; one or two creatures make a Dex save or take acid damage.
 Blade Ward::Self-buff granting resistance to bludgeoning, piercing, and slashing weapon damage until your next turn.
@@ -1174,6 +1244,18 @@ Compulsion::Force a charmed creature to move in a direction you choose each of y
 Animal Friendship::Convince a beast it has nothing to fear from you, calming it for the duration.
 Bane::Up to three creatures subtract a d4 from attack rolls and saving throws for the duration.
 Faerie Fire::Outline creatures in an area with light, granting attackers advantage and negating invisibility.
+Thaumaturgy::Produce a minor wonder, like a booming voice, flickering flames, tremors, sounds, doors flung open or changed eyes. Up to three 1-minute effects at once.
+Hellish Rebuke::When a creature you can see within 60 ft damages you, it makes a Dex save: 2d10 fire on a failure, half on a success (+1d10 per slot level above 1st).
+Sanctuary::Ward a creature so anyone targeting it with an attack or harmful spell must pass a Wis save or pick a new target. Ends if the warded creature attacks or casts a spell affecting an enemy.
+Ensnaring Strike::Your next weapon hit makes thorny vines grab the target: Str save or restrained, taking 1d6 piercing at the start of each of its turns (+1d6 per slot level above 1st).
+Hunter's Mark::Mark a creature: your weapon hits deal +1d6 damage to it and you have advantage on Perception and Survival checks to find it. Move the mark if it drops to 0 HP.
+Moonbeam::A 5 ft radius, 40 ft high beam of silvery light; creatures entering or starting their turn in it make a Con save or take 2d10 radiant (half on a success). Move it as an action.
+Beacon of Hope::Any number of creatures in range get advantage on Wisdom saves and death saves, and regain the maximum possible from any healing.
+Guardian of Faith::A spectral guardian occupies a space nearby. Hostile creatures moving within 10 ft make a Dex save or take 20 radiant (half on a success); it vanishes after dealing 60 damage.
+Commune::Contact your deity and ask up to three yes-or-no questions before the spell ends.
+Commune with Nature::Learn up to three facts about the surrounding land within 3 miles (300 ft underground), such as terrain, water, plants, animals or creatures.
+Flame Strike::A 10 ft radius, 40 ft high column of divine fire: Dex save or take 4d6 fire + 4d6 radiant (half on a success).
+Tree Stride::Step into a tree and out of another of the same kind within 500 ft, once per turn, for the duration.
 Healing Word::A word of power heals a creature at range without needing to touch it.
 Calm Emotions::Suppress strong emotion in an area, quelling hostility or removing charm/fear effects.
 Enhance Ability::Grant a creature advantage on checks with one chosen ability score.
@@ -1225,6 +1307,27 @@ const SPELL_DATA = {
   bard: parseSpells(BARD_RAW),
   rogue: []
 };
+// Racial spells that aren't on any class list above (checked against dnd5e.wikidot.com)
+const RACIAL_SPELL_RAW = `0|Thaumaturgy|Transmutation|1 Action|30 feet|Up to 1 minute|V
+1|Hellish Rebuke|Evocation|1 Reaction|60 feet|Instantaneous|V, S
+1|Sanctuary|Abjuration|1 Bonus Action|30 feet|1 minute|V, S, M
+1|Ensnaring Strike|Conjuration|1 Bonus Action|Self|Concentration, up to 1 minute|V
+1|Hunter's Mark|Divination|1 Bonus Action|90 feet|Concentration, up to 1 hour|V
+2|Moonbeam|Evocation|1 Action|120 feet|Concentration, up to 1 minute|V, S, M
+3|Beacon of Hope|Abjuration|1 Action|30 feet|Concentration, up to 1 minute|V, S
+4|Guardian of Faith|Conjuration|1 Action|30 feet|8 hours|V
+5|Commune|Divination|1 Minute|Self|1 minute|V, S, M
+5|Commune with Nature|Divination|1 Minute|Self|Instantaneous|V, S
+5|Flame Strike|Evocation|1 Action|60 feet|Instantaneous|V, S, M
+5|Tree Stride|Conjuration|1 Action|Self|Concentration, up to 1 minute|V, S`;
+const EXTRA_SPELLS = parseSpells(RACIAL_SPELL_RAW);
+function findSpell(name){
+  for(const list of [...Object.values(SPELL_DATA), EXTRA_SPELLS]){
+    const sp = list.find(s=>s.name===name);
+    if(sp) return sp;
+  }
+  return null;
+}
 function slugify(name){
   return name.toLowerCase().replace(/'/g,'').replace(/[:,]/g,'').replace(/\//g,'-')
     .replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');
@@ -1346,6 +1449,7 @@ document.getElementById('actionButtons').addEventListener('click', e=>{
   const act = btn.dataset.act;
   if(act==='attack') renderAttackDetail();
   else if(act==='spell') renderCastDetail();
+  else if(act==='features') renderFeatureActionDetail();
   else showDetail(`<h4>${btn.textContent}</h4><p>${ACTION_TEXT[act]}</p>`);
 });
 document.querySelector('.action-grid button[data-act="bonus"]').addEventListener('click', renderBonusDetail);
@@ -1367,15 +1471,60 @@ function renderAttackDetail(){
   showDetail(html);
 }
 
-function renderSpellLineList(spells, dimPredicate){
+// Class features usable right now with the given action type ('action' | 'bonus')
+function usableFeatures(type){
+  return classFeatureItems().filter(t=>t.type===type && charLevel() >= t.level);
+}
+// Feature lines look and behave like spell lines: colored by action type, Class tag,
+// hover tooltip, click for the full description
+function featureLineList(features){
+  return `<div class="prepared-list">` + features.map(t=>
+    `<div class="spell-line act-${t.type}" data-feature="${t.name}">${t.name} <span style="color:var(--ink-dim); font-size:0.8rem;">(Class Feature)</span>${sourceTag('Class')}</div>`
+  ).join('') + `</div>`;
+}
+function featureMeta(t){
+  return `Class feature (level ${t.level})${TYPE_LABELS[t.type] ? ' &middot; ' + TYPE_LABELS[t.type] : ''}`;
+}
+function showFeatureTooltip(e, t){
+  tooltip.innerHTML = `<b>${t.name}</b><div class="meta">${featureMeta(t)}</div><div class="meta" style="margin-top:6px; color:var(--ink);">${t.desc}</div>`;
+  tooltip.style.display='block';
+  moveTooltip(e);
+}
+function wireFeatureLines(backLabel, backFn){
+  actionDetail.querySelectorAll('.spell-line[data-feature]').forEach(row=>{
+    const t = classFeatureItems().find(f=>f.name===row.dataset.feature);
+    if(!t) return;
+    row.addEventListener('mouseenter', e=>showFeatureTooltip(e, t));
+    row.addEventListener('mousemove', moveTooltip);
+    row.addEventListener('mouseleave', hideTooltip);
+    row.addEventListener('click', ()=>{
+      hideTooltip();
+      showDetail(`<div class="detail-back" id="detailBack">&larr; Back to ${backLabel}</div>
+        <h4 class="act-${t.type}">${t.name}</h4>
+        <div class="meta">${featureMeta(t)}</div>
+        <p style="margin-top:8px;">${t.desc}</p>`);
+      document.getElementById('detailBack').addEventListener('click', backFn);
+    });
+  });
+}
+function updateFeaturesButton(){
+  document.getElementById('featuresBtn').style.display = usableFeatures('action').length ? '' : 'none';
+}
+function renderFeatureActionDetail(){
+  showDetail(`<h4>Class Features</h4>` + featureLineList(usableFeatures('action')));
+  wireFeatureLines('Class Features', renderFeatureActionDetail);
+}
+
+function renderSpellLineList(spells, dimPredicate, sources){
   return `<div class="prepared-list">` + spells.map(sp=>{
     const dim = dimPredicate && dimPredicate(sp) ? ' spell-line-dim' : '';
-    return `<div class="spell-line ${sp.cls}${dim}" data-spell="${sp.name}">${sp.name} <span style="color:var(--ink-dim); font-size:0.8rem;">(${LEVEL_NAMES[sp.level]})</span></div>`;
+    const tag = sources && sources.has(sp.name) ? sourceTag(sources.get(sp.name).source) : '';
+    return `<div class="spell-line ${sp.cls}${dim}" data-spell="${sp.name}">${sp.name} <span style="color:var(--ink-dim); font-size:0.8rem;">(${LEVEL_NAMES[sp.level]})</span>${tag}</div>`;
   }).join('') + `</div>`;
 }
 function wireSpellLines(classKey, backLabel, backFn){
   actionDetail.querySelectorAll('.spell-line').forEach(row=>{
-    const sp = SPELL_DATA[classKey].find(s=>s.name===row.dataset.spell);
+    const sp = SPELL_DATA[classKey].find(s=>s.name===row.dataset.spell) || findSpell(row.dataset.spell);
     if(!sp) return;
     row.addEventListener('mouseenter', e=>showTooltip(e, sp));
     row.addEventListener('mousemove', moveTooltip);
@@ -1391,10 +1540,16 @@ function renderCastDetail(){
   let html = `<h4>Cast Prepared Spell</h4>`;
   const classKey = document.getElementById('spellClassSelect').value;
   const prepared = [...state.preparedSpells].map(n=>SPELL_DATA[classKey].find(s=>s.name===n)).filter(Boolean);
+  // Unlocked racial/class spells are always prepared, so they're castable without a tick
+  const sources = new Map();
+  alwaysPreparedSpells().filter(x=>charLevel() >= x.unlock).forEach(x=>{ if(!sources.has(x.sp.name)) sources.set(x.sp.name, {sp:x.sp, source:x.source}); });
+  const always = [...sources.values()].map(v=>v.sp);
+  const castable = [...always, ...prepared.filter(sp=>!sources.has(sp.name))];
   if(!prepared.length){
     html += `<p class="empty-note">No spells prepared yet — expand the Spells section below and check the ones you have prepared.</p>`;
-  } else {
-    html += renderSpellLineList(prepared, sp=>sp.cls==='act-ritual'||sp.cls==='act-bonus');
+  }
+  if(castable.length){
+    html += renderSpellLineList(castable, sp=>sp.cls==='act-ritual'||sp.cls==='act-bonus', sources);
     html += `<p class="empty-note" style="margin-top:10px; font-size:0.72rem;">Dimmed spells are rituals or Bonus Action spells — they can't be cast with your Action.</p>`;
   }
   showDetail(html);
@@ -1404,16 +1559,26 @@ function renderCastDetail(){
 function renderBonusDetail(){
   document.querySelectorAll('#actionButtons button').forEach(b=>b.classList.remove('active'));
   const classKey = document.getElementById('spellClassSelect').value;
-  const bonusSpells = [...state.preparedSpells].map(n=>SPELL_DATA[classKey].find(s=>s.name===n)).filter(sp=>sp && sp.cls==='act-bonus');
+  const sources = new Map();
+  alwaysPreparedSpells().filter(x=>charLevel() >= x.unlock).forEach(x=>{ if(!sources.has(x.sp.name)) sources.set(x.sp.name, {sp:x.sp, source:x.source}); });
+  const bonusSpells = [...[...sources.values()].map(v=>v.sp),
+    ...[...state.preparedSpells].filter(n=>!sources.has(n)).map(n=>SPELL_DATA[classKey].find(s=>s.name===n))]
+    .filter(sp=>sp && sp.cls==='act-bonus');
   let html = `<h4>Bonus Action Options</h4>
     <div class="opt-block" style="margin-top:0; padding-top:0; border-top:none;"><b>Two-Weapon Fighting</b> — When you take the Attack action with a light melee weapon, you can use your bonus action to attack with a different light melee weapon in your other hand (or a thrown weapon you're holding). Don't add your ability modifier to that extra attack's damage unless it's negative.</div>`;
+  const bonusFeatures = usableFeatures('bonus');
+  if(bonusFeatures.length){
+    html += `<div style="margin-top:12px; font-size:0.7rem; color:var(--ink-dim); text-transform:uppercase; letter-spacing:0.06em;">Bonus Action Class Features</div>`;
+    html += featureLineList(bonusFeatures);
+  }
   if(bonusSpells.length){
     html += `<div style="margin-top:12px; font-size:0.7rem; color:var(--ink-dim); text-transform:uppercase; letter-spacing:0.06em;">Prepared Bonus Action Spells</div>`;
-    html += renderSpellLineList(bonusSpells, null);
+    html += renderSpellLineList(bonusSpells, null, sources);
   }
   html += `<p class="empty-note" style="margin-top:8px;">Other bonus actions depend on your class features, spells, or items (e.g. Divine Favor, Misty Step) — check your character's abilities.</p>`;
   showDetail(html);
   wireSpellLines(classKey, 'Bonus Action Options', renderBonusDetail);
+  wireFeatureLines('Bonus Action Options', renderBonusDetail);
 }
 
 function showSpellPopupStatic(sp, backLabel, backFn){
@@ -1440,9 +1605,28 @@ function renderSpellList(){
   const classKey = document.getElementById('spellClassSelect').value;
   const area = document.getElementById('spellListArea');
   area.innerHTML='';
+
+  // Racial and class-granted spells are always prepared, so they get their own group with no tick box
+  const always = alwaysPreparedSpells();
+  if(always.length){
+    const group = document.createElement('div'); group.className='level-group';
+    group.innerHTML = `<h3>Always Prepared</h3>`;
+    always.forEach(x=>{
+      const locked = charLevel() < x.unlock;
+      const row = document.createElement('div'); row.className = 'spell-row' + (locked ? ' spell-locked' : '');
+      row.innerHTML = `<span class="sname ${x.sp.cls}">${x.sp.name}</span>${sourceTag(x.source)}`
+        + `<span class="rspell-note">(always prepared${locked ? ` &middot; unlocks at level ${x.unlock}` : ''})</span>`;
+      wireSpellTooltip(row.querySelector('.sname'), x.sp, alwaysPreparedNote(x));
+      group.appendChild(row);
+    });
+    area.appendChild(group);
+  }
+
   const list = SPELL_DATA[classKey];
   if(!list.length){
-    area.innerHTML = `<div class="no-spells-note">Rogues have no base class spell list — spellcasting only comes from the Arcane Trickster subclass, which borrows Enchantment/Illusion spells from the Wizard list. Switch the dropdown to Wizard and pick from there if that applies to your character.</div>`;
+    const note = document.createElement('div'); note.className='no-spells-note';
+    note.textContent = 'Rogues have no base class spell list — spellcasting only comes from the Arcane Trickster subclass, which borrows Enchantment/Illusion spells from the Wizard list. Switch the dropdown to Wizard and pick from there if that applies to your character.';
+    area.appendChild(note);
     return;
   }
   const byLevel = {};
@@ -1470,8 +1654,9 @@ function renderSpellList(){
 
 /* ---------- Tooltip ---------- */
 const tooltip = document.getElementById('tooltip');
-function showTooltip(e, sp){
-  tooltip.innerHTML = `<b>${sp.name}</b><div class="meta">${sp.school} &middot; ${sp.time}${sp.ritual?' (Ritual)':''}<br>Range: ${sp.range} &middot; Duration: ${sp.duration}<br>Components: ${sp.comp}</div><div class="meta" style="margin-top:6px; color:var(--ink);">${sp.desc}</div>`;
+function showTooltip(e, sp, extra){
+  tooltip.innerHTML = `<b>${sp.name}</b><div class="meta">${sp.school} &middot; ${sp.time}${sp.ritual?' (Ritual)':''}<br>Range: ${sp.range} &middot; Duration: ${sp.duration}<br>Components: ${sp.comp}</div><div class="meta" style="margin-top:6px; color:var(--ink);">${sp.desc}</div>`
+    + (extra ? `<div class="meta" style="margin-top:6px; color:var(--racial);">${extra}</div>` : '');
   tooltip.style.display='block';
   moveTooltip(e);
 }
@@ -1748,6 +1933,12 @@ async function runImport(){
     renderChips('skillsChips', state.skills);
     renderAttacksList();
 
+    currentCharId = sheetId;
+    rt.raceKey = raceKeyFrom(document.getElementById('f_race').value);
+    racialSection.loadPins();
+    racialSection.render();
+    setupClassFeatures(cls);
+
     const speedNum = parseInt(document.getElementById('f_speed').value,10);
     document.getElementById('moveFt').textContent = isNaN(speedNum) ? 30 : speedNum;
 
@@ -1770,7 +1961,328 @@ document.getElementById('f_speed').addEventListener('input', ()=>{
   document.getElementById('moveFt').textContent = isNaN(n) ? 30 : n;
 });
 
+/* ---------- Racial traits ---------- */
+// PHB-only traits, checked against dnd5e.wikidot.com. Descriptions are paraphrased.
+// Flavour and already-tracked info (age, size, languages, ASIs) is left out.
+// `tiers` are parts that unlock at a character level; they're dimmed until reached.
+const DARKVISION = {name:'Darkvision', desc:'See 60 ft in dim light as if bright, and in darkness as if dim (shades of gray only).'};
+const RACIAL_TRAITS = {
+  halforc: {traits:[
+    DARKVISION,
+    {name:'Menacing', desc:'Proficient in Intimidation.'},
+    {name:'Relentless Endurance', desc:'When you drop to 0 HP but aren’t killed outright, go to 1 HP instead. Once per long rest.'},
+    {name:'Savage Attacks', desc:'On a melee weapon crit, roll one extra weapon damage die and add it to the crit damage.'},
+  ]},
+  elf: {traits:[
+    DARKVISION,
+    {name:'Fey Ancestry', desc:'Advantage on saves against being charmed; magic can’t put you to sleep.'},
+    {name:'Keen Senses', desc:'Proficient in Perception.'},
+    {name:'Trance', desc:'No sleep needed; 4 hours of semi-conscious meditation gives the same benefit as 8 hours of sleep.'},
+  ]},
+  woodelf: {base:'elf', traits:[
+    {name:'Elf Weapon Training', desc:'Proficient with longsword, shortsword, shortbow and longbow.'},
+    {name:'Fleet of Foot', desc:'Base walking speed is 35 ft.'},
+    {name:'Mask of the Wild', desc:'You can try to hide when only lightly obscured by natural things like foliage, heavy rain, falling snow or mist.'},
+  ]},
+  drow: {base:'elf', replaces:['Darkvision'], traits:[
+    {name:'Drow Magic', desc:'Charisma is the spellcasting ability for these spells.',
+      tiers:[{level:1, name:'Dancing Lights', text:'Cantrip; cast at will.'},
+             {level:3, name:'Faerie Fire', text:'Cast once per long rest.'},
+             {level:5, name:'Darkness', text:'Cast once per long rest.'}]},
+    {name:'Drow Weapon Training', desc:'Proficient with rapiers, shortswords and hand crossbows.'},
+    {name:'Sunlight Sensitivity', desc:'Disadvantage on attack rolls and sight-based Perception checks in direct sunlight.'},
+    {name:'Superior Darkvision', desc:'Darkvision out to 120 ft instead of 60.'},
+  ]},
+  tiefling: {traits:[
+    DARKVISION,
+    {name:'Hellish Resistance', desc:'Resistance to fire damage.'},
+    {name:'Infernal Legacy', desc:'Charisma is the spellcasting ability for these spells.',
+      tiers:[{level:1, name:'Thaumaturgy', text:'Cantrip; cast at will.'},
+             {level:3, name:'Hellish Rebuke', text:'Cast once per long rest as a 2nd-level spell (3d10 fire).'},
+             {level:5, name:'Darkness', text:'Cast once per long rest.'}]},
+  ]},
+};
+
+function raceKeyFrom(race){
+  const r = (race||'').toLowerCase();
+  if(/half[\s-]?orc/.test(r)) return 'halforc';
+  if(r.includes('drow') || r.includes('dark elf')) return 'drow';
+  if(r.includes('wood elf')) return 'woodelf';
+  if(r.includes('tiefling')) return 'tiefling';
+  if(/\belf\b/.test(r) && !r.includes('half')) return 'elf';
+  return null;
+}
+function traitsForRace(key){
+  const entry = RACIAL_TRAITS[key]; if(!entry) return [];
+  const base = entry.base ? RACIAL_TRAITS[entry.base].traits.filter(t=>!(entry.replaces||[]).includes(t.name)) : [];
+  return [...base, ...entry.traits].sort((a,b)=>a.name.localeCompare(b.name));
+}
+
+/* ---------- Class features ---------- */
+// PHB-only (core subclasses), checked against dnd5e.wikidot.com and paraphrased.
+// `level` = class level the feature arrives at; later features are dimmed until reached.
+// `type` ('action' | 'bonus' | 'reaction') adds a colored label; passive features have none.
+// Oath spells are `tiers` with spell names, so they also show in the Spells list as always prepared.
+const oathSpells = (list)=>list.map(([level, name])=>({level, name, text:'Oath spell; always prepared.'}));
+const CLASS_FEATURES = {
+  paladin: {
+    subclassLabel: 'Sacred Oath', subclassLevel: 3,
+    base: [
+      {level:1, name:'Divine Sense', type:'action', desc:'Until the end of your next turn, sense the location of any celestial, fiend or undead within 60 ft not behind total cover, and any consecrated or desecrated place or object nearby. Uses: 1 + your Charisma modifier per long rest.'},
+      {level:1, name:'Lay on Hands', type:'action', desc:'You have a healing pool of 5 × your paladin level, refilled on a long rest. Touch a creature to restore hit points from the pool, or spend 5 points to cure one disease or neutralize one poison.'},
+      {level:2, name:'Fighting Style', choose:true, desc:'Pick one style; its benefit is permanent.',
+        tiers:[{level:2, name:'Defense', text:'+1 AC while wearing armor.'},
+               {level:2, name:'Dueling', text:'+2 damage with a melee weapon in one hand and no other weapons.'},
+               {level:2, name:'Great Weapon Fighting', text:'Reroll 1s and 2s on damage dice with a two-handed or versatile melee weapon held in two hands.'},
+               {level:2, name:'Protection', text:'With a shield, use your reaction to give disadvantage to an attack on an ally within 5 ft.'}]},
+      {level:2, name:'Spellcasting', desc:'Cast paladin spells using Charisma. Prepare Charisma modifier + half your paladin level (minimum 1) each long rest.'},
+      {level:2, name:'Divine Smite', desc:'When you hit with a melee weapon attack, spend a spell slot for +2d8 radiant damage (+1d8 per slot level above 1st, max 5d8; +1d8 more against undead or fiends).'},
+      {level:3, name:'Divine Health', desc:'You are immune to disease.'},
+      {level:3, name:'Sacred Oath', desc:'Swear your Oath (pick it above). It grants Oath spells and Channel Divinity options; Channel Divinity can be used once per short or long rest.'},
+      {level:4, name:'Ability Score Improvement', desc:'At levels 4, 8, 12, 16 and 19: raise one ability score by 2, or two scores by 1 each (max 20), or take a feat if your table allows it.'},
+      {level:5, name:'Extra Attack', desc:'Attack twice when you take the Attack action.'},
+      {level:6, name:'Aura of Protection', desc:'You and friendly creatures within 10 ft add your Charisma modifier (minimum +1) to saving throws while you’re conscious.'},
+      {level:10, name:'Aura of Courage', desc:'You and friendly creatures within 10 ft can’t be frightened while you’re conscious.'},
+      {level:11, name:'Improved Divine Smite', desc:'Every melee weapon hit deals an extra 1d8 radiant damage.'},
+      {level:14, name:'Cleansing Touch', type:'action', desc:'End one spell on yourself or a willing creature you touch. Uses: your Charisma modifier (minimum 1) per long rest.'},
+      {level:18, name:'Aura Improvements', desc:'Your auras reach 30 ft instead of 10 ft.'},
+    ],
+    subclasses: {
+      'Oath of Devotion': [
+        {level:3, name:'Oath Spells', desc:'Always prepared; they don’t count against your prepared spells.',
+          tiers: oathSpells([[3,'Protection from Evil and Good'],[3,'Sanctuary'],[5,'Lesser Restoration'],[5,'Zone of Truth'],[9,'Beacon of Hope'],[9,'Dispel Magic'],[13,'Freedom of Movement'],[13,'Guardian of Faith'],[17,'Commune'],[17,'Flame Strike']])},
+        {level:3, name:'Channel Divinity: Sacred Weapon', type:'action', desc:'For 1 minute, add your Charisma modifier (minimum +1) to attack rolls with one weapon you hold. It sheds bright light 20 ft (dim 20 ft more) and counts as magical.'},
+        {level:3, name:'Channel Divinity: Turn the Unholy', type:'action', desc:'Each fiend or undead within 30 ft that can see or hear you makes a Wisdom save or is turned for 1 minute or until it takes damage.'},
+        {level:7, name:'Aura of Devotion', desc:'You and friendly creatures within 10 ft can’t be charmed while you’re conscious (30 ft at level 18).'},
+        {level:15, name:'Purity of Spirit', desc:'You are always under the effects of Protection from Evil and Good.'},
+        {level:20, name:'Holy Nimbus', type:'action', desc:'For 1 minute, shed bright sunlight 30 ft. Enemies starting their turn in it take 10 radiant damage, and you have advantage on saves against spells from fiends and undead. Once per long rest.'},
+      ],
+      'Oath of the Ancients': [
+        {level:3, name:'Oath Spells', desc:'Always prepared; they don’t count against your prepared spells.',
+          tiers: oathSpells([[3,'Ensnaring Strike'],[3,'Speak with Animals'],[5,'Misty Step'],[5,'Moonbeam'],[9,'Plant Growth'],[9,'Protection from Energy'],[13,'Ice Storm'],[13,'Stoneskin'],[17,'Commune with Nature'],[17,'Tree Stride']])},
+        {level:3, name:'Channel Divinity: Nature’s Wrath', type:'action', desc:'Spectral vines grab a creature within 10 ft; it makes a Strength or Dexterity save (its choice) or is restrained, repeating the save each turn.'},
+        {level:3, name:'Channel Divinity: Turn the Faithless', type:'action', desc:'Each fey or fiend within 30 ft that can hear you makes a Wisdom save or is turned for 1 minute or until it takes damage.'},
+        {level:7, name:'Aura of Warding', desc:'You and friendly creatures within 10 ft have resistance to damage from spells (30 ft at level 18).'},
+        {level:15, name:'Undying Sentinel', desc:'When reduced to 0 HP and not killed outright, drop to 1 HP instead, once per long rest. You also stop showing signs of age.'},
+        {level:20, name:'Elder Champion', type:'action', desc:'For 1 minute: regain 10 HP at the start of each turn, cast action-length paladin spells as a bonus action, and enemies within 10 ft have disadvantage on saves against your paladin spells and Channel Divinity. Once per long rest.'},
+      ],
+      'Oath of Vengeance': [
+        {level:3, name:'Oath Spells', desc:'Always prepared; they don’t count against your prepared spells.',
+          tiers: oathSpells([[3,'Bane'],[3,"Hunter's Mark"],[5,'Hold Person'],[5,'Misty Step'],[9,'Haste'],[9,'Protection from Energy'],[13,'Banishment'],[13,'Dimension Door'],[17,'Hold Monster'],[17,'Scrying']])},
+        {level:3, name:'Channel Divinity: Abjure Enemy', type:'action', desc:'One creature within 60 ft makes a Wisdom save or is frightened for 1 minute (or until it takes damage) with speed 0. Fiends and undead save with disadvantage. On a success its speed is halved for 1 minute.'},
+        {level:3, name:'Channel Divinity: Vow of Enmity', type:'bonus', desc:'Advantage on attack rolls against one creature within 10 ft for 1 minute.'},
+        {level:7, name:'Relentless Avenger', desc:'When you hit with an opportunity attack, you can move up to half your speed right after, as part of the same reaction, without provoking opportunity attacks.'},
+        {level:15, name:'Soul of Vengeance', type:'reaction', desc:'When the target of your Vow of Enmity attacks, make a melee weapon attack against it if it’s within reach.'},
+        {level:20, name:'Avenging Angel', type:'action', desc:'For 1 hour: gain a 60 ft flying speed and a 30 ft aura. The first time in a battle an enemy enters it or starts its turn there, it makes a Wisdom save or is frightened for 1 minute (or until it takes damage). Once per long rest.'},
+      ],
+    },
+  },
+};
+const CLASS_NAMES = ['barbarian','bard','cleric','druid','fighter','monk','paladin','ranger','rogue','sorcerer','warlock','wizard'];
+function classKeyFrom(cls){
+  const c = (cls||'').toLowerCase();
+  return CLASS_NAMES.find(k=>c.includes(k)) || null;
+}
+// The sheet sometimes includes the subclass in the class text (e.g. "Assassin Rogue")
+function subclassFromText(classKey, cls){
+  const entry = CLASS_FEATURES[classKey]; if(!entry) return '';
+  const c = (cls||'').toLowerCase();
+  return Object.keys(entry.subclasses).find(s=>c.includes(s.split(' ').pop().toLowerCase())) || '';
+}
+
+/* ---------- Pinned sections (Racial Traits, Class Features) ---------- */
+// Pins live in localStorage, one key per character (sheet ID) per section per item.
+// Storage can be unavailable (private mode, blocked site data), so pins also live in memory.
+let currentCharId = '';
+function storageGet(key){ try{ return localStorage.getItem(key); }catch(e){ return null; } }
+function storageSet(key, val){ try{ if(val===null) localStorage.removeItem(key); else localStorage.setItem(key, val); }catch(e){} }
+
+function charLevel(){ return parseInt(document.getElementById('f_level').value,10) || 1; }
+function wireSpellTooltip(el, sp, extra){
+  el.addEventListener('mouseenter', e=>showTooltip(e, sp, extra));
+  el.addEventListener('mousemove', moveTooltip);
+  el.addEventListener('mouseleave', hideTooltip);
+}
+
+// "Pick one" features (e.g. Fighting Style): the chosen option is saved per character, like pins
+const choiceMem = new Map();
+function choiceKey(featureName){ return `dndTracker:choice:${currentCharId}:${featureName}`; }
+function getChoice(featureName){
+  const k = choiceKey(featureName);
+  return choiceMem.has(k) ? choiceMem.get(k) : (storageGet(k) || '');
+}
+function setChoice(featureName, option){
+  const k = choiceKey(featureName);
+  choiceMem.set(k, option);
+  storageSet(k, option || null);
+}
+
+const TYPE_LABELS = {action:'Action', bonus:'Bonus Action', reaction:'Reaction'};
+function featureRow(section, t, withBox){
+  const level = charLevel(), ownLevel = t.level || 1;
+  const chosen = t.choose ? getChoice(t.name) : '';
+  // A row with its own sub tick boxes can't be one big <label>, or clicking an option would toggle the pin
+  const row = document.createElement(withBox && !t.choose ? 'label' : 'div');
+  row.className = 'rt-row' + (level < ownLevel ? ' rt-locked' : '');
+  // Sub-lines (a trait's spells, Fighting Style options, Oath spells); dimmed until their level.
+  // Pinned "pick one" features show only the chosen option once there is one.
+  const shownTiers = (t.tiers||[]).filter(tier=>withBox || !chosen || tier.name===chosen);
+  const tiers = shownTiers.map(tier=>{
+    const locked = level < tier.level && level >= ownLevel;
+    const unchosen = t.choose && chosen && tier.name !== chosen;
+    const body = `<span class="rt-subname" data-spell="${tier.name}">${tier.name}</span>`
+      + (tier.level > ownLevel ? ` <span class="rt-lvl">(level ${tier.level})</span>` : '')
+      + ` &mdash; ${tier.text}`;
+    const cls = [locked?'rt-locked':'', unchosen?'rt-unchosen':''].join(' ').trim();
+    if(t.choose && withBox){
+      return `<li class="${cls}"><label class="rt-choice"><input type="checkbox" data-choice="${tier.name}" ${tier.name===chosen?'checked':''}><span>${body}</span></label></li>`;
+    }
+    return `<li class="${cls}">${body}</li>`;
+  }).join('');
+  const typeLabel = TYPE_LABELS[t.type] ? ` <span class="ft-type ft-${t.type}">${TYPE_LABELS[t.type]}</span>` : '';
+  const lvlLabel = ownLevel > 1 ? ` <span class="rt-lvl">(level ${ownLevel})</span>` : '';
+  row.innerHTML = (withBox ? `<input type="checkbox" ${section.pins.has(t.name)?'checked':''}>` : '')
+    + `<div><span class="rt-name">${t.name}</span>${lvlLabel}${typeLabel} <span class="rt-desc">&mdash; ${t.desc}</span>`
+    + (tiers ? `<ul class="rt-sub">${tiers}</ul>` : '') + `</div>`;
+  row.querySelectorAll('[data-spell]').forEach(el=>{
+    const sp = findSpell(el.dataset.spell);
+    if(sp){ el.classList.add('has-tip'); wireSpellTooltip(el, sp); }
+  });
+  if(withBox){
+    row.querySelector('input:not([data-choice])').addEventListener('change', e=>{ section.setPin(t.name, e.target.checked); section.render(); });
+    // Ticking an option picks it (unticking the others); ticking the picked one again clears it
+    row.querySelectorAll('input[data-choice]').forEach(cb=>cb.addEventListener('change', ()=>{
+      setChoice(t.name, cb.checked ? cb.dataset.choice : '');
+      section.render();
+    }));
+  }
+  return row;
+}
+
+// cfg: {prefix, store, items(), emptyText(), sort?, beforeList?(bodyEl)}
+function makePinSection(cfg){
+  const $ = id=>document.getElementById(cfg.prefix + id);
+  const section = {open:false, pins:new Set()};
+  const key = name=>`dndTracker:${cfg.store}:${currentCharId}:${name}`;
+  section.loadPins = ()=>{
+    section.pins = new Set(cfg.items().filter(t=>storageGet(key(t.name))==='1').map(t=>t.name));
+  };
+  section.setPin = (name, on)=>{
+    if(on) section.pins.add(name); else section.pins.delete(name);
+    storageSet(key(name), on ? '1' : null);
+  };
+  section.render = ()=>{
+    const list = $('List'), pinned = $('Pinned');
+    list.innerHTML=''; pinned.innerHTML='';
+    $('Toggle').classList.toggle('open', section.open);
+    $('Toggle').setAttribute('aria-expanded', section.open);
+    $('Body').classList.toggle('open', section.open);
+    $('Hint').style.display = section.open ? 'none' : '';
+    if(cfg.beforeList) cfg.beforeList();
+    const items = cfg.items();
+    if(!items.length){
+      const note = document.createElement('div'); note.className='empty-note';
+      note.textContent = cfg.emptyText();
+      list.appendChild(note);
+      return;
+    }
+    items.forEach(t=>list.appendChild(featureRow(section, t, true)));
+    // Pinned items show only while collapsed; the expanded list already shows them ticked
+    if(!section.open) items.filter(t=>section.pins.has(t.name)).forEach(t=>pinned.appendChild(featureRow(section, t, false)));
+  };
+  const toggle = ()=>{ section.open = !section.open; section.render(); };
+  $('Toggle').addEventListener('click', toggle);
+  $('Toggle').addEventListener('keydown', e=>{
+    if(e.key==='Enter' || e.key===' '){ e.preventDefault(); toggle(); }
+  });
+  return section;
+}
+
+const rt = {raceKey:null};
+const racialSection = makePinSection({
+  prefix:'rt', store:'racialPin',
+  items: ()=>traitsForRace(rt.raceKey),
+  emptyText: ()=>{
+    const race = document.getElementById('f_race').value.trim();
+    return race ? `No racial traits added for "${race}" yet.` : 'Import a sheet to see racial traits.';
+  },
+});
+
+// Subclass is picked by hand (the sheet has no reliable field for it) and remembered per character
+const cf = {classKey:null, subclass:''};
+function subclassStoreKey(){ return `dndTracker:subclass:${currentCharId}`; }
+function classFeatureItems(){
+  const entry = CLASS_FEATURES[cf.classKey]; if(!entry) return [];
+  const sub = entry.subclasses[cf.subclass] || [];
+  // By level; within a level, keep data order with base features first (so Sacred Oath comes before Oath Spells)
+  return [...entry.base, ...sub].sort((a,b)=>a.level-b.level);
+}
+const classSection = makePinSection({
+  prefix:'cf', store:'classPin',
+  items: classFeatureItems,
+  emptyText: ()=>{
+    const cls = document.getElementById('f_class').value.trim();
+    return cls ? `Class features for "${cls}" haven’t been added yet.` : 'Import a sheet to see class features.';
+  },
+  beforeList: ()=>{
+    const wrap = document.getElementById('cfSubclassWrap'), sel = document.getElementById('cfSubclass');
+    const entry = CLASS_FEATURES[cf.classKey];
+    wrap.style.display = entry ? '' : 'none';
+    if(!entry) return;
+    document.getElementById('cfSubclassLabel').textContent = entry.subclassLabel + ':';
+    sel.innerHTML = `<option value="">— choose —</option>` + Object.keys(entry.subclasses)
+      .map(s=>`<option value="${s}"${s===cf.subclass?' selected':''}>${s}</option>`).join('');
+    const note = document.getElementById('cfSubclassNote');
+    note.textContent = !cf.subclass ? `Pick one to see its features (gained at level ${entry.subclassLevel}).` : '';
+  },
+});
+document.getElementById('cfSubclass').addEventListener('change', e=>{
+  cf.subclass = e.target.value;
+  storageSet(subclassStoreKey(), cf.subclass || null);
+  classSection.loadPins();
+  classSection.render();
+  updateFeaturesButton();
+  if(spellBody.classList.contains('open')) renderSpellList();
+});
+function setupClassFeatures(clsText){
+  cf.classKey = classKeyFrom(clsText);
+  const entry = CLASS_FEATURES[cf.classKey];
+  const saved = storageGet(subclassStoreKey());
+  cf.subclass = entry && saved && entry.subclasses[saved] ? saved : subclassFromText(cf.classKey, clsText);
+  classSection.loadPins();
+  classSection.render();
+  updateFeaturesButton();
+}
+
+/* ---------- Always-prepared spells (racial + class) ---------- */
+// Each spell granted by a trait or feature, with the level it unlocks at
+function grantedSpells(source, features){
+  return features.flatMap(t=>(t.tiers||[]).map(tier=>({
+    sp: findSpell(tier.name), unlock: Math.max(tier.level, t.level||1), source, from: t.name, note: tier.text
+  }))).filter(x=>x.sp);
+}
+function alwaysPreparedSpells(){
+  return [...grantedSpells('Racial', traitsForRace(rt.raceKey)), ...grantedSpells('Class', classFeatureItems())];
+}
+function alwaysPreparedNote(x){
+  return `${x.source} (${x.from}): ${x.note}` + (charLevel() < x.unlock ? ` Unlocks at level ${x.unlock}.` : '');
+}
+function sourceTag(source){ return `<span class="src-tag src-${source.toLowerCase()}">${source}</span>`; }
+
+// Plain collapsible sections (no pinning): Saving Throws, Skills, Attacks
+document.querySelectorAll('.collapsible').forEach(wrap=>{
+  const toggleEl = wrap.querySelector('.rt-toggle'), body = wrap.querySelector('.rt-body'), hint = wrap.querySelector('.rt-hint');
+  const toggle = ()=>{
+    const open = !body.classList.contains('open');
+    body.classList.toggle('open', open); toggleEl.classList.toggle('open', open);
+    toggleEl.setAttribute('aria-expanded', open); hint.style.display = open ? 'none' : '';
+  };
+  toggleEl.addEventListener('click', toggle);
+  toggleEl.addEventListener('keydown', e=>{ if(e.key==='Enter' || e.key===' '){ e.preventDefault(); toggle(); } });
+});
+
 renderChips('savesChips', []); renderChips('skillsChips', []); renderAttacksList();
+racialSection.render(); classSection.render();
 
 /* ---------- Auto-import when opened with ?sheet=<url>&name=<name> ---------- */
 (async function(){

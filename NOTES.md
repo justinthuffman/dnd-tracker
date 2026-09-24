@@ -5,7 +5,9 @@ This repo has two files:
   (Krunk, Venthor, Ezlo, Bel), each linking to `dnd_tracker.html?sheet=<encoded Google
   Sheet URL>&name=<CharacterName>`.
 - **dnd_tracker.html** — a single self-contained, offline D&D 5e character tracker.
-  No server, no persistence between sessions (closing the tab loses all state).
+  No server. The only things saved between sessions are pinned racial traits and class
+  features, the chosen subclass and the chosen Fighting Style (localStorage, per browser);
+  everything else resets when the tab closes.
   Reads the `?sheet=` and `?name=` URL params on load and auto-imports.
 
 Both share one color palette (CSS variables in `:root`) — a dark-navy "night harbor"
@@ -66,25 +68,77 @@ widen this in the `runImport()` call.
 All read-only except Name, populated entirely by import. Don't re-add manual editing to
 the others without a specific reason — this was a deliberate choice (Justin's request).
 
-## Class Features & Abilities system
+## Racial Traits and Class Features sections
 
-`CLASS_FEATURES` object holds base class features + core (PHB-only) subclass features,
-gated by the character's imported level and a manually-picked subclass (subclass isn't
-auto-detected from the sheet — there was no reliable field to pull it from). Only
-**Paladin** is fully populated so far (18 base features to level 20, plus all three core
-PHB Oaths: Devotion, Ancients, Vengeance). The other 11 classes are present as empty
-stubs in the dropdown so the UI is ready, but show a "not added yet" message.
+Two collapsible sections under the ability scores that work the same way. They share
+`makePinSection` and `featureRow`. Each starts collapsed with a hint line. Expanding it
+shows every entry with a tick box, and ticked entries stay visible under the header after
+it's collapsed again.
 
-**When adding a new class: verify against current sources (web search), don't rely on
-memory.** D&D 5e class features are precise mechanically, and getting a level or a
-mechanic wrong actually matters at the table. The Paladin data was checked against
-dnd5e.wikidot.com, D&D Beyond, and Roll20's compendium before being added. Spell
-descriptions throughout are paraphrased in original wording, never copied verbatim
-(copyright).
+**Pins** are saved in localStorage as `dndTracker:<racialPin|classPin>:<sheetId>:<name>`,
+so they're per browser and per character. Every storage call goes through
+`storageGet`/`storageSet` (try/catch, with an in-memory fallback), because storage can be
+blocked; the app's preview pane blocks it, for one. Nothing is written back to the repo or
+the sheet.
 
-Each feature has a `type`: `'action' | 'bonus' | 'reaction' | 'passive'` — this drives
-both the color coding and which Combat Menu buttons a feature shows up under (see
-`renderClassFeatureActionDetail`, `renderBonusDetail`).
+**Level dimming:** an entry above the character's imported level is dimmed and labelled
+"(level N)". Sub-lines (`tiers`) unlock separately and are dimmed until reached, so
+players can see what's coming and plan.
+
+**Racial Traits:** `RACIAL_TRAITS` holds PHB-only traits for the party's races (Half-Orc,
+Elf base + Wood Elf / Drow subraces, Tiefling), sorted alphabetically. Subraces layer on
+`base` traits, and `replaces` drops base traits the subrace overrides (Drow's Superior
+Darkvision replaces Darkvision). Age, size, speed, languages and ability score increases
+are left out on purpose; Fleet of Foot is kept because it's a named trait. `raceKeyFrom`
+matches the imported Race text loosely (e.g. "Dark Elf (Drow)" → drow).
+
+**Class Features:** `CLASS_FEATURES` holds base + core PHB subclass features, sorted by
+level. Only **Paladin** is filled in so far, with all three PHB Oaths. Other classes show
+a "not added yet" note. Bard, Wizard and Rogue are next, since those are the party's
+classes. The subclass is picked from a dropdown in the section and saved per character
+(`dndTracker:subclass:<sheetId>`). It's also auto-detected when the sheet's Class text
+includes it (e.g. "Vengeance Paladin"). Features with a `type` of `'action' | 'bonus' |
+'reaction'` get a colored label; passive ones have none. Repeated features (Ability Score
+Improvement) are merged into one entry. Within a level, base features come before
+subclass ones in data order, so Oath Spells follows Sacred Oath.
+
+A feature with `choose:true` (Fighting Style) gives its options their own tick boxes. Only
+one can be ticked, and the choice is saved per character (`dndTracker:choice:<sheetId>:
+<feature>`). Once a style is chosen, the pinned view shows only that option.
+
+**In the Combat Menu:** unlocked features with `type:'action'` are listed under a "Class
+Features" button in the Action row (`usableFeatures`). The button is hidden when there are
+none. `type:'bonus'` features are listed in Bonus Action Options. Lay on Hands is an Action
+here because the tracker follows the 2014 PHB; it's a Bonus Action only in the 2024 rules.
+
+Saving Throw Proficiencies, Skill Proficiencies and Attacks are plain collapsibles
+(`.collapsible`), with the same look and collapsed start but no pinning.
+
+The Class Features data in `DnD Tracker (man)/dnd_tracker TEMP.html` was an earlier
+attempt that never reached the repo. Its Paladin data was reused, with three fixes: Lay
+on Hands is an Action in the 2014 PHB (not a Bonus Action), Divine Sense lasts until the
+end of your next turn (not 1 minute), and Abjure Enemy has no "1 round" clause.
+
+**2014 5e rules only, never 2024 (5.5e).** This is Justin's standing rule. D&D Beyond
+defaults to 2024 wording, which is one reason to stick to the wiki.
+
+**When adding a new class or race: verify against dnd5e.wikidot.com (web search), don't
+rely on memory.** D&D 5e mechanics are precise, and a wrong level or rule matters at the
+table. PHB only: no Xanathar's, Tasha's or other supplements. Descriptions throughout
+are paraphrased in original wording, never copied (copyright).
+
+## Always-prepared spells
+
+Spells granted by a racial trait or class feature are `tiers` whose names match spells
+(cantrips at level 1). They show as sub-lines with the normal spell hover tooltip.
+`alwaysPreparedSpells()` gathers them for an "Always Prepared" group at the top of the
+Spells list. Those rows have no tick box, carry a **Racial** (blue, `--racial`) or
+**Class** (green) tag, which is also in the legend, and are marked "(always prepared)".
+Once unlocked, they also appear in Cast Prepared Spell and, for bonus action spells, in
+Bonus Action Options. Spells not on any class list (Thaumaturgy, Hellish Rebuke, Oath
+spells from the cleric/druid/ranger lists) live in `RACIAL_SPELL_RAW`; `findSpell`
+searches every list. Every granted spell needs an entry there or in a class list, or it
+won't get a tooltip.
 
 ## Mobile tooltip handling
 
@@ -102,8 +156,32 @@ since touch devices have no real hover state to naturally close one.
 - Spell slots used/remaining, hit dice remaining, short/long rest buttons
 - Class-specific resource pools (Lay on Hands, Channel Divinity uses, Rage, Ki, etc.)
 - Death saves, conditions (Grappled/Poisoned/etc.), concentration reminder
-- A Reaction slot in the Combat Menu (reaction-type class features currently only show
-  up in the full Class Features reference list, not a dedicated combat-menu button)
+- Open question: keep the separate "Class Features" button in the Action row, or merge
+  Action features into Cast Prepared Spell (renamed to something like "Spells &
+  Features")? Justin hadn't decided as of 2026-09-23.
+- A Reaction slot in the Combat Menu (for reaction spells like Hellish Rebuke and
+  reaction features like Soul of Vengeance)
 - Equipment/inventory and currency import (the sheet has this data; not pulled in yet)
-- Any persistence at all (currently everything resets on tab close — no localStorage)
+- More persistence. Only trait/feature pins, the chosen subclass and Fighting Style are
+  saved so far.
+  Remembering prepared spells in localStorage is the likely next step (the sheet's spell
+  section is free text and inconsistent between players); revisit once pinning has been
+  tried in a real session.
+- **Class Features for the other classes. Next up; Justin asked for this on 2026-09-23.**
+  Only Paladin is filled in, so Bel (Bard), Ezlo (Wizard) and Venthor (Rogue) see "not
+  added yet". Do the party's classes first, same structure as Paladin: base features to
+  level 20 plus the core PHB subclasses, `type` for anything that takes an action, `tiers`
+  for choices or per-level parts, and any always-prepared spells. Verify every item on
+  dnd5e.wikidot.com (2014 rules, PHB only). Rough checklist to confirm, not trust:
+  - **Bard:** Spellcasting, Bardic Inspiration (bonus action; die grows with level), Jack
+    of All Trades, Song of Rest, Bard College (Lore / Valor), Expertise, Font of
+    Inspiration, Countercharm, Magical Secrets, Superior Inspiration
+  - **Wizard:** Spellcasting, Arcane Recovery, Arcane Tradition (the eight PHB schools),
+    Spell Mastery, Signature Spells
+  - **Rogue:** Expertise, Sneak Attack, Thieves' Cant, Cunning Action (bonus action),
+    Roguish Archetype (Thief / Assassin / Arcane Trickster), Uncanny Dodge (reaction),
+    Evasion, Reliable Talent, Blindsense, Slippery Mind, Elusive, Stroke of Luck
+  - Then the remaining eight classes.
+  Expertise is a "pick" feature (choose skills), so it may need something like Fighting
+  Style's `choose`, but allowing more than one pick.
 - Party initiative tracker
