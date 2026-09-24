@@ -136,6 +136,9 @@ button.sel-toggle:empty{display:none;}
 .turn-note{font-size:0.82rem; color:var(--ink-dim); font-style:italic; margin:0 0 12px;}
 .move-line{font-size:0.95rem; margin-bottom:12px; color:var(--ink-dim);}
 .move-line span{color:var(--sea); font-family:var(--font-display); font-size:1.1rem;}
+.move-line span#moveFt{transition:color .2s ease;}
+.move-line.dashing span#moveFt{color:var(--orange-bright);}
+.move-line span.move-dash{font-family:var(--font-body); font-size:0.85rem; color:var(--ink-dim);}
 .action-grid{display:flex; flex-wrap:wrap; gap:8px; margin-bottom:8px;}
 .action-grid button{flex:0 0 auto;}
 .action-grid button.active{background:var(--sea-dim); border-color:var(--sea);}
@@ -146,6 +149,41 @@ button.sel-toggle:empty{display:none;}
 .weapon-row:last-child{border-bottom:none;}
 .weapon-row .wname{color:var(--ink); font-weight:600;}
 .weapon-row .wdmg{color:var(--ink-dim); font-size:0.82rem;}
+/* Attack flow (V2) */
+.flow-label{font-size:0.72rem; text-transform:uppercase; letter-spacing:0.06em; color:var(--ink-dim); margin:12px 0 6px;}
+.flow-label:first-of-type{margin-top:4px;}
+.flow-grid{display:flex; flex-wrap:wrap; gap:8px;}
+button.flow-btn.active{background:var(--sea-dim); border-color:var(--sea);}
+.flow-summary{font-size:0.85rem; color:var(--ink-dim); margin-top:10px;}
+.flow-go{margin-top:14px;}
+#flowRoll{min-width:130px; font-weight:600;}
+
+/* Roll popup */
+.roll-backdrop{position:fixed; inset:0; z-index:60; background:rgba(4,10,16,0.65); display:flex; align-items:center; justify-content:center; padding:16px; opacity:0; transition:opacity .2s ease;}
+.roll-backdrop[hidden]{display:none;}
+.roll-backdrop.open{opacity:1;}
+.roll-popup{background:var(--panel); border:1px solid var(--border); border-radius:8px; width:min(540px,100%); max-height:90vh; overflow:auto; padding:14px 16px 16px; box-shadow:0 12px 40px rgba(0,0,0,0.45); transform:translateY(8px); transition:transform .2s ease;}
+.roll-backdrop.open .roll-popup{transform:none;}
+.roll-head{display:flex; justify-content:space-between; align-items:center; gap:12px;}
+.roll-head h4{font-family:var(--font-display); color:var(--sea); font-size:1.1rem; margin:0; font-weight:normal;}
+button.roll-close{background:none; border:none; color:var(--ink-dim); font-size:1.5rem; line-height:1; padding:0 4px;}
+button.roll-close:hover{background:none; color:var(--ink);}
+.roll-intro{font-size:0.8rem; color:var(--ink-dim); margin:6px 0 0;}
+.roll-box{background:var(--panel2); border:1px solid var(--border); border-radius:6px; padding:10px 12px; margin-top:10px;}
+.roll-box-label{font-size:0.7rem; text-transform:uppercase; letter-spacing:0.06em; color:var(--sea-dim); margin-bottom:6px;}
+.roll-cmd-row{display:flex; flex-wrap:wrap; gap:8px; align-items:center;}
+.roll-cmd{font-family:ui-monospace, Consolas, monospace; font-size:0.95rem; color:var(--ink); background:var(--bg); border:1px solid var(--border); border-radius:4px; padding:7px 10px; overflow-wrap:anywhere; user-select:all;}
+.roll-cmd-desc{font-size:0.85rem; color:var(--ink-dim);}
+button.copy-btn{padding:6px 12px; font-size:0.82rem; white-space:nowrap;}
+.roll-after{font-size:0.72rem; color:var(--ink-dim); margin:10px 0 4px;}
+.roll-toggles{display:flex; flex-wrap:wrap; gap:6px;}
+.roll-toggles button.flow-btn{padding:5px 10px; font-size:0.8rem;}
+.roll-info{font-size:0.88rem; color:var(--ink); line-height:1.45;}
+.roll-info b{color:var(--orange-bright); font-weight:600;}
+button.flow-btn.flow-dim{opacity:0.55;}
+button.flow-btn .src-tag{color:var(--ink); border-color:rgba(255,255,255,0.6);}
+.roll-notes{font-size:0.75rem; color:var(--ink-dim); margin:8px 0 0; padding-left:18px;}
+@media (prefers-reduced-motion: reduce){ .roll-backdrop, .roll-popup{transition:none;} }
 .opt-block{margin-top:10px; padding-top:10px; border-top:1px solid var(--border);}
 .opt-block b{color:var(--sea-dim);}
 .free-note{font-size:0.82rem; color:var(--ink-dim); margin-top:10px; font-style:italic;}
@@ -284,7 +322,7 @@ footer{text-align:center; color:var(--ink-dim); font-size:0.75rem; margin-top:30
 <div class="panel">
   <h2>Combat Menu</h2>
   <p class="turn-note">On your turn, you can do these in any order. The numbers are just for reference. You can also split your movement, for example moving 10 feet, attacking, then moving the rest. Some bonus actions do depend on something else first, such as off-hand attacks, which need the Attack action.</p>
-  <div class="move-line">1. Move up to <span id="moveFt">30</span> feet.</div>
+  <div class="move-line">1. Move up to <span id="moveFt">30</span> feet.<span class="move-dash" id="moveDash"></span></div>
 
   <div class="action-row-label">2. Action</div>
   <div class="action-grid" id="actionButtons">
@@ -360,6 +398,12 @@ footer{text-align:center; color:var(--ink-dim); font-size:0.75rem; margin-top:30
 </div>
 
 <div id="tooltip"></div>
+<div class="roll-backdrop" id="rollPopup" hidden>
+  <div class="roll-popup" role="dialog" aria-modal="true" aria-labelledby="rollTitle">
+    <div class="roll-head"><h4 id="rollTitle"></h4><button type="button" class="roll-close" aria-label="Close">&times;</button></div>
+    <div id="rollBody"></div>
+  </div>
+</div>
 
 <script>
 /* ---------- Spell data (level|Name|School|Casting Time|Range|Duration|Components) ---------- */
@@ -1361,6 +1405,83 @@ const RACIAL_SPELL_RAW = `0|Thaumaturgy|Transmutation|1 Action|30 feet|Up to 1 m
 5|Flame Strike|Evocation|1 Action|60 feet|Instantaneous|V, S, M
 5|Tree Stride|Conjuration|1 Action|Self|Concentration, up to 1 minute|V, S`;
 const EXTRA_SPELLS = parseSpells(RACIAL_SPELL_RAW);
+/* Roll data for the Cast Prepared Spell popup, checked against dnd5e.wikidot.com (2014).
+   attack: 'ranged'|'melee' spell attack.  save: ability the target saves with; onSave: 'half'|'none'.
+   parts: damage [{d, type, per (extra dice per slot above the spell's level)}]; cantrips (cantrip:true)
+   multiply their dice at character levels 5, 11 and 17.
+   heal / temp / pool / darts: special results.  rider: extra damage on a later weapon hit.
+   hitSave: a save the target makes when the spell (or rider) hits.  ongoing: damage on later turns.
+   effect: what a failed save does.  upcastNote: non-damage upcast effect.
+   Currently: all cantrips and 1st-level spells on the class lists, plus the party's racial and
+   Oath spells up to 1st level. Spells not here and not in NO_ROLL_SPELLS show "not added yet". */
+const SPELL_ROLLS = {
+  'Acid Splash': {save:'dex', onSave:'none', cantrip:true, parts:[{d:'1d6', type:'acid'}], note:'One creature, or two within 5 ft of each other.'},
+  'Chill Touch': {attack:'ranged', cantrip:true, parts:[{d:'1d8', type:'necrotic'}], note:'On a hit, the target can’t regain hit points until the start of your next turn. An undead target also has disadvantage on attacks against you until the end of your next turn.'},
+  'Create Bonfire': {save:'dex', onSave:'none', cantrip:true, parts:[{d:'1d8', type:'fire'}], note:'Also applies when a creature moves into the bonfire or ends its turn there.'},
+  'Fire Bolt': {attack:'ranged', cantrip:true, parts:[{d:'1d10', type:'fire'}]},
+  'Frostbite': {save:'con', onSave:'none', cantrip:true, parts:[{d:'1d6', type:'cold'}], effect:'Disadvantage on its next weapon attack roll before the end of its next turn.'},
+  'Gust': {save:'str', effect:'A Medium or smaller creature is pushed up to 5 ft away.'},
+  'Infestation': {save:'con', onSave:'none', cantrip:true, parts:[{d:'1d6', type:'poison'}], effect:'It moves 5 ft in a random direction (no opportunity attacks).'},
+  'Poison Spray': {save:'con', onSave:'none', cantrip:true, parts:[{d:'1d12', type:'poison'}]},
+  'Ray of Frost': {attack:'ranged', cantrip:true, parts:[{d:'1d8', type:'cold'}], note:'On a hit, its speed drops by 10 ft until the start of your next turn.'},
+  'Sapping Sting': {save:'con', onSave:'none', cantrip:true, parts:[{d:'1d4', type:'necrotic'}], effect:'It falls prone.'},
+  'Shocking Grasp': {attack:'melee', cantrip:true, parts:[{d:'1d8', type:'lightning'}], note:'Advantage if the target wears metal armor. On a hit, it can’t take reactions until the start of its next turn.'},
+  'Thunderclap': {save:'con', onSave:'none', cantrip:true, parts:[{d:'1d6', type:'thunder'}], note:'Every creature within 5 ft of you except you.'},
+  'Toll the Dead': {save:'wis', onSave:'none', cantrip:true, parts:[{d:'1d8', type:'necrotic', alt:'1d12'}], altLabel:'Target is missing hit points'},
+  'Vicious Mockery': {save:'wis', onSave:'none', cantrip:true, parts:[{d:'1d4', type:'psychic'}], effect:'Disadvantage on its next attack roll before the end of its next turn.'},
+
+  'Burning Hands': {save:'dex', onSave:'half', parts:[{d:'3d6', type:'fire', per:'1d6'}], note:'15 ft cone.'},
+  'Catapult': {save:'dex', onSave:'none', parts:[{d:'3d8', type:'bludgeoning', per:'1d8'}], note:'The object takes the same damage. Max object weight +5 lb per slot level above 1st.'},
+  'Chromatic Orb': {attack:'ranged', parts:[{d:'3d8', type:'acid, cold, fire, lightning, poison or thunder (your choice)', per:'1d8'}]},
+  'Color Spray': {pool:{d:'6d10', per:'2d10', what:'hit points of creatures blinded, lowest current hit points first'}},
+  'Cure Wounds': {heal:{d:'1d8', per:'1d8'}},
+  'Dissonant Whispers': {save:'wis', onSave:'half', parts:[{d:'3d6', type:'psychic', per:'1d6'}], effect:'It must use its reaction to move as far away from you as it can.'},
+  'Earth Tremor': {save:'dex', onSave:'none', parts:[{d:'1d6', type:'bludgeoning', per:'1d6'}], effect:'It is knocked prone.'},
+  'False Life': {temp:{d:'1d4', flat:4, perFlat:5}},
+  'Frost Fingers': {save:'con', onSave:'half', parts:[{d:'2d8', type:'cold', per:'1d8'}]},
+  'Healing Word': {heal:{d:'1d4', per:'1d4'}},
+  'Ice Knife': {attack:'ranged', parts:[{d:'1d10', type:'piercing'}],
+    explosion:{save:'dex', onSave:'none', d:'2d6', type:'cold', per:'1d6', text:'Hit or miss, the shard explodes: the target and each creature within 5 ft of it.'}},
+  'Magic Missile': {darts:{n:3, d:'1d4', bonus:1, type:'force'}},
+  'Magnify Gravity': {save:'con', onSave:'half', parts:[{d:'2d8', type:'force', per:'1d8'}], effect:'Its speed is halved.'},
+  'Ray of Sickness': {attack:'ranged', parts:[{d:'2d8', type:'poison', per:'1d8'}], hitSave:{save:'con', effect:'poisoned until the end of your next turn'}},
+  'Sleep': {pool:{d:'5d8', per:'2d8', what:'hit points of creatures that fall asleep, lowest current hit points first'}},
+  'Thunderwave': {save:'con', onSave:'half', parts:[{d:'2d8', type:'thunder', per:'1d8'}], effect:'It is pushed 10 ft away from you.'},
+  'Witch Bolt': {attack:'ranged', parts:[{d:'1d12', type:'lightning', per:'1d12'}], ongoing:{d:'1d12', type:'lightning', text:'On each later turn, use your action to deal this automatically (concentration).'}},
+  'Hellish Rebuke': {save:'dex', onSave:'half', parts:[{d:'2d10', type:'fire', per:'1d10'}], note:'Reaction: when a creature you can see within 60 ft damages you.'},
+
+  // Riders: no roll when cast; extra damage on a later weapon hit
+  'Searing Smite': {rider:{d:'1d6', type:'fire', per:'1d6', on:'your next melee weapon hit'},
+    ongoing:{d:'1d6', type:'fire', save:'con', text:'At the start of each of its turns the target makes a Constitution save: on a failure it takes this damage, on a success the spell ends.'}},
+  'Thunderous Smite': {rider:{d:'2d6', type:'thunder', on:'your next melee weapon hit'}, hitSave:{save:'str', effect:'pushed 10 ft away and knocked prone'}},
+  'Wrathful Smite': {rider:{d:'1d6', type:'psychic', on:'your next melee weapon hit'}, hitSave:{save:'wis', effect:'frightened of you until the spell ends'}},
+  'Divine Favor': {rider:{d:'1d4', type:'radiant', on:'every weapon hit for the next minute (concentration)'}},
+  "Hunter's Mark": {rider:{d:'1d6', type:'same type as your weapon', on:'every weapon hit on the marked creature (concentration)'}},
+  'Absorb Elements': {rider:{d:'1d6', type:'the triggering damage type', per:'1d6', on:'your first melee hit on your next turn'}, note:'Reaction when you take acid, cold, fire, lightning or thunder damage: resistance to it until the start of your next turn.'},
+  'Ensnaring Strike': {rider:null, hitSave:{save:'str', effect:'restrained by thorny vines'}, onHit:'your next weapon hit',
+    ongoing:{d:'1d6', type:'piercing', per:'1d6', text:'While restrained, it takes this at the start of each of its turns.'}},
+
+  // Save only, no damage
+  'Animal Friendship': {save:'wis', effect:'Charmed for 24 hours. Beasts only; fails on Intelligence 4 or higher.', upcastNote:'+1 beast per slot level above 1st.'},
+  'Bane': {save:'cha', effect:'For the duration, it subtracts 1d4 from attack rolls and saving throws.', upcastNote:'+1 target per slot level above 1st.'},
+  'Cause Fear': {save:'wis', effect:'Frightened of you; it repeats the save at the end of each of its turns. Constructs and undead are immune.', upcastNote:'+1 target per slot level above 1st (within 30 ft of each other).'},
+  'Charm Person': {save:'wis', effect:'Charmed by you (advantage on the save if you or your companions are fighting it).', upcastNote:'+1 target per slot level above 1st.'},
+  'Command': {save:'wis', effect:'It follows your one-word command on its next turn. Undead and creatures that don’t understand your language are unaffected.', upcastNote:'+1 target per slot level above 1st.'},
+  'Compelled Duel': {save:'wis', effect:'Disadvantage on attacks against anyone but you, and it must save again to move more than 30 ft from you.'},
+  'Faerie Fire': {save:'dex', effect:'Outlined in light: attacks against it have advantage and it can’t benefit from being invisible.'},
+  'Grease': {save:'dex', effect:'It falls prone. Also when a creature enters the area or ends its turn there.'},
+  'Sanctuary': {save:'wis', effect:'Made by any creature that targets the warded creature with an attack or harmful spell: on a failure it must choose a new target or lose the attack.'},
+  'Snare': {save:'dex', effect:'When triggered: hoisted upside down and restrained. Anyone can use an action on an Arcana check against the same DC to free it.'},
+  "Tasha's Hideous Laughter": {save:'wis', effect:'Prone and incapacitated with laughter. Creatures with Intelligence 4 or less are unaffected.'},
+};
+// Checked: these don't involve any roll by the caster
+const NO_ROLL_SPELLS = new Set(['Blade Ward','Control Flames','Dancing Lights','Friends','Light','Mage Hand','Mending','Message',
+  'Minor Illusion','Mold Earth','Prestidigitation','Shape Water','True Strike','Thaumaturgy','Alarm','Bless','Ceremony',
+  'Comprehend Languages','Detect Evil and Good','Detect Magic','Detect Poison and Disease','Disguise Self','Distort Value',
+  'Expeditious Retreat','Feather Fall','Find Familiar','Fog Cloud','Gift of Alacrity','Heroism','Identify','Illusory Script',
+  'Jump','Longstrider','Mage Armor','Protection from Evil and Good','Purify Food and Drink','Shield','Shield of Faith',
+  'Silent Image','Silvery Barbs','Speak with Animals',"Tenser's Floating Disk",'Unseen Servant','Darkness']);
+
 function findSpell(name){
   for(const list of [...Object.values(SPELL_DATA), EXTRA_SPELLS]){
     const sp = list.find(s=>s.name===name);
@@ -1481,6 +1602,7 @@ function showDetail(html){
   clearTimeout(detailClearTimer);
   actionDetail.innerHTML = html;
   actionDetailWrap.classList.add('open');
+  updateMoveLine();
 }
 function hideDetail(){
   actionDetailWrap.classList.remove('open');
@@ -1506,11 +1628,28 @@ function closeDetail(){
   hideDetail();
   document.querySelectorAll('.action-grid button').forEach(b=>b.classList.remove('active'));
   openAct = null;
+  updateMoveLine();
+}
+
+// "1. Move up to X feet": Dash adds your speed again. Dash is your action for the turn, so it
+// stays on until you pick a different Action or click Dash again. Opening Bonus Action
+// Options doesn't cancel it (you still get a bonus action).
+let dashActive = false;
+function updateMoveLine(){
+  const n = parseInt(document.getElementById('f_speed').value,10), speed = isNaN(n) ? 30 : n;
+  const dashing = dashActive;
+  const dashBtn = document.querySelector('.action-grid button[data-act="dash"]');
+  if(dashBtn && dashing) dashBtn.classList.add('active');
+  document.getElementById('moveFt').textContent = dashing ? speed*2 : speed;
+  document.getElementById('moveDash').textContent = dashing ? ` (${speed} + ${speed} from Dash)` : '';
+  document.querySelector('.move-line').classList.toggle('dashing', dashing);
 }
 document.getElementById('actionButtons').addEventListener('click', e=>{
   const btn = e.target.closest('button[data-act]');
   if(!btn) return;
   const act = btn.dataset.act;
+  // Choosing an Action sets whether you're dashing this turn (see updateMoveLine)
+  dashActive = act==='dash' && !detailOpenFor('dash');
   if(detailOpenFor(act)){ closeDetail(); return; }
   document.querySelectorAll('.action-grid button').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
@@ -1518,6 +1657,7 @@ document.getElementById('actionButtons').addEventListener('click', e=>{
   if(act==='attack') renderAttackDetail();
   else if(act==='spell') renderCastDetail();
   else if(act==='features') renderFeatureActionDetail();
+  else if(CHECK_ACTIONS[act]) renderCheckDetail(act);
   else showDetail(`<h4>${btn.textContent}</h4><p>${ACTION_TEXT[act]}</p>`);
 });
 document.querySelector('.action-grid button[data-act="bonus"]').addEventListener('click', e=>{
@@ -1527,33 +1667,309 @@ document.querySelector('.action-grid button[data-act="bonus"]').addEventListener
   e.currentTarget.classList.add('active');
 });
 
-function renderAttackDetail(){
-  let html = `<h4>Attack</h4>`;
-  if(state.attacks.length){
-    html += `<div>` + state.attacks.map(a=>`
-      <div class="weapon-row"><span class="wname">${a.name}</span><span class="wdmg">${a.bonus||'—'} to hit &middot; ${a.damage||'—'}</span></div>
-    `).join('') + `</div>`;
-  } else {
-    html += `<p class="empty-note">No weapons imported yet — add them in Character Summary or import from your sheet.</p>`;
+/* ---------- Attack flow (V2): Attack → weapon/maneuver → roll mode → Roll → popup ----------
+   Commands are plain Avrae !r rolls ONLY (never !a or other character commands).
+   Anything the 2014 rules decide after seeing the roll (crit, Divine Smite) is chosen in the
+   popup, not before Roll. */
+const attackFlow = {choice:null, mode:'normal'};
+const ROLL_MODES = [['adv','Advantage'], ['normal','Normal'], ['dis','Disadvantage']];
+const MANEUVERS = {
+  grapple: {label:'Grapple', text:'Replaces one attack. Athletics check contested by the target’s Athletics or Acrobatics (their choice). On a success the target is grappled. The target can be at most one size larger than you and must be within reach.'},
+  shove: {label:'Shove', text:'Replaces one attack. Athletics check contested by the target’s Athletics or Acrobatics (their choice). On a success, knock the target prone or push it 5 ft away. The target can be at most one size larger than you and must be within reach.'},
+};
+
+// "2d6+3 slashing · Martial Melee Weapon Attack. Heavy, Two-Handed" → parts
+function parseWeaponDamage(text){
+  const [first, ...rest] = String(text||'').split(' · ');
+  const m = first.trim().match(/^(\d+)d(\d+)\s*([+-]\s*\d+)?\s*([a-z]+)?/i);
+  if(!m) return null;
+  return {count:+m[1], die:+m[2], mod: m[3] ? parseInt(m[3].replace(/\s/g,''),10) : 0,
+    type:(m[4]||'').toLowerCase(), props:rest.join(' · ')};
+}
+function attackChoices(){
+  return [
+    ...state.attacks.map((a,i)=>({key:'w'+i, label:a.name, kind:'weapon', attack:a})),
+    ...Object.entries(MANEUVERS).map(([k,m])=>({key:k, label:m.label, kind:k})),
+  ];
+}
+// Actions that are a single ability check get the same flow: (pick skill) → roll mode → Roll → popup
+const CHECK_ACTIONS = {
+  hide: {title:'Hide', text:'Make a Stealth check. Until you’re found or stop hiding, it’s contested by the Perception of any creature actively looking for you. You can’t hide from a creature that can see you clearly.',
+    skills:['Stealth']},
+  search: {title:'Search', text:'Look for something. The DM tells you which check: Perception to notice things, Investigation to deduce from clues.',
+    skills:['Perception','Investigation']},
+};
+const checkFlow = {act:null, skill:null, mode:'normal'};
+function renderCheckDetail(act){
+  const def = CHECK_ACTIONS[act];
+  if(checkFlow.act !== act) Object.assign(checkFlow, {act, skill:null, mode:'normal'});
+  if(def.skills.length === 1) checkFlow.skill = def.skills[0];
+  let html = `<h4>${def.title}</h4><div class="flow-summary" style="margin-top:0;">${def.text}</div>`;
+  if(def.skills.length > 1){
+    html += `<div class="flow-label">Which check?</div><div class="flow-grid">`
+      + def.skills.map(s=>`<button type="button" class="flow-btn${checkFlow.skill===s?' active':''}" data-skill="${s}">${s} ${fmtMod(skillMod(s))}</button>`).join('') + `</div>`;
   }
-  html += `
-    <div class="opt-block"><b>Grappling</b> (replaces one attack) — contest your Athletics against the target's Athletics or Acrobatics; on a success, apply the Grappled condition.</div>
-    <div class="opt-block"><b>Shoving</b> (replaces one attack) — contest your Athletics against the target's Athletics or Acrobatics; on a success, knock the target Prone or push it 5 feet away.</div>
-    <div class="opt-block"><b>Two-Weapon Fighting</b> (Bonus Action) — after attacking with a light melee weapon, attack with a different light melee weapon in your other hand (or throw a thrown weapon); no ability modifier to that damage.</div>
-  `;
+  if(checkFlow.skill){
+    html += `<div class="flow-label">Roll with</div><div class="flow-grid">`
+      + ROLL_MODES.map(([k,l])=>`<button type="button" class="flow-btn${checkFlow.mode===k?' active':''}" data-mode="${k}">${l}</button>`).join('')
+      + `</div><div class="flow-go"><button type="button" id="flowRoll">Roll</button></div>`;
+  }
   showDetail(html);
+  actionDetail.querySelectorAll('[data-skill]').forEach(b=>b.addEventListener('click', ()=>{ checkFlow.skill = b.dataset.skill; renderCheckDetail(act); }));
+  actionDetail.querySelectorAll('[data-mode]').forEach(b=>b.addEventListener('click', ()=>{ checkFlow.mode = b.dataset.mode; renderCheckDetail(act); }));
+  const go = document.getElementById('flowRoll');
+  if(go) go.addEventListener('click', ()=>openRollPopup({kind:'check', label:def.title, skill:checkFlow.skill}, checkFlow.mode));
+}
+
+function hasFeature(name){ return classFeatureItems().some(t=>t.name===name && charLevel() >= t.level); }
+function skillMod(name){ const s = state.skills.find(x=>x.name===name); return s && typeof s.mod==='number' ? s.mod : 0; }
+function d20For(mode){ return mode==='adv' ? '2d20kh1' : mode==='dis' ? '2d20kl1' : '1d20'; }
+
+function renderAttackDetail(){
+  const choices = attackChoices();
+  if(!choices.some(c=>c.key===attackFlow.choice)) attackFlow.choice = null;
+  const sel = choices.find(c=>c.key===attackFlow.choice);
+  let html = `<h4>Attack</h4><div class="flow-label">Choose an attack</div><div class="flow-grid">`
+    + choices.map(c=>`<button type="button" class="flow-btn${c===sel?' active':''}" data-choice="${c.key}">${escapeHtml(c.label)}</button>`).join('')
+    + `</div>`;
+  if(!state.attacks.length) html += `<p class="empty-note" style="margin-top:8px;">No weapons imported yet. Import your sheet to see them here.</p>`;
+  if(sel){
+    const summary = sel.kind==='weapon'
+      ? `${escapeHtml(sel.attack.bonus||'—')} to hit &middot; ${escapeHtml(sel.attack.damage||'—')}`
+      : `Athletics ${fmtMod(skillMod('Athletics'))}. ${MANEUVERS[sel.kind].text}`;
+    html += `<div class="flow-summary">${summary}</div>`
+      + `<div class="flow-label">Roll with</div><div class="flow-grid">`
+      + ROLL_MODES.map(([k,l])=>`<button type="button" class="flow-btn${attackFlow.mode===k?' active':''}" data-mode="${k}">${l}</button>`).join('')
+      + `</div><div class="flow-go"><button type="button" id="flowRoll">Roll</button></div>`;
+  }
+  showDetail(html);
+  actionDetail.querySelectorAll('[data-choice]').forEach(b=>b.addEventListener('click', ()=>{ attackFlow.choice = b.dataset.choice; renderAttackDetail(); }));
+  actionDetail.querySelectorAll('[data-mode]').forEach(b=>b.addEventListener('click', ()=>{ attackFlow.mode = b.dataset.mode; renderAttackDetail(); }));
+  const go = document.getElementById('flowRoll');
+  if(go) go.addEventListener('click', ()=>openRollPopup(sel, attackFlow.mode));
+}
+
+/* ---------- Roll popup ---------- */
+const rollPopup = document.getElementById('rollPopup');
+const rollState = {sel:null, mode:'normal', crit:false, smite:0, undead:false};
+// Paladin spell slots: highest slot level available by paladin level (2014 half-caster table)
+function paladinMaxSlot(){ const l = charLevel(); return l>=17?5 : l>=13?4 : l>=9?3 : l>=5?2 : l>=2?1 : 0; }
+const ORDINAL = ['','1st','2nd','3rd','4th','5th'];
+
+function openRollPopup(sel, mode){
+  hideTooltip();
+  Object.assign(rollState, {sel, mode, crit:false, smite:0, undead:false, alt:false});
+  renderRollPopup();
+  rollPopup.hidden = false;
+  requestAnimationFrame(()=>rollPopup.classList.add('open'));
+  rollPopup.querySelector('.roll-close').focus();
+}
+function closeRollPopup(){
+  rollPopup.classList.remove('open');
+  rollPopup.hidden = true;
+  const go = document.getElementById('flowRoll'); if(go) go.focus();
+}
+
+// Each command is {cmd, desc}: only `cmd` goes in the copy box; `desc` is shown beside it
+function toHitCommand(){
+  const {sel, mode} = rollState;
+  if(sel.kind==='weapon'){
+    const bonus = parseInt(String(sel.attack.bonus||'0').replace(/\s/g,''),10) || 0;
+    return {cmd:`!r ${d20For(mode)}${fmtMod(bonus)}`, desc:`${sel.attack.name} attack`};
+  }
+  if(sel.kind==='check') return {cmd:`!r ${d20For(mode)}${fmtMod(skillMod(sel.skill))}`, desc:`${sel.label} (${sel.skill})`};
+  return {cmd:`!r ${d20For(mode)}${fmtMod(skillMod('Athletics'))}`, desc:`${MANEUVERS[sel.kind].label} (Athletics)`};
+}
+// Damage command plus a list of what's included, following the 2014 rules
+function damageCommand(){
+  const a = rollState.sel.attack, p = parseWeaponDamage(a.damage);
+  if(!p) return null;
+  const melee = /melee/i.test(p.props);
+  const twoHanded = /two-handed/i.test(p.props) || /two-handed/i.test(a.name);
+  const style = hasFeature('Fighting Style') ? getChoice('Fighting Style') : '';
+  const notes = [];
+  // Great Weapon Fighting: reroll 1s and 2s once, melee weapon held in two hands
+  const gwf = style==='Great Weapon Fighting' && melee && twoHanded;
+  if(gwf) notes.push('Great Weapon Fighting: 1s and 2s on the weapon dice are rerolled once');
+  // Dueling: +2 damage with a melee weapon in one hand and no other weapons (so never off-hand)
+  const offhand = !!rollState.sel.offhand;
+  const dueling = style==='Dueling' && melee && !twoHanded && !offhand;
+  if(dueling) notes.push('Dueling: +2 (one-handed, no other weapons)');
+  let count = p.count * (rollState.crit ? 2 : 1);
+  if(rollState.crit) notes.push('Crit: all damage dice doubled');
+  if(rollState.crit && melee && rt.raceKey==='halforc'){ count += 1; notes.push('Savage Attacks: one extra weapon die'); }
+  // Radiant: Divine Smite (2d8 + 1d8/slot above 1st, max 5d8; +1d8 vs undead/fiend) and Improved Divine Smite (+1d8)
+  let radiant = 0;
+  if(rollState.smite && melee){
+    radiant += Math.min(5, 1 + rollState.smite) + (rollState.undead ? 1 : 0);
+    notes.push(`Divine Smite (${ORDINAL[rollState.smite]}-level slot${rollState.undead?', undead/fiend':''}). Uses a spell slot.`);
+  }
+  if(melee && hasFeature('Improved Divine Smite')){ radiant += 1; notes.push('Improved Divine Smite: +1d8 radiant'); }
+  radiant *= rollState.crit ? 2 : 1;
+  // Two-Weapon Fighting: the off-hand attack adds no ability modifier to damage unless it's negative.
+  // (Assumes the sheet's damage modifier is the ability modifier; a magic weapon bonus would also be dropped.)
+  let mod = p.mod + (dueling ? 2 : 0);
+  if(offhand){ mod = Math.min(p.mod, 0); notes.push('Two-Weapon Fighting: no ability modifier on off-hand damage (unless negative)'); }
+  const types = [p.type, radiant ? 'radiant' : ''].filter(Boolean).join(' + ');
+  const cmd = `!r ${count}d${p.die}${gwf?'ro<3':''}${mod ? fmtMod(mod) : ''}${radiant ? `+${radiant}d8` : ''}`;
+  const desc = `${a.name} damage${types ? ` (${types})` : ''}`;
+  return {cmd, desc, notes, melee};
+}
+
+// Only the Avrae command goes in the box (and gets copied); the description sits beside it
+function cmdBox(label, c, extraHtml){
+  return `<div class="roll-box"><div class="roll-box-label">${label}</div>
+    <div class="roll-cmd-row"><code class="roll-cmd">${escapeHtml(c.cmd)}</code>
+    <button type="button" class="copy-btn" data-copy="${escapeHtml(c.cmd)}" aria-label="Copy ${label.toLowerCase()} command">Copy</button>
+    <span class="roll-cmd-desc">${escapeHtml(c.desc)}</span></div>${extraHtml||''}</div>`;
+}
+function toggleBtn(attr, value, label, on){
+  return `<button type="button" class="flow-btn${on?' active':''}" ${attr}="${value}" aria-pressed="${on}">${label}</button>`;
+}
+
+function infoBox(label, html){
+  return `<div class="roll-box"><div class="roll-box-label">${label}</div><div class="roll-info">${html}</div></div>`;
+}
+const ABILITY_TEXT = a=>a==='str/dex' ? 'Strength or Dexterity (its choice)' : ABILITY_FULL[a];
+function parseDice(d){ const m = String(d).match(/^(\d+)d(\d+)$/); return m ? {n:+m[1], s:+m[2]} : {n:0, s:0}; }
+// Dice for one part: base (× cantrip tier) + per-slot extra, doubled on a crit
+function scaleDice(base, per, {up=0, cantrip=false, crit=false}={}){
+  const b = parseDice(base), p = per ? parseDice(per) : {n:0};
+  const tier = 1 + (charLevel()>=5) + (charLevel()>=11) + (charLevel()>=17);
+  const n = (b.n * (cantrip ? tier : 1) + p.n * up) * (crit ? 2 : 1);
+  return `${n}d${b.s}`;
+}
+function saveLine(dc, ability, onSave, effect){
+  const result = onSave==='half' ? 'Half damage on a success.' : onSave==='none' ? 'No damage on a success.' : '';
+  return `Target makes a <b>DC ${dc} ${ABILITY_TEXT(ability)}</b> saving throw. ${result}${effect ? ` On a failure: ${effect}` : ''}`;
+}
+const critToggle = ()=>`<div class="roll-after">After you see the attack roll:</div><div class="roll-toggles">${toggleBtn('data-crit','1','Crit',rollState.crit)}</div>`;
+
+function spellPopupHtml(){
+  const {sel, mode, crit} = rollState, e = sel.entry, sp = e.sp, r = SPELL_ROLLS[sp.name];
+  const s = spellStats(e.ability), up = sp.level ? Math.max(0, sel.slot - sp.level) : 0, cantrip = !!(r && r.cantrip);
+  const abil = ABILITY_FULL[e.ability];
+  let html = `<p class="roll-intro">${sp.level ? (e.fixedLevel ? `Cast at ${ORDINAL[sel.slot]} level (no spell slot).` : `Uses a ${ORDINAL[sel.slot]}-level spell slot.`) : 'Cantrip.'} ${abil} is your spellcasting ability for it.</p>`;
+  if(!r){
+    return html + (NO_ROLL_SPELLS.has(sp.name)
+      ? infoBox('No roll', `${sp.name} doesn’t need a roll. ${sp.desc}`)
+      : infoBox('Not added yet', `Roll details for ${sp.name} haven’t been added to the tracker yet. Your spell attack is ${fmtMod(s.atk)} and your save DC is ${s.dc}.`));
+  }
+  const notes = [];
+  if(r.attack) html += cmdBox('Spell attack', {cmd:`!r ${d20For(mode)}${fmtMod(s.atk)}`, desc:`${sp.name} (${r.attack} spell attack)`});
+  if(r.save) html += infoBox('Saving throw', saveLine(s.dc, r.save, r.onSave, r.effect));
+  (r.parts||[]).forEach(p=>{
+    const base = p.alt && rollState.alt ? p.alt : p.d;
+    const dice = scaleDice(base, p.per, {up, cantrip, crit: r.attack && crit});
+    let extra = r.attack ? critToggle() : '';
+    if(p.alt) extra += `<div class="roll-toggles" style="margin-top:6px;">${toggleBtn('data-alt','1',r.altLabel,!!rollState.alt)}</div>`;
+    html += cmdBox('Damage', {cmd:`!r ${dice}`, desc:`${sp.name} damage (${p.type})`}, extra);
+  });
+  if(r.explosion){
+    const x = r.explosion;
+    html += infoBox('Explosion', `${x.text} ${saveLine(s.dc, x.save, x.onSave)}`)
+      + cmdBox('Explosion damage', {cmd:`!r ${scaleDice(x.d, x.per, {up})}`, desc:`${sp.name} explosion (${x.type})`});
+  }
+  if(r.heal){ const d = scaleDice(r.heal.d, r.heal.per, {up}); html += cmdBox('Healing', {cmd:`!r ${d}${fmtMod(s.mod)}`, desc:'hit points regained'}); }
+  if(r.temp) html += cmdBox('Temporary hit points', {cmd:`!r ${r.temp.d}+${r.temp.flat + r.temp.perFlat*up}`, desc:'temporary hit points for 1 hour'});
+  if(r.pool) html += cmdBox('Hit point pool', {cmd:`!r ${scaleDice(r.pool.d, r.pool.per, {up})}`, desc:r.pool.what});
+  if(r.darts){
+    const n = r.darts.n + up;
+    html += cmdBox('All darts, one target', {cmd:`!r ${n}${r.darts.d.slice(1)}+${n*r.darts.bonus}`, desc:`${n} darts (${r.darts.type})`})
+      + cmdBox('One dart', {cmd:`!r ${r.darts.d}+${r.darts.bonus}`, desc:`per dart (${r.darts.type})`});
+    notes.push(`${n} darts. Each one hits automatically; split them between targets however you like.`);
+  }
+  if(r.rider || r.onHit){
+    html += infoBox('No roll now', `This adds to ${r.rider ? r.rider.on : r.onHit}.`);
+    if(r.rider){
+      html += cmdBox('Extra damage on the hit', {cmd:`!r ${scaleDice(r.rider.d, r.rider.per, {up, crit})}`, desc:r.rider.type}, critToggle());
+      notes.push('Roll this with your weapon damage. A crit doubles these dice too.');
+    }
+  }
+  if(r.hitSave) html += infoBox('On a hit', `Target makes a <b>DC ${s.dc} ${ABILITY_TEXT(r.hitSave.save)}</b> saving throw or is ${r.hitSave.effect}.`);
+  if(r.ongoing){
+    const o = r.ongoing;
+    html += cmdBox('Later turns', {cmd:`!r ${scaleDice(o.d, o.per, {up})}`, desc:o.type},
+      `<div class="roll-notes" style="list-style:none; padding-left:0;">${o.text}${o.save ? ` (DC ${s.dc} ${ABILITY_FULL[o.save]}.)` : ''}</div>`);
+  }
+  if(r.note) notes.push(r.note);
+  if(up && r.upcastNote) notes.push(r.upcastNote);
+  if(notes.length) html += `<ul class="roll-notes">${notes.map(n=>`<li>${n}</li>`).join('')}</ul>`;
+  return html;
+}
+
+function featurePopupHtml(){
+  const t = rollState.sel.feature;
+  const casting = SPELLCASTING[cf.classKey];
+  const dc = casting ? spellStats(casting.ability).dc : null;
+  let html = `<p class="roll-intro">${t.desc}</p>`;
+  if(/^Channel Divinity/.test(t.name)) html += `<p class="roll-intro">Uses your Channel Divinity (once per short or long rest).</p>`;
+  if(t.save && dc) html += infoBox('Saving throw', `Target makes a <b>DC ${dc} ${ABILITY_TEXT(t.save)}</b> saving throw. ${t.saveNote||''}`);
+  else if(t.name==='Lay on Hands') html += infoBox('Healing pool', `<b>${5*charLevel()} hit points</b> (5 × paladin level), refilled on a long rest. Touch a creature and spend any amount from the pool; there’s nothing to roll. Or spend 5 to cure one disease or neutralize one poison.`);
+  else html += infoBox('No roll', `${t.name} doesn’t need a roll.${t.tip ? ` ${t.tip}` : ''}`);
+  return html;
+}
+
+function renderRollPopup(){
+  const {sel, mode} = rollState;
+  const modeLabel = ROLL_MODES.find(([k])=>k===mode)[1];
+  document.getElementById('rollTitle').textContent = `${sel.label}${sel.kind==='spell' && sel.slot && !sel.entry.fixedLevel && sel.slot > sel.entry.sp.level ? ` (${ORDINAL[sel.slot]}-level slot)` : ''}${mode!=='normal' ? ` — ${modeLabel}` : ''}`;
+  if(sel.kind==='spell' || sel.kind==='feature'){
+    document.getElementById('rollBody').innerHTML = sel.kind==='spell' ? spellPopupHtml() : featurePopupHtml();
+    return;
+  }
+  let html = `<p class="roll-intro">Copy a command and paste it into Discord.</p>`
+    + cmdBox(sel.kind==='weapon' ? 'To hit' : `${sel.kind==='check' ? sel.skill : 'Athletics'} check`, toHitCommand());
+  if(sel.kind==='weapon'){
+    const dmg = damageCommand();
+    if(!dmg){
+      html += `<div class="roll-box"><div class="roll-box-label">Damage</div><p class="empty-note">Couldn’t read this weapon’s damage from the sheet (“${escapeHtml(sel.attack.damage||'')}”).</p></div>`;
+    } else {
+      // Decided after seeing the to-hit roll, per the rules: crit and Divine Smite
+      let toggles = `<div class="roll-after">After you see the roll:</div><div class="roll-toggles">${toggleBtn('data-crit','1','Crit',rollState.crit)}</div>`;
+      if(dmg.melee && hasFeature('Divine Smite') && paladinMaxSlot()){
+        toggles += `<div class="roll-after">Divine Smite:</div><div class="roll-toggles">`
+          + toggleBtn('data-smite','0','None', !rollState.smite)
+          + Array.from({length:paladinMaxSlot()}, (_,i)=>toggleBtn('data-smite', i+1, `${ORDINAL[i+1]} slot`, rollState.smite===i+1)).join('')
+          + (rollState.smite ? toggleBtn('data-undead','1','Undead or fiend', rollState.undead) : '')
+          + `</div>`;
+      }
+      const notes = dmg.notes.length ? `<ul class="roll-notes">${dmg.notes.map(n=>`<li>${n}</li>`).join('')}</ul>` : '';
+      html += cmdBox('Damage', dmg, toggles + notes);
+    }
+  }
+  document.getElementById('rollBody').innerHTML = html;
+}
+
+// Popup events: toggles re-render; copy; click outside, the ×, or Escape closes
+rollPopup.addEventListener('click', e=>{
+  if(e.target===rollPopup || e.target.closest('.roll-close')){ closeRollPopup(); return; }
+  const t = e.target.closest('button'); if(!t) return;
+  if(t.dataset.crit){ rollState.crit = !rollState.crit; renderRollPopup(); }
+  else if(t.dataset.smite !== undefined){ rollState.smite = +t.dataset.smite; if(!rollState.smite) rollState.undead = false; renderRollPopup(); }
+  else if(t.dataset.undead){ rollState.undead = !rollState.undead; renderRollPopup(); }
+  else if(t.dataset.alt){ rollState.alt = !rollState.alt; renderRollPopup(); }
+  else if(t.dataset.copy !== undefined){ copyText(t.dataset.copy, t); }
+});
+document.addEventListener('keydown', e=>{ if(e.key==='Escape' && !rollPopup.hidden) closeRollPopup(); });
+
+function copyText(text, btn){
+  const done = ok=>{ btn.textContent = ok ? 'Copied!' : 'Select & copy'; setTimeout(()=>{ btn.textContent = 'Copy'; }, 1500); };
+  if(navigator.clipboard && window.isSecureContext){
+    navigator.clipboard.writeText(text).then(()=>done(true), ()=>done(fallbackCopy(text)));
+  } else done(fallbackCopy(text));
+}
+function fallbackCopy(text){
+  const ta = document.createElement('textarea');
+  ta.value = text; ta.setAttribute('readonly',''); ta.style.position='fixed'; ta.style.opacity='0';
+  document.body.appendChild(ta); ta.select();
+  let ok = false; try{ ok = document.execCommand('copy'); }catch(e){}
+  ta.remove(); return ok;
 }
 
 // Class features usable right now with the given action type ('action' | 'bonus')
 function usableFeatures(type){
   return classFeatureItems().filter(t=>t.type===type && charLevel() >= t.level);
-}
-// Feature lines look and behave like spell lines: colored by action type, Class tag,
-// hover tooltip, click for the full description
-function featureLineList(features){
-  return `<div class="prepared-list">` + features.map(t=>
-    `<div class="spell-line act-${t.type}" data-feature="${t.name}">${t.name} <span style="color:var(--ink-dim); font-size:0.8rem;">(Class Feature)</span>${sourceTag('Class')}</div>`
-  ).join('') + `</div>`;
 }
 function featureMeta(t){
   return `Class feature (level ${t.level})${TYPE_LABELS[t.type] ? ' &middot; ' + TYPE_LABELS[t.type] : ''}`;
@@ -1563,108 +1979,202 @@ function showFeatureTooltip(e, t){
   tooltip.style.display='block';
   moveTooltip(e);
 }
-function wireFeatureLines(backLabel, backFn){
-  actionDetail.querySelectorAll('.spell-line[data-feature]').forEach(row=>{
-    const t = classFeatureItems().find(f=>f.name===row.dataset.feature);
-    if(!t) return;
-    row.addEventListener('mouseenter', e=>showFeatureTooltip(e, t));
-    row.addEventListener('mousemove', moveTooltip);
-    row.addEventListener('mouseleave', hideTooltip);
-    row.addEventListener('click', ()=>{
-      hideTooltip();
-      showDetail(`<div class="detail-back" id="detailBack">&larr; Back to ${backLabel}</div>
-        <h4 class="act-${t.type}">${t.name}</h4>
-        <div class="meta">${featureMeta(t)}</div>
-        <p style="margin-top:8px;">${t.desc}</p>`);
-      document.getElementById('detailBack').addEventListener('click', backFn);
-    });
-  });
-}
 function updateFeaturesButton(){
   document.getElementById('featuresBtn').style.display = usableFeatures('action').length ? '' : 'none';
 }
+
+/* ---------- Class Features flow: pick a feature → Use → popup ----------
+   Most features don't roll; the popup then says so, and gives the DC the DM needs when the
+   target makes a save (Channel Divinity uses your spell save DC). */
+const featureFlow = {name:null};
+function featureStepHtml(t){
+  return `<div class="flow-summary">${featureMeta(t)}. ${t.desc}</div>`
+    + `<div class="flow-go"><button type="button" id="flowRoll">Use</button></div>`;
+}
+function wireFeatureStep(t){
+  const go = document.getElementById('flowRoll');
+  if(go) go.addEventListener('click', ()=>openRollPopup({kind:'feature', label:t.name, feature:t}, 'normal'));
+}
 function renderFeatureActionDetail(){
-  showDetail(`<h4>Class Features</h4>` + featureLineList(usableFeatures('action')));
-  wireFeatureLines('Class Features', renderFeatureActionDetail);
-}
-
-function renderSpellLineList(spells, dimPredicate, sources){
-  return `<div class="prepared-list">` + spells.map(sp=>{
-    const dim = dimPredicate && dimPredicate(sp) ? ' spell-line-dim' : '';
-    const tag = sources && sources.has(sp.name) ? sourceTag(sources.get(sp.name).source) : '';
-    return `<div class="spell-line ${sp.cls}${dim}" data-spell="${sp.name}">${sp.name} <span style="color:var(--ink-dim); font-size:0.8rem;">(${LEVEL_NAMES[sp.level]})</span>${tag}</div>`;
-  }).join('') + `</div>`;
-}
-function wireSpellLines(classKey, backLabel, backFn){
-  actionDetail.querySelectorAll('.spell-line').forEach(row=>{
-    const sp = SPELL_DATA[classKey].find(s=>s.name===row.dataset.spell) || findSpell(row.dataset.spell);
-    if(!sp) return;
-    row.addEventListener('mouseenter', e=>showTooltip(e, sp));
-    row.addEventListener('mousemove', moveTooltip);
-    row.addEventListener('mouseleave', hideTooltip);
-    row.addEventListener('click', ()=>{
-      hideTooltip();
-      showSpellPopupStatic(sp, backLabel, backFn);
-    });
-  });
-}
-
-function renderCastDetail(){
-  let html = `<h4>Cast Prepared Spell</h4>`;
-  const classKey = document.getElementById('spellClassSelect').value;
-  const prepared = [...state.preparedSpells].map(n=>SPELL_DATA[classKey].find(s=>s.name===n)).filter(Boolean);
-  // Unlocked racial/class spells are always prepared, so they're castable without a tick
-  const sources = new Map();
-  alwaysPreparedSpells().filter(x=>charLevel() >= x.unlock).forEach(x=>{ if(!sources.has(x.sp.name)) sources.set(x.sp.name, {sp:x.sp, source:x.source}); });
-  const always = [...sources.values()].map(v=>v.sp);
-  const castable = [...always, ...prepared.filter(sp=>!sources.has(sp.name))];
-  if(!castable.length){
-    html += `<p class="empty-note">No spells prepared yet — expand the Spells section below and check the ones you have prepared.</p>`;
-  } else if(!prepared.length){
-    html += `<p class="empty-note">Your always-prepared spells are below. Tick more in the Spells section to add them here.</p>`;
-  }
-  if(castable.length){
-    html += renderSpellLineList(castable, sp=>sp.cls==='act-ritual'||sp.cls==='act-bonus', sources);
-    html += `<p class="empty-note" style="margin-top:10px; font-size:0.72rem;">Dimmed spells are rituals or Bonus Action spells — they can't be cast with your Action.</p>`;
-  }
+  const feats = usableFeatures('action');
+  if(!feats.some(t=>t.name===featureFlow.name)) featureFlow.name = null;
+  const sel = feats.find(t=>t.name===featureFlow.name);
+  let html = `<h4>Class Features</h4><div class="flow-label">Choose a feature</div><div class="flow-grid">`
+    + feats.map(t=>`<button type="button" class="flow-btn${t===sel?' active':''}" data-feature-pick="${escapeHtml(t.name)}">${t.name}</button>`).join('')
+    + `</div>`;
+  if(sel) html += featureStepHtml(sel);
   showDetail(html);
-  wireSpellLines(classKey, 'prepared spells', renderCastDetail);
+  actionDetail.querySelectorAll('[data-feature-pick]').forEach(b=>{
+    const t = feats.find(f=>f.name===b.dataset.featurePick);
+    b.addEventListener('mouseenter', e=>showFeatureTooltip(e, t));
+    b.addEventListener('mousemove', moveTooltip);
+    b.addEventListener('mouseleave', hideTooltip);
+    b.addEventListener('click', ()=>{ hideTooltip(); featureFlow.name = t.name; renderFeatureActionDetail(); });
+  });
+  if(sel) wireFeatureStep(sel);
 }
-
+/* ---------- Cast Prepared Spell flow: pick a spell → slot level (→ roll mode) → Cast → popup ----------
+   Each castable spell is an "entry": {sp, source ('Racial'|'Class'|null), ability, fixedLevel}.
+   Racial spells are cast at a fixed level (e.g. Hellish Rebuke at 2nd); everything else uses
+   the class's spell slots. */
+const FULL_CASTERS = ['bard','cleric','druid','sorcerer','wizard'];
+// Highest spell slot level the character has (2014 tables). Warlock Pact Magic is a single
+// slot level, handled as a max here; add pact-only casting when Warlock is added.
+function maxSlotLevel(){
+  const l = charLevel(), k = cf.classKey;
+  if(FULL_CASTERS.includes(k)) return Math.min(9, Math.ceil(l/2));
+  if(k==='paladin' || k==='ranger') return l < 2 ? 0 : Math.min(5, Math.floor((l-1)/4) + 1);
+  if(k==='warlock') return Math.min(5, Math.ceil(l/2));
+  return 0;
+}
+function castableSpells(){
+  const listKey = document.getElementById('spellClassSelect').value;
+  const listAbility = (SPELLCASTING[cf.classKey] || SPELLCASTING[listKey] || {ability:'int'}).ability;
+  const entries = [], seen = new Set();
+  alwaysPreparedSpells().filter(x=>charLevel() >= x.unlock).forEach(x=>{
+    if(seen.has(x.sp.name)) return; seen.add(x.sp.name);
+    entries.push({sp:x.sp, source:x.source, ability:x.ability || listAbility,
+      fixedLevel: x.source==='Racial' && x.sp.level > 0 ? (x.castLevel || x.sp.level) : null, note:x.note});
+  });
+  [...state.preparedSpells].forEach(n=>{
+    const sp = SPELL_DATA[listKey].find(s=>s.name===n);
+    if(!sp || seen.has(n)) return; seen.add(n);
+    entries.push({sp, source:null, ability:listAbility, fixedLevel:null});
+  });
+  return entries.sort((a,b)=>a.sp.level-b.sp.level || a.sp.name.localeCompare(b.sp.name));
+}
+const castFlow = {name:null, slot:null, mode:'normal'};
+function spellStepHtml(entry){
+  const sp = entry.sp, r = SPELL_ROLLS[sp.name];
+  const url = `https://dnd5e.wikidot.com/spell:${slugify(sp.name)}`;
+  let html = `<div class="flow-summary">${LEVEL_NAMES[sp.level]} &middot; ${sp.time} &middot; ${sp.range} &middot; ${sp.duration}. ${sp.desc}`
+    + (entry.note ? ` <span style="color:var(--racial);">${entry.note}</span>` : '')
+    + ` <a href="${url}" target="_blank" style="color:var(--sea);">Full rules ↗</a></div>`;
+  if(sp.level > 0){
+    if(entry.fixedLevel){
+      castFlow.slot = entry.fixedLevel;
+      html += `<div class="flow-label">Cast at</div><div class="flow-summary" style="margin-top:0;">${ORDINAL[entry.fixedLevel]} level (from ${entry.source==='Racial'?'your race':'this feature'}; no spell slot)</div>`;
+    } else {
+      const max = Math.max(maxSlotLevel(), sp.level);
+      if(!castFlow.slot || castFlow.slot < sp.level || castFlow.slot > max) castFlow.slot = sp.level;
+      html += `<div class="flow-label">Spell slot</div><div class="flow-grid">`
+        + Array.from({length:max - sp.level + 1}, (_,i)=>sp.level+i).map(l=>`<button type="button" class="flow-btn${castFlow.slot===l?' active':''}" data-slot="${l}">${ORDINAL[l] || l+'th'} level</button>`).join('')
+        + `</div>`;
+      if(maxSlotLevel() < sp.level) html += `<div class="flow-summary">You don’t have ${ORDINAL[sp.level]}-level slots yet at your level.</div>`;
+    }
+  }
+  if(r && r.attack){
+    html += `<div class="flow-label">Roll with</div><div class="flow-grid">`
+      + ROLL_MODES.map(([k,l])=>`<button type="button" class="flow-btn${castFlow.mode===k?' active':''}" data-mode="${k}">${l}</button>`).join('') + `</div>`;
+  }
+  return html + `<div class="flow-go"><button type="button" id="flowRoll">Cast</button></div>`;
+}
+function wireSpellStep(entry, rerender){
+  actionDetail.querySelectorAll('[data-slot]').forEach(b=>b.addEventListener('click', ()=>{ castFlow.slot = +b.dataset.slot; rerender(); }));
+  actionDetail.querySelectorAll('[data-mode]').forEach(b=>b.addEventListener('click', ()=>{ castFlow.mode = b.dataset.mode; rerender(); }));
+  const go = document.getElementById('flowRoll');
+  if(go) go.addEventListener('click', ()=>openRollPopup({kind:'spell', label:entry.sp.name, entry, slot: entry.sp.level ? castFlow.slot : 0},
+    SPELL_ROLLS[entry.sp.name] && SPELL_ROLLS[entry.sp.name].attack ? castFlow.mode : 'normal'));
+}
+function renderCastDetail(){
+  // Bonus action spells are cast from Bonus Action Options, not with your Action
+  const entries = castableSpells().filter(e=>!isBonusSpell(e.sp));
+  if(!entries.some(e=>e.sp.name===castFlow.name)) castFlow.name = null;
+  const sel = entries.find(e=>e.sp.name===castFlow.name);
+  let html = `<h4>Cast Prepared Spell</h4>`;
+  if(!entries.length){
+    html += `<p class="empty-note">No spells prepared yet — expand the Spells section below and check the ones you have prepared.</p>`;
+  } else {
+    // Buttons grouped by spell level; spells that don't take an Action are dimmed (cast them another way)
+    let lastLevel = -1;
+    html += entries.map(e=>{
+      const head = e.sp.level !== lastLevel ? `${lastLevel>=0?'</div>':''}<div class="flow-label">${LEVEL_NAMES[e.sp.level]}</div><div class="flow-grid">` : '';
+      lastLevel = e.sp.level;
+      const dim = /Reaction/i.test(e.sp.time) ? ' flow-dim' : '';
+      return head + `<button type="button" class="flow-btn${e===sel?' active':''}${dim}" data-cast="${escapeHtml(e.sp.name)}">${e.sp.name}${e.source ? sourceTag(e.source) : ''}</button>`;
+    }).join('') + `</div>`;
+    if(entries.some(e=>/Reaction/i.test(e.sp.time))) html += `<p class="empty-note" style="margin-top:8px; font-size:0.72rem;">Dimmed spells are cast as a Reaction (on someone else's turn), not with your Action. Bonus action spells are in Bonus Action Options.</p>`;
+  }
+  if(sel) html += spellStepHtml(sel);
+  showDetail(html);
+  actionDetail.querySelectorAll('[data-cast]').forEach(b=>{
+    const e = entries.find(x=>x.sp.name===b.dataset.cast);
+    wireSpellTooltip(b, e.sp);
+    b.addEventListener('click', ()=>{ hideTooltip(); if(castFlow.name!==e.sp.name){ castFlow.name = e.sp.name; castFlow.slot = null; castFlow.mode = 'normal'; } renderCastDetail(); });
+  });
+  if(sel) wireSpellStep(sel, renderCastDetail);
+}
+/* ---------- Bonus Action Options flow: same path as the Action buttons ----------
+   Two-Weapon Fighting (off-hand light melee weapon → roll mode → Roll), bonus-action class
+   features (→ Use) and bonus-action spells (→ slot → Cast). */
+const bonusFlow = {pick:null, weapon:null, mode:'normal'};
+const isBonusSpell = sp=>/Bonus Action/i.test(sp.time);
+// Two-Weapon Fighting needs a light melee weapon in the off hand
+function lightMeleeWeapons(){
+  return state.attacks.map((a,i)=>({a, i, p:parseWeaponDamage(a.damage)}))
+    .filter(x=>x.p && /melee/i.test(x.p.props) && /\blight\b/i.test(x.p.props));
+}
 function renderBonusDetail(){
   document.querySelectorAll('#actionButtons button').forEach(b=>b.classList.remove('active'));
-  const classKey = document.getElementById('spellClassSelect').value;
-  const sources = new Map();
-  alwaysPreparedSpells().filter(x=>charLevel() >= x.unlock).forEach(x=>{ if(!sources.has(x.sp.name)) sources.set(x.sp.name, {sp:x.sp, source:x.source}); });
-  const bonusSpells = [...[...sources.values()].map(v=>v.sp),
-    ...[...state.preparedSpells].filter(n=>!sources.has(n)).map(n=>SPELL_DATA[classKey].find(s=>s.name===n))]
-    .filter(sp=>sp && sp.cls==='act-bonus');
-  let html = `<h4>Bonus Action Options</h4>
-    <div class="opt-block" style="margin-top:0; padding-top:0; border-top:none;"><b>Two-Weapon Fighting</b> — When you take the Attack action with a light melee weapon, you can use your bonus action to attack with a different light melee weapon in your other hand (or a thrown weapon you're holding). Don't add your ability modifier to that extra attack's damage unless it's negative.</div>`;
-  const bonusFeatures = usableFeatures('bonus');
-  if(bonusFeatures.length){
-    html += `<div style="margin-top:12px; font-size:0.7rem; color:var(--ink-dim); text-transform:uppercase; letter-spacing:0.06em;">Bonus Action Class Features</div>`;
-    html += featureLineList(bonusFeatures);
+  const feats = usableFeatures('bonus');
+  const spells = castableSpells().filter(e=>isBonusSpell(e.sp));
+  const picks = ['twf', ...feats.map(t=>'f:'+t.name), ...spells.map(e=>'s:'+e.sp.name)];
+  if(!picks.includes(bonusFlow.pick)) bonusFlow.pick = null;
+  const btn = (key, label, extra='')=>`<button type="button" class="flow-btn${bonusFlow.pick===key?' active':''}" data-bonus="${escapeHtml(key)}">${label}${extra}</button>`;
+  let html = `<h4>Bonus Action Options</h4>`
+    + `<div class="flow-label">Attack</div><div class="flow-grid">${btn('twf','Two-Weapon Fighting')}</div>`;
+  if(feats.length) html += `<div class="flow-label">Class features</div><div class="flow-grid">${feats.map(t=>btn('f:'+t.name, t.name)).join('')}</div>`;
+  if(spells.length) html += `<div class="flow-label">Spells</div><div class="flow-grid">${spells.map(e=>btn('s:'+e.sp.name, e.sp.name, e.source ? sourceTag(e.source) : '')).join('')}</div>`;
+
+  const pick = bonusFlow.pick;
+  if(pick==='twf'){
+    const weapons = lightMeleeWeapons();
+    html += `<div class="flow-summary">After you take the Attack action with a light melee weapon, attack with a different light melee weapon in your other hand. Don’t add your ability modifier to the damage unless it’s negative.</div>`;
+    if(!weapons.length){
+      html += `<p class="empty-note" style="margin-top:8px;">No light melee weapons on your sheet.</p>`;
+    } else {
+      if(!weapons.some(w=>w.i===bonusFlow.weapon)) bonusFlow.weapon = weapons.length===1 ? weapons[0].i : null;
+      html += `<div class="flow-label">Off-hand weapon</div><div class="flow-grid">`
+        + weapons.map(w=>`<button type="button" class="flow-btn${bonusFlow.weapon===w.i?' active':''}" data-offhand="${w.i}">${escapeHtml(w.a.name)}</button>`).join('') + `</div>`;
+      if(bonusFlow.weapon !== null){
+        html += `<div class="flow-label">Roll with</div><div class="flow-grid">`
+          + ROLL_MODES.map(([k,l])=>`<button type="button" class="flow-btn${bonusFlow.mode===k?' active':''}" data-mode="${k}">${l}</button>`).join('')
+          + `</div><div class="flow-go"><button type="button" id="flowRoll">Roll</button></div>`;
+      }
+    }
+  } else if(pick && pick.startsWith('f:')){
+    html += featureStepHtml(feats.find(t=>'f:'+t.name===pick));
+  } else if(pick && pick.startsWith('s:')){
+    html += spellStepHtml(spells.find(e=>'s:'+e.sp.name===pick));
   }
-  if(bonusSpells.length){
-    html += `<div style="margin-top:12px; font-size:0.7rem; color:var(--ink-dim); text-transform:uppercase; letter-spacing:0.06em;">Prepared Bonus Action Spells</div>`;
-    html += renderSpellLineList(bonusSpells, null, sources);
-  }
-  html += `<p class="empty-note" style="margin-top:8px;">Other bonus actions depend on your class features, spells, or items (e.g. Divine Favor, Misty Step) — check your character's abilities.</p>`;
+  html += `<p class="empty-note" style="margin-top:10px;">Other bonus actions depend on your class features, spells or items. Check your character’s abilities.</p>`;
   showDetail(html);
-  wireSpellLines(classKey, 'Bonus Action Options', renderBonusDetail);
-  wireFeatureLines('Bonus Action Options', renderBonusDetail);
+
+  actionDetail.querySelectorAll('[data-bonus]').forEach(b=>{
+    const key = b.dataset.bonus;
+    if(key.startsWith('s:')) wireSpellTooltip(b, spells.find(e=>'s:'+e.sp.name===key).sp);
+    if(key.startsWith('f:')){ const t = feats.find(f=>'f:'+f.name===key); b.addEventListener('mouseenter', e=>showFeatureTooltip(e, t)); b.addEventListener('mousemove', moveTooltip); b.addEventListener('mouseleave', hideTooltip); }
+    b.addEventListener('click', ()=>{
+      hideTooltip();
+      if(bonusFlow.pick !== key){ bonusFlow.pick = key; bonusFlow.mode = 'normal'; castFlow.name = key.slice(2); castFlow.slot = null; castFlow.mode = 'normal'; }
+      renderBonusDetail();
+    });
+  });
+  if(pick==='twf'){
+    actionDetail.querySelectorAll('[data-offhand]').forEach(b=>b.addEventListener('click', ()=>{ bonusFlow.weapon = +b.dataset.offhand; renderBonusDetail(); }));
+    actionDetail.querySelectorAll('[data-mode]').forEach(b=>b.addEventListener('click', ()=>{ bonusFlow.mode = b.dataset.mode; renderBonusDetail(); }));
+    const go = document.getElementById('flowRoll');
+    if(go) go.addEventListener('click', ()=>{
+      const a = state.attacks[bonusFlow.weapon];
+      openRollPopup({kind:'weapon', label:`${a.name} (off-hand)`, attack:a, offhand:true}, bonusFlow.mode);
+    });
+  } else if(pick && pick.startsWith('f:')){
+    wireFeatureStep(feats.find(t=>'f:'+t.name===pick));
+  } else if(pick && pick.startsWith('s:')){
+    wireSpellStep(spells.find(e=>'s:'+e.sp.name===pick), renderBonusDetail);
+  }
 }
 
-function showSpellPopupStatic(sp, backLabel, backFn){
-  const url = `https://dnd5e.wikidot.com/spell:${slugify(sp.name)}`;
-  showDetail(`<div class="detail-back" id="detailBack">&larr; Back to ${backLabel}</div>
-    <h4 class="${sp.cls}">${sp.name}${sp.ritual?' <span style="font-size:0.7em; color:var(--ink-dim);">(Ritual)</span>':''}</h4>
-    <div class="meta">${sp.school} &middot; ${sp.time}<br>Range: ${sp.range} &middot; Duration: ${sp.duration}<br>Components: ${sp.comp}</div>
-    <p style="margin-top:8px;">${sp.desc}</p>
-    <p style="margin-top:8px;"><a href="${url}" target="_blank" style="color:var(--sea);">Full rules text on dnd5e.wikidot.com ↗</a></p>`);
-  document.getElementById('detailBack').addEventListener('click', backFn);
-}
 
 /* ---------- Spells section ---------- */
 const spellToggle = document.getElementById('spellToggle');
@@ -1973,6 +2483,7 @@ function loadSheetJSONP(sheetId, gid, range){
   });
 }
 
+let lastImportedId = null;
 async function runImport(){
   const url = document.getElementById('sheetUrl').value.trim();
   const idm = url.match(/\/d\/([a-zA-Z0-9-_]+)/);
@@ -2014,6 +2525,18 @@ async function runImport(){
       document.getElementById('f_senses').value = String(10 + perceptionMod);
     }
     currentCharId = sheetId;
+    // A new character: close any open Combat Menu panel/popup so nothing stale stays on screen
+    if(!rollPopup.hidden) closeRollPopup();
+    dashActive = false;
+    if(openAct) closeDetail();
+    attackFlow.choice = null; attackFlow.mode = 'normal';
+    checkFlow.act = null;
+    castFlow.name = null; featureFlow.name = null;
+    bonusFlow.pick = null; bonusFlow.weapon = null; bonusFlow.mode = 'normal';
+    // Prepared spells belong to the previous character (they aren't saved yet; see NOTES backlog)
+    if(sheetId !== lastImportedId) state.preparedSpells.clear();
+    lastImportedId = sheetId;
+    dashActive = false;
     attackSection.loadPins();
     attackSection.render();
     skillPins.load(); skillPins.render();
@@ -2024,8 +2547,7 @@ async function runImport(){
     setupClassFeatures(cls);
     updateSpellStats();
 
-    const speedNum = parseInt(document.getElementById('f_speed').value,10);
-    document.getElementById('moveFt').textContent = isNaN(speedNum) ? 30 : speedNum;
+    updateMoveLine();
 
     const key = (cls||'').toLowerCase();
     const matchedKey = ['wizard','paladin','bard','rogue'].find(k=>key.includes(k));
@@ -2041,10 +2563,7 @@ document.getElementById('clearBtn').addEventListener('click', ()=>{
   document.getElementById('sheetUrl').value='';
   setStatus('Sheet must be shared as "Anyone with the link can view."', '');
 });
-document.getElementById('f_speed').addEventListener('input', ()=>{
-  const n = parseInt(document.getElementById('f_speed').value,10);
-  document.getElementById('moveFt').textContent = isNaN(n) ? 30 : n;
-});
+document.getElementById('f_speed').addEventListener('input', updateMoveLine);
 
 /* ---------- Racial traits ---------- */
 // PHB-only traits, checked against dnd5e.wikidot.com. Descriptions are paraphrased.
@@ -2083,7 +2602,7 @@ const RACIAL_TRAITS = {
     {name:'Hellish Resistance', desc:'Resistance to fire damage.'},
     {name:'Infernal Legacy', ability:'cha', desc:'Charisma is the spellcasting ability for these spells.',
       tiers:[{level:1, name:'Thaumaturgy', text:'Cantrip; cast at will.'},
-             {level:3, name:'Hellish Rebuke', text:'Cast once per long rest as a 2nd-level spell (3d10 fire).'},
+             {level:3, name:'Hellish Rebuke', castLevel:2, text:'Cast once per long rest as a 2nd-level spell (3d10 fire).'},
              {level:5, name:'Darkness', text:'Cast once per long rest.'}]},
   ]},
 };
@@ -2136,8 +2655,8 @@ const CLASS_FEATURES = {
       'Oath of Devotion': [
         {level:3, name:'Oath Spells', desc:'Always prepared; they don’t count against your prepared spells.',
           tiers: oathSpells([[3,'Protection from Evil and Good'],[3,'Sanctuary'],[5,'Lesser Restoration'],[5,'Zone of Truth'],[9,'Beacon of Hope'],[9,'Dispel Magic'],[13,'Freedom of Movement'],[13,'Guardian of Faith'],[17,'Commune'],[17,'Flame Strike']])},
-        {level:3, name:'Channel Divinity: Sacred Weapon', type:'action', desc:'For 1 minute, add your Charisma modifier (minimum +1) to attack rolls with one weapon you hold. It sheds bright light 20 ft (dim 20 ft more) and counts as magical.'},
-        {level:3, name:'Channel Divinity: Turn the Unholy', type:'action', desc:'Each fiend or undead within 30 ft that can see or hear you makes a Wisdom save or is turned for 1 minute or until it takes damage.'},
+        {level:3, name:'Channel Divinity: Sacred Weapon', type:'action', tip:'For the next minute, add your Charisma modifier (minimum +1) to attack rolls with that weapon: add it to the to-hit command in the Attack popup.', desc:'For 1 minute, add your Charisma modifier (minimum +1) to attack rolls with one weapon you hold. It sheds bright light 20 ft (dim 20 ft more) and counts as magical.'},
+        {level:3, name:'Channel Divinity: Turn the Unholy', type:'action', save:'wis', saveNote:'Each fiend or undead within 30 ft that can see or hear you. On a failure it is turned for 1 minute or until it takes damage.', desc:'Each fiend or undead within 30 ft that can see or hear you makes a Wisdom save or is turned for 1 minute or until it takes damage.'},
         {level:7, name:'Aura of Devotion', desc:'You and friendly creatures within 10 ft can’t be charmed while you’re conscious (30 ft at level 18).'},
         {level:15, name:'Purity of Spirit', desc:'You are always under the effects of Protection from Evil and Good.'},
         {level:20, name:'Holy Nimbus', type:'action', desc:'For 1 minute, shed bright sunlight 30 ft. Enemies starting their turn in it take 10 radiant damage, and you have advantage on saves against spells from fiends and undead. Once per long rest.'},
@@ -2145,8 +2664,8 @@ const CLASS_FEATURES = {
       'Oath of the Ancients': [
         {level:3, name:'Oath Spells', desc:'Always prepared; they don’t count against your prepared spells.',
           tiers: oathSpells([[3,'Ensnaring Strike'],[3,'Speak with Animals'],[5,'Misty Step'],[5,'Moonbeam'],[9,'Plant Growth'],[9,'Protection from Energy'],[13,'Ice Storm'],[13,'Stoneskin'],[17,'Commune with Nature'],[17,'Tree Stride']])},
-        {level:3, name:'Channel Divinity: Nature’s Wrath', type:'action', desc:'Spectral vines grab a creature within 10 ft; it makes a Strength or Dexterity save (its choice) or is restrained, repeating the save each turn.'},
-        {level:3, name:'Channel Divinity: Turn the Faithless', type:'action', desc:'Each fey or fiend within 30 ft that can hear you makes a Wisdom save or is turned for 1 minute or until it takes damage.'},
+        {level:3, name:'Channel Divinity: Nature’s Wrath', type:'action', save:'str/dex', saveNote:'The target picks Strength or Dexterity. On a failure it is restrained, and repeats the save at the end of each of its turns.', desc:'Spectral vines grab a creature within 10 ft; it makes a Strength or Dexterity save (its choice) or is restrained, repeating the save each turn.'},
+        {level:3, name:'Channel Divinity: Turn the Faithless', type:'action', save:'wis', saveNote:'Each fey or fiend within 30 ft that can hear you. On a failure it is turned for 1 minute or until it takes damage.', desc:'Each fey or fiend within 30 ft that can hear you makes a Wisdom save or is turned for 1 minute or until it takes damage.'},
         {level:7, name:'Aura of Warding', desc:'You and friendly creatures within 10 ft have resistance to damage from spells (30 ft at level 18).'},
         {level:15, name:'Undying Sentinel', desc:'When reduced to 0 HP and not killed outright, drop to 1 HP instead, once per long rest. You also stop showing signs of age.'},
         {level:20, name:'Elder Champion', type:'action', desc:'For 1 minute: regain 10 HP at the start of each turn, cast action-length paladin spells as a bonus action, and enemies within 10 ft have disadvantage on saves against your paladin spells and Channel Divinity. Once per long rest.'},
@@ -2154,11 +2673,11 @@ const CLASS_FEATURES = {
       'Oath of Vengeance': [
         {level:3, name:'Oath Spells', desc:'Always prepared; they don’t count against your prepared spells.',
           tiers: oathSpells([[3,'Bane'],[3,"Hunter's Mark"],[5,'Hold Person'],[5,'Misty Step'],[9,'Haste'],[9,'Protection from Energy'],[13,'Banishment'],[13,'Dimension Door'],[17,'Hold Monster'],[17,'Scrying']])},
-        {level:3, name:'Channel Divinity: Abjure Enemy', type:'action', desc:'One creature within 60 ft makes a Wisdom save or is frightened for 1 minute (or until it takes damage) with speed 0. Fiends and undead save with disadvantage. On a success its speed is halved for 1 minute.'},
-        {level:3, name:'Channel Divinity: Vow of Enmity', type:'bonus', desc:'Advantage on attack rolls against one creature within 10 ft for 1 minute.'},
+        {level:3, name:'Channel Divinity: Abjure Enemy', type:'action', save:'wis', saveNote:'Fiends and undead have disadvantage. On a failure: frightened for 1 minute (or until it takes damage), speed 0. On a success: speed halved for 1 minute.', desc:'One creature within 60 ft makes a Wisdom save or is frightened for 1 minute (or until it takes damage) with speed 0. Fiends and undead save with disadvantage. On a success its speed is halved for 1 minute.'},
+        {level:3, name:'Channel Divinity: Vow of Enmity', type:'bonus', tip:'For the next minute, pick <b>Advantage</b> when you Attack that creature.', desc:'Advantage on attack rolls against one creature within 10 ft for 1 minute.'},
         {level:7, name:'Relentless Avenger', desc:'When you hit with an opportunity attack, you can move up to half your speed right after, as part of the same reaction, without provoking opportunity attacks.'},
         {level:15, name:'Soul of Vengeance', type:'reaction', desc:'When the target of your Vow of Enmity attacks, make a melee weapon attack against it if it’s within reach.'},
-        {level:20, name:'Avenging Angel', type:'action', desc:'For 1 hour: gain a 60 ft flying speed and a 30 ft aura. The first time in a battle an enemy enters it or starts its turn there, it makes a Wisdom save or is frightened for 1 minute (or until it takes damage). Once per long rest.'},
+        {level:20, name:'Avenging Angel', type:'action', save:'wis', saveNote:'The first time in a battle an enemy enters your 30 ft aura or starts its turn there. On a failure it is frightened for 1 minute or until it takes damage.', desc:'For 1 hour: gain a 60 ft flying speed and a 30 ft aura. The first time in a battle an enemy enters it or starts its turn there, it makes a Wisdom save or is frightened for 1 minute (or until it takes damage). Once per long rest.'},
       ],
     },
   },
@@ -2430,7 +2949,7 @@ function setupClassFeatures(clsText){
 function grantedSpells(source, features, defaultAbility){
   return features.flatMap(t=>(t.tiers||[]).map(tier=>({
     sp: findSpell(tier.name), unlock: Math.max(tier.level, t.level||1), source, from: t.name, note: tier.text,
-    ability: t.ability || defaultAbility
+    ability: t.ability || defaultAbility, castLevel: tier.castLevel
   }))).filter(x=>x.sp);
 }
 function alwaysPreparedSpells(){

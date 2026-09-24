@@ -3,6 +3,44 @@
 What's new in the Crisis in Waterdeep character tracker, newest first.
 Rules follow D&D 5e (2014), checked against [dnd5e.wikidot.com](https://dnd5e.wikidot.com).
 
+## Unreleased (Version 2, in progress)
+
+### Fixed
+- Prepared spells no longer carry over when you import a different character.
+
+### Added
+- **Attack roll commands.** In the Combat Menu, Attack → pick a weapon, Grapple or Shove →
+  Advantage / Normal / Disadvantage → **Roll**. A popup shows the Avrae commands to copy
+  and paste into Discord, e.g. `!r 1d20+5` to hit and `!r 2d6ro<3+3` for damage. Only the
+  command is in the copy box; what it's for ("Greatsword attack") is shown beside it.
+  - Great Weapon Fighting and Dueling are applied automatically from your Fighting Style.
+  - Following the rules, **Crit** and **Divine Smite** are chosen in the popup after you see
+    the roll. A crit doubles all damage dice (plus Savage Attacks for Half-Orcs). Smite
+    lets you pick the slot level and whether the target is undead or a fiend.
+  - Grapple and Shove give an Athletics check.
+- **Spell roll commands.** Cast Prepared Spell → pick a spell → spell slot level (→ Advantage /
+  Normal / Disadvantage for spell attacks) → **Cast**. The popup gives the spell attack
+  command, the save DC to tell your DM (e.g. "DC 13 Dexterity save, half damage on a
+  success"), and damage, healing or hit point pool commands, all scaled for the slot level
+  and, for cantrips, your character level. Spell crits are chosen after the roll.
+  - Smite spells, Hunter's Mark and Divine Favor show the extra damage to add to your hit.
+  - Spells that don't roll say so. Covers every cantrip and 1st-level spell on the class
+    lists plus racial and Oath spells; higher-level spells are coming.
+- **Bonus Action Options** follow the same path to a roll:
+  - **Two-Weapon Fighting:** pick your off-hand light melee weapon → roll mode → Roll. Damage
+    leaves out your ability modifier (unless it's negative), per the rule.
+  - Bonus-action class features (e.g. Vow of Enmity) and bonus-action spells (e.g. Healing
+    Word, the smites, Hunter's Mark). Bonus-action spells no longer appear under Cast
+    Prepared Spell.
+- **Class Features** follow the same path: pick a feature → **Use**. The popup gives the
+  save DC for Channel Divinity options, your Lay on Hands pool, or says no roll is needed.
+- **Dash updates your movement:** "Move up to 60 feet (30 + 30 from Dash)". It stays on if
+  you open Bonus Action Options, and turns off when you pick another action or click Dash
+  again.
+- **Hide and Search roll commands.** Hide gives a Stealth check; Search lets you pick
+  Perception or Investigation. Both have Advantage / Normal / Disadvantage.
+  - Close the popup by clicking outside it, pressing Escape, or the ×.
+
 ## 2026-09-24
 
 ### Added
