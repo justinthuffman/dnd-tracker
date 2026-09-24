@@ -3,7 +3,7 @@
 What's new in the Crisis in Waterdeep character tracker, newest first.
 Rules follow D&D 5e (2014), checked against [dnd5e.wikidot.com](https://dnd5e.wikidot.com).
 
-## Unreleased (Version 2, in progress)
+## 2026-09-24 — Version 2 begins: roll commands
 
 ### Fixed
 - Prepared spells no longer carry over when you import a different character.
