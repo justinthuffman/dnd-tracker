@@ -125,6 +125,20 @@ h1{
 @keyframes palFlash{0%{opacity:0; transform:scale(0.7);} 18%{opacity:1; transform:scale(1.05);} 55%{opacity:0.35;} 100%{opacity:0.18; transform:scale(1.1);}}
 .card-paladin:is(:hover, :focus-visible, .is-active) .card-art{animation:palShake 0.45s ease-in-out 0.25s;}
 @keyframes palShake{0%, 100%{transform:translate(0, 0);} 20%{transform:translate(-3px, 2px);} 40%{transform:translate(3px, -2px);} 60%{transform:translate(-2px, 1px);} 80%{transform:translate(1px, -1px);}}
+/* The greatsword glows like Ezlo's flame: a light laid along the blade (from his hands at
+   48% 9% to the tip at the left edge, 30% down: about 56% of the card's width at 147°) that
+   flares and pulses, with a shine running down it toward the tip */
+.card-paladin .fx-blade{
+  left:48%; top:9%; width:58%; height:3.8%; transform-origin:0 50%; transform:translateY(-50%) rotate(147deg);
+  border-radius:999px; mix-blend-mode:screen; overflow:hidden;
+  background:linear-gradient(90deg, rgba(255,250,225,0.95), rgba(255,222,130,0.85) 55%, rgba(255,185,70,0.15));
+  box-shadow:0 0 14px 5px rgba(255,205,95,0.75), 0 0 30px 10px rgba(255,170,60,0.35);
+}
+.card-paladin:is(:hover, :focus-visible, .is-active) .fx-blade{animation:palBlade 2.6s ease-out forwards;}
+@keyframes palBlade{0%{opacity:0; filter:brightness(1);} 18%{opacity:1; filter:brightness(1.6);} 38%{opacity:0.65; filter:brightness(1);} 58%{opacity:1; filter:brightness(1.35);} 100%{opacity:0.85; filter:brightness(1.1);}}
+.card-paladin .fx-blade::after{content:''; position:absolute; top:0; bottom:0; left:0; width:28%; background:linear-gradient(90deg, transparent, rgba(255,255,255,0.95), transparent); transform:translateX(-120%);}
+.card-paladin:is(:hover, :focus-visible, .is-active) .fx-blade::after{animation:bladeShine 0.8s ease-in 0.55s forwards;}
+@keyframes bladeShine{to{transform:translateX(420%);}}
 .card-paladin .fx-p{background:radial-gradient(circle, #fff3c0, #ff9a2a 60%, transparent 72%); box-shadow:0 0 6px #ffb347;}
 
 /* Venthor, Assassin Rogue: gunmetal frame with square corners; shadows close in, smoke rises,
@@ -298,6 +312,7 @@ window.addEventListener('storage', e=>{ if(e.key === 'dndTracker:theme'){ applyT
       <img src="portraits/krunk.jpg" alt="Portrait of Krunk">
       <div class="card-fx" aria-hidden="true">
         <div class="fx-flash"></div>
+        <div class="fx-blade"></div>
         <i class="fx-p" style="--x:18%;--y:92%;--dx:-8px;--dy:-150px;--d:2.2s;--t:.3s"></i>
         <i class="fx-p" style="--x:32%;--y:88%;--dx:10px;--dy:-120px;--d:1.9s;--t:.45s;--s:4px"></i>
         <i class="fx-p" style="--x:47%;--y:94%;--dx:-14px;--dy:-170px;--d:2.4s;--t:.35s;--s:6px"></i>

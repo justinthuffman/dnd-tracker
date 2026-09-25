@@ -3,6 +3,12 @@
 What's new in Turnkeeper, the Crisis in Waterdeep character tracker, newest first.
 Rules follow D&D 5e (2014), checked against [dnd5e.wikidot.com](https://dnd5e.wikidot.com).
 
+## Unreleased
+
+### Changed
+- **Krunk's greatsword glows** on his hub card: the blade lights up, flares and pulses, and a
+  shine runs down it to the tip, like the flame in Ezlo's hand.
+
 ## 2026-09-24 — !tk rolls and Keep as the default theme
 
 ### Changed
