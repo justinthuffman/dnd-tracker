@@ -16,6 +16,17 @@ Rules follow D&D 5e (2014), checked against [dnd5e.wikidot.com](https://dnd5e.wi
   If the hub is open in another tab, it changes as soon as you pick a new theme.
 - **Back to the hub:** click the Turnkeeper logo or name at the top of the tracker to return
   to the character list.
+- **Character cards on the hub.** Each character is now a portrait card, like a trading card,
+  in a frame that matches their class: gold for Krunk (Paladin), gunmetal for Venthor (Rogue),
+  violet for Ezlo (Wizard), crimson and gold for Bel (Bard). Portraits are gray until you point
+  at one; then it comes to color with a quick effect for that class:
+  - **Krunk:** a flash of radiant light off his sword, the shock of the swing, rising embers.
+  - **Venthor:** shadows close in, smoke rises, and a flash of steel cuts across the card.
+  - **Ezlo:** the flame in his hand flares, a rune circle turns around it and sparks fly.
+  - **Bel:** candlelight warms up, she tips her ale for a "cheers", the mug glints and music
+    notes drift up.
+  On phones and tablets the portraits show in color. No motion if your device is set to
+  reduce motion.
 
 ## 2026-09-24 — Color themes
 

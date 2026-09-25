@@ -26,25 +26,12 @@ html[data-theme="tome"]{
 }
 html[data-theme="tome"] body{background-image:radial-gradient(ellipse at 50% 0%, rgba(255,247,222,0.6), transparent 65%), radial-gradient(ellipse at 50% 100%, rgba(110,70,25,0.22), transparent 70%); background-attachment:fixed;}
 html[data-theme="tome"] h1{font-variant:small-caps; letter-spacing:0.08em; font-weight:600;}
-html[data-theme="tome"] .plaque{border-color:#8f7447; box-shadow:inset 0 0 0 3px var(--panel), inset 0 0 0 4px rgba(125,26,22,0.35), 0 2px 10px rgba(60,35,10,0.25);}
-html[data-theme="tome"] .plaque:hover{box-shadow:inset 0 0 0 3px var(--panel2), inset 0 0 0 4px rgba(125,26,22,0.5), 0 2px 10px rgba(60,35,10,0.3);}
 html[data-theme="keep"]{
   --bg:#1e140c; --panel:#3a2515; --panel2:#46301c; --border:#56565c; --ink:#f0e4ca; --ink-dim:#bda98a; --sea:#d9ad56; --sea-dim:#8f6a2a; --orange:#a9572a;
   --font-display: 'MedievalSharp', 'Cinzel', 'Book Antiqua', Georgia, serif;
 }
 html[data-theme="keep"] body{background-image:radial-gradient(ellipse at 50% 35%, transparent 35%, rgba(0,0,0,0.6) 100%), repeating-linear-gradient(90deg, rgba(0,0,0,0.45) 0 2px, rgba(255,210,150,0.04) 2px 3px, transparent 3px 170px), repeating-linear-gradient(0deg, rgba(255,215,160,0.03) 0 1px, transparent 1px 6px), linear-gradient(90deg, #21150c, #2b1b0f 50%, #21150c); background-attachment:fixed;}
 html[data-theme="keep"] h1{text-shadow:0 1px 0 rgba(0,0,0,0.85), 0 0 8px rgba(217,173,86,0.18);}
-html[data-theme="keep"] .plaque{
-  border:3px solid #4d4e54; border-radius:3px;
-  background-image:
-    radial-gradient(circle at 9px 9px, #e2ddd0 0 1.4px, #77746d 2.2px, #2b2a28 3.4px, transparent 4px),
-    radial-gradient(circle at calc(100% - 9px) 9px, #e2ddd0 0 1.4px, #77746d 2.2px, #2b2a28 3.4px, transparent 4px),
-    radial-gradient(circle at 9px calc(100% - 9px), #e2ddd0 0 1.4px, #77746d 2.2px, #2b2a28 3.4px, transparent 4px),
-    radial-gradient(circle at calc(100% - 9px) calc(100% - 9px), #e2ddd0 0 1.4px, #77746d 2.2px, #2b2a28 3.4px, transparent 4px),
-    repeating-linear-gradient(0deg, rgba(255,215,160,0.035) 0 1px, transparent 1px 5px);
-  box-shadow:inset 0 0 0 1px #8d8e94, inset 0 0 22px rgba(0,0,0,0.55), 0 5px 16px rgba(0,0,0,0.65);
-}
-html[data-theme="keep"] .plaque::before, html[data-theme="inferno"] .plaque::before{display:none;}
 html[data-theme="inferno"]{
   --bg:#0a0505; --panel:#170c0b; --panel2:#231110; --border:#4d1812; --ink:#f0dfd3; --ink-dim:#ad8d82; --sea:#ff6a2a; --sea-dim:#a8360f; --orange:#8f1510;
   --font-display: 'Pirata One', 'UnifrakturCook', 'Book Antiqua', Georgia, serif;
@@ -59,17 +46,6 @@ html[data-theme="inferno"] body::before{
 @keyframes embersRise{from{background-position:0 0, 0 0, 0 0, 0 0;} to{background-position:30px -300px, -20px -300px, 10px -300px, -40px -420px;}}
 @media (prefers-reduced-motion: reduce){ html[data-theme="inferno"] body::before{animation:none;} }
 html[data-theme="inferno"] h1{text-shadow:0 0 6px rgba(255,90,20,0.55), 0 0 18px rgba(200,20,0,0.35), 0 1px 0 #000; font-size:3rem;}
-html[data-theme="inferno"] .plaque{
-  border-color:#5a1a12; padding-top:30px;
-  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 22' preserveAspectRatio='none'%3E%3Cpath fill='%237a0b08' d='M0 0H120V4C113 4 112 6 111 10C110 16 106 16 105 10C104 6 101 4 93 4C85 4 84 5 83 7C82 10 79 10 78 7C77 5 75 4 61 4C51 4 50 6 49 12C48 20 43 20 42 12C41 6 39 4 29 4C21 4 20 5 19 8C18 12 15 12 14 8C13 5 11 4 0 4Z'/%3E%3C/svg%3E"), radial-gradient(ellipse at 50% 120%, rgba(255,70,10,0.16), transparent 60%);
-  background-size:120px 16px, auto; background-repeat:repeat-x, no-repeat;
-  box-shadow:0 0 0 1px #1c0605, 0 0 22px rgba(255,60,10,0.16), inset 0 0 30px rgba(0,0,0,0.7);
-}
-html[data-theme="inferno"] .plaque:hover{box-shadow:0 0 0 1px #1c0605, 0 0 26px rgba(255,70,10,0.4), inset 0 0 30px rgba(0,0,0,0.7);}
-html[data-theme="inferno"] .plaque-name::before{
-  content:''; display:inline-block; width:0.9em; height:0.9em; margin-right:0.3em; vertical-align:-0.08em;
-  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23e2d3bd' d='M12 2C6.6 2 3 5.8 3 10.6c0 2.8 1.3 4.6 3 5.6V19a1 1 0 0 0 1 1h1.6v-2.2h1.6V20h3.6v-2.2h1.6V20H17a1 1 0 0 0 1-1v-2.8c1.7-1 3-2.8 3-5.6C21 5.8 17.4 2 12 2z'/%3E%3Ccircle cx='8.4' cy='11' r='2.4' fill='%23140404'/%3E%3Ccircle cx='15.6' cy='11' r='2.4' fill='%23140404'/%3E%3Ccircle cx='8.4' cy='11.2' r='0.9' fill='%23ff4a1a'/%3E%3Ccircle cx='15.6' cy='11.2' r='0.9' fill='%23ff4a1a'/%3E%3Cpath d='M12 13.4l-1.4 2.7h2.8z' fill='%23140404'/%3E%3C/svg%3E") center/contain no-repeat;
-}
 *{box-sizing:border-box;}
 html{-webkit-text-size-adjust:100%;}
 body{
@@ -87,35 +63,119 @@ h1{
   font-family:var(--font-display); font-style:italic; color:var(--ink-dim);
   font-size:1rem; margin-top:10px;
 }
-.roster{
-  display:grid; grid-template-columns:repeat(4, minmax(150px, 1fr));
-  gap:14px; width:100%; max-width:780px;
-}
-@media (max-width:640px){
-  .roster{grid-template-columns:repeat(2, 1fr);}
+.roster{display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)); gap:22px; width:100%; max-width:920px;}
+@media (max-width:760px){
+  .roster{grid-template-columns:repeat(2, minmax(0, 1fr)); gap:16px; max-width:460px;}
   h1{font-size:2.1rem;}
 }
-.plaque{
-  position:relative; display:block; text-decoration:none;
-  background:var(--panel); border:1px solid var(--border);
-  padding:26px 14px 20px; text-align:center; border-radius:2px;
-  transition:border-color .15s, background .15s;
+
+/* ---------- Character cards, baseball-card style ----------
+   Gray until hovered. On hover the portrait turns to color, the camera pushes in a little and
+   a quick (under 3 s) effect plays that matches the character's class. The metallic frame
+   (--frame) matches the class too. Effects are CSS layers over the still portrait; positions
+   like "81% 20%" point at things in the picture (Ezlo's hand, Bel's mug), measured for this
+   5:7 card shape. A short clip can replace the still: put
+   <video class="card-video" src="portraits/NAME.mp4" muted playsinline preload="none"></video>
+   inside .card-art and the script at the bottom plays it on hover. */
+.card{
+  position:relative; display:block; aspect-ratio:5/7; padding:6px; border-radius:12px; text-decoration:none;
+  background:var(--frame); box-shadow:0 10px 24px rgba(0,0,0,0.5), inset 0 0 0 1px rgba(255,255,255,0.3);
+  transition:transform .25s ease, box-shadow .25s ease;
 }
-.plaque::before{
-  content:''; position:absolute; top:0; left:18px; right:18px; height:2px;
-  background:var(--sea-dim); opacity:0.55;
+.card:is(:hover, :focus-visible){transform:translateY(-6px); box-shadow:0 16px 30px rgba(0,0,0,0.55), 0 0 28px var(--glow), inset 0 0 0 1px rgba(255,255,255,0.4);}
+.card:focus-visible{outline:2px solid var(--line); outline-offset:4px;}
+.card-art{position:relative; width:100%; height:100%; overflow:hidden; border-radius:7px; background:#000; isolation:isolate;}
+.card-art img, .card-video{position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:var(--pos, 50% 30%); transform-origin:var(--focus, 50% 35%);}
+.card-art img{filter:grayscale(1) brightness(0.7) contrast(1.05); transition:filter .6s ease;}
+.card-video{opacity:0; transition:opacity .25s ease; z-index:1;}
+.card:is(:hover, :focus-visible) .card-video{opacity:1;}
+.card:is(:hover, :focus-visible) .card-art img{filter:none; animation:cardPush 2.6s ease-out forwards;}
+@keyframes cardPush{from{transform:scale(1);} to{transform:scale(1.07);}}
+/* Inner frame line, class tag (top) and name plate (bottom) */
+.card-art::after{content:''; position:absolute; inset:5px; border:1px solid var(--line); border-radius:4px; z-index:5; pointer-events:none; opacity:0.6;}
+.card-class{
+  position:absolute; top:11px; left:11px; z-index:6; padding:3px 9px; border-radius:3px;
+  background:var(--frame); color:var(--tag-ink); font-size:0.6rem; font-weight:700;
+  text-transform:uppercase; letter-spacing:0.14em; box-shadow:0 2px 6px rgba(0,0,0,0.55);
 }
-.plaque:hover{border-color:var(--sea-dim); background:var(--panel2);}
-.plaque:hover::before{background:var(--sea); opacity:1;}
-.plaque:focus-visible{outline:2px solid var(--sea); outline-offset:3px;}
-.plaque-name{
-  font-family:var(--font-display); font-size:1.25rem; color:var(--ink);
-  letter-spacing:0.01em;
+.card-plate{position:absolute; left:0; right:0; bottom:0; z-index:6; padding:40px 10px 15px; text-align:center; background:linear-gradient(to top, rgba(0,0,0,0.92), rgba(0,0,0,0.6) 55%, transparent);}
+.card-name{font-family:var(--font-display); font-size:1.5rem; line-height:1.1; color:#fff; letter-spacing:0.02em; text-shadow:0 2px 6px #000;}
+.card-sub{margin-top:4px; font-size:0.64rem; color:var(--line); text-transform:uppercase; letter-spacing:0.12em;}
+/* Effect layer: hidden until hover; each effect sets its own animation below */
+.card-fx{position:absolute; inset:0; z-index:4; pointer-events:none; overflow:hidden;}
+.card-fx > *{position:absolute; opacity:0;}
+/* Particles (embers, sparks, notes): start at --x/--y, drift by --dx/--dy over --d after --t */
+.fx-p{left:var(--x); top:var(--y); width:var(--s, 5px); height:var(--s, 5px); border-radius:50%;}
+.card:is(:hover, :focus-visible) .fx-p{animation:fxRise var(--d, 2s) ease-out var(--t, 0s) forwards;}
+@keyframes fxRise{
+  0%{opacity:0; transform:translate(0, 0) scale(0.6) rotate(0deg);}
+  15%{opacity:1;}
+  100%{opacity:0; transform:translate(var(--dx, 0px), var(--dy, -120px)) scale(1) rotate(var(--r, 0deg));}
 }
-.plaque:hover .plaque-name{color:var(--sea);}
-.plaque-sub{
-  margin-top:6px; font-size:0.7rem; color:var(--ink-dim);
-  text-transform:uppercase; letter-spacing:0.08em;
+/* A four-point twinkle (Venthor's steel, Bel's clink) */
+.fx-star{left:var(--x); top:var(--y); width:28px; height:28px; margin:-14px 0 0 -14px; background:var(--star, #fff); clip-path:polygon(50% 0, 58% 42%, 100% 50%, 58% 58%, 50% 100%, 42% 58%, 0 50%, 42% 42%); filter:drop-shadow(0 0 5px var(--star, #fff));}
+.card:is(:hover, :focus-visible) .fx-star{animation:twinkle .65s ease-out var(--t, 1s) forwards;}
+@keyframes twinkle{0%{opacity:0; transform:scale(0) rotate(0deg);} 40%{opacity:1; transform:scale(1.25) rotate(45deg);} 100%{opacity:0; transform:scale(0.4) rotate(90deg);}}
+
+/* Krunk, Vengeance Paladin: gold frame; a radiant flash off the sword, the impact of the
+   swing (a short shake) and embers rising from the broken floor */
+.card-paladin{--frame:linear-gradient(135deg, #fff4c2, #c9982f 22%, #fff1b8 45%, #9a6b17 70%, #f3d27a); --glow:rgba(255,214,110,0.75); --line:#f5d98a; --tag-ink:#3b2604; --pos:48% 30%; --focus:54% 30%;}
+.card-paladin .fx-flash{inset:-25%; background:radial-gradient(circle at 20% 28%, rgba(255,252,225,0.95), rgba(255,205,95,0.55) 14%, transparent 38%);}
+.card-paladin:is(:hover, :focus-visible) .fx-flash{animation:palFlash 1.8s ease-out 0.1s forwards;}
+@keyframes palFlash{0%{opacity:0; transform:scale(0.7);} 18%{opacity:1; transform:scale(1.05);} 55%{opacity:0.35;} 100%{opacity:0.18; transform:scale(1.1);}}
+.card-paladin:is(:hover, :focus-visible) .card-art{animation:palShake 0.45s ease-in-out 0.25s;}
+@keyframes palShake{0%, 100%{transform:translate(0, 0);} 20%{transform:translate(-3px, 2px);} 40%{transform:translate(3px, -2px);} 60%{transform:translate(-2px, 1px);} 80%{transform:translate(1px, -1px);}}
+.card-paladin .fx-p{background:radial-gradient(circle, #fff3c0, #ff9a2a 60%, transparent 72%); box-shadow:0 0 6px #ffb347;}
+
+/* Venthor, Assassin Rogue: gunmetal frame with square corners; shadows close in, smoke rises,
+   and a flash of steel cuts across the card with a glint at his hand */
+.card-rogue{--frame:linear-gradient(135deg, #6b766a, #1a1d1a 25%, #8a9488 48%, #0e100e 72%, #56604f); --glow:rgba(150,210,150,0.45); --line:#a9c2a2; --tag-ink:#e6eee3; --pos:50% 30%; --focus:54% 30%; border-radius:3px;}
+.card-rogue .card-art{border-radius:1px;}
+.card-rogue .card-art::after{border-radius:0;}
+.card-rogue .fx-shade{inset:0; box-shadow:inset 0 0 70px 30px rgba(0,0,0,0.9);}
+.card-rogue:is(:hover, :focus-visible) .fx-shade{animation:rogShade 2.4s ease forwards;}
+@keyframes rogShade{0%{opacity:0;} 40%{opacity:1;} 100%{opacity:0.55;}}
+.card-rogue .fx-smoke{left:var(--x); bottom:-12%; width:75%; height:45%; background:radial-gradient(ellipse, rgba(205,215,205,0.38), transparent 65%); filter:blur(6px);}
+.card-rogue:is(:hover, :focus-visible) .fx-smoke{animation:rogSmoke 2.6s ease-out var(--t, 0s) forwards;}
+@keyframes rogSmoke{0%{opacity:0; transform:translate(0, 20px) scale(0.8);} 30%{opacity:0.9;} 100%{opacity:0; transform:translate(var(--dx, 0px), -100px) scale(1.5);}}
+.card-rogue .fx-glint{inset:-30% -70%; background:linear-gradient(115deg, transparent 47%, rgba(255,255,255,0.95) 50%, transparent 53%);}
+.card-rogue:is(:hover, :focus-visible) .fx-glint{animation:rogGlint 0.45s ease-in 1.1s forwards;}
+@keyframes rogGlint{0%{opacity:0; transform:translateX(-45%);} 15%{opacity:1;} 85%{opacity:1;} 100%{opacity:0; transform:translateX(45%);}}
+
+/* Ezlo, Drow Wizard: violet arcane frame; the flame in his hand flares, a rune circle turns
+   around it and sparks spiral off */
+.card-wizard{--frame:linear-gradient(135deg, #d7c6ff, #4a2596 25%, #1b0d3d 50%, #7b4ce0 75%, #e0d2ff); --glow:rgba(170,120,255,0.8); --line:#c8b2ff; --tag-ink:#f3eeff; --pos:50% 20%; --focus:80% 22%;}
+.card-wizard .fx-tint{inset:0; box-shadow:inset 0 0 45px rgba(140,80,255,0.55);}
+.card-wizard:is(:hover, :focus-visible) .fx-tint{animation:fadeHold 1s ease forwards;}
+@keyframes fadeHold{to{opacity:1;}}
+.card-wizard .fx-orb{left:81%; top:20%; width:96px; height:96px; margin:-48px 0 0 -48px; border-radius:50%; background:radial-gradient(circle, rgba(245,230,255,0.95), rgba(175,105,255,0.75) 28%, rgba(120,50,220,0.25) 55%, transparent 70%); mix-blend-mode:screen;}
+.card-wizard:is(:hover, :focus-visible) .fx-orb{animation:wizOrb 2.6s ease-out forwards;}
+@keyframes wizOrb{0%{opacity:0; transform:scale(0.3);} 25%{opacity:1; transform:scale(1.15);} 45%{transform:scale(0.9);} 65%{transform:scale(1.2);} 100%{opacity:0.85; transform:scale(1);}}
+.card-wizard .fx-rune{left:81%; top:20%; width:124px; height:124px; margin:-62px 0 0 -62px; border-radius:50%; border:1.5px dashed rgba(215,185,255,0.9); box-shadow:0 0 10px rgba(170,110,255,0.6), inset 0 0 10px rgba(170,110,255,0.4);}
+.card-wizard .fx-rune.inner{width:74px; height:74px; margin:-37px 0 0 -37px; border-style:dotted; border-width:2px;}
+.card-wizard:is(:hover, :focus-visible) .fx-rune{animation:wizRune 2.6s ease-out 0.15s forwards;}
+.card-wizard:is(:hover, :focus-visible) .fx-rune.inner{animation:wizRuneBack 2.6s ease-out 0.3s forwards;}
+@keyframes wizRune{0%{opacity:0; transform:scale(0.4) rotate(0deg);} 30%{opacity:1;} 100%{opacity:0.6; transform:scale(1) rotate(200deg);}}
+@keyframes wizRuneBack{0%{opacity:0; transform:scale(0.4) rotate(0deg);} 30%{opacity:1;} 100%{opacity:0.7; transform:scale(1) rotate(-260deg);}}
+.card-wizard .fx-p{background:radial-gradient(circle, #fff, #b98cff 55%, transparent 72%); box-shadow:0 0 6px #a66bff;}
+
+/* Bel, Bard: crimson and gold frame; warm candlelight, she tips her ale up for a "cheers",
+   the mug glints and music notes drift up */
+.card-bard{--frame:linear-gradient(135deg, #f6d27e, #8c1a26 24%, #c23a48 46%, #6e0f19 70%, #f0c060); --glow:rgba(255,170,90,0.7); --line:#f3cf7a; --tag-ink:#fff4dc; --pos:55% 30%; --focus:28% 45%;}
+.card-bard:is(:hover, :focus-visible) .card-art img{animation:bardCheers 2.4s ease-out forwards;}
+@keyframes bardCheers{0%{transform:scale(1) rotate(0deg);} 35%{transform:scale(1.06) rotate(-1.8deg) translateY(-2%);} 55%{transform:scale(1.07) rotate(-0.6deg) translateY(-1%);} 100%{transform:scale(1.07) rotate(-0.8deg) translateY(-1%);}}
+.card-bard .fx-warm{inset:0; background:radial-gradient(circle at 30% 72%, rgba(255,170,70,0.4), transparent 60%); mix-blend-mode:screen;}
+.card-bard:is(:hover, :focus-visible) .fx-warm{animation:candle 2.4s ease forwards;}
+@keyframes candle{0%{opacity:0;} 20%{opacity:0.85;} 35%{opacity:0.6;} 50%{opacity:0.95;} 65%{opacity:0.7;} 100%{opacity:0.85;}}
+.card-bard .fx-star{--star:#ffe7a3;}
+.fx-note{left:var(--x); top:var(--y); font-family:Georgia, serif; font-size:var(--s, 16px); color:#ffd98a; text-shadow:0 0 6px rgba(255,180,80,0.9);}
+.card:is(:hover, :focus-visible) .fx-note{animation:fxRise var(--d, 2s) ease-out var(--t, 0s) forwards;}
+
+/* No hover on touch screens: show the portraits in color. Reduced motion: no animation. */
+@media (hover:none){ .card-art img{filter:none;} }
+@media (prefers-reduced-motion: reduce){
+  .card, .card *{animation:none !important;}
+  .card-fx{display:none;}
 }
 footer{margin-top:56px; font-size:0.75rem; color:var(--ink-dim); text-align:center;}
 </style>
@@ -149,25 +209,91 @@ window.addEventListener('storage', e=>{ if(e.key === 'dndTracker:theme') applyTh
 </div>
 
 <div class="roster">
-  <a class="plaque" href="turnkeeper.html?sheet=https%3A%2F%2Fdocs.google.com%2Fspreadsheets%2Fd%2F1vIvEke6E12m7il5voB2n5rJAqwgJeWf_2BZYJSKpYgU%2Fedit%3Fgid%3D359784640%23gid%3D359784640&name=Krunk" target="_blank" rel="noopener">
-    <div class="plaque-name">Krunk</div>
-    <div class="plaque-sub">Sheet</div>
+  <a class="card card-paladin" href="turnkeeper.html?sheet=https%3A%2F%2Fdocs.google.com%2Fspreadsheets%2Fd%2F1vIvEke6E12m7il5voB2n5rJAqwgJeWf_2BZYJSKpYgU%2Fedit%3Fgid%3D359784640%23gid%3D359784640&name=Krunk" target="_blank" rel="noopener">
+    <div class="card-art">
+      <img src="portraits/krunk.jpg" alt="Portrait of Krunk">
+      <div class="card-fx" aria-hidden="true">
+        <div class="fx-flash"></div>
+        <i class="fx-p" style="--x:18%;--y:92%;--dx:-8px;--dy:-150px;--d:2.2s;--t:.3s"></i>
+        <i class="fx-p" style="--x:32%;--y:88%;--dx:10px;--dy:-120px;--d:1.9s;--t:.45s;--s:4px"></i>
+        <i class="fx-p" style="--x:47%;--y:94%;--dx:-14px;--dy:-170px;--d:2.4s;--t:.35s;--s:6px"></i>
+        <i class="fx-p" style="--x:61%;--y:90%;--dx:12px;--dy:-140px;--d:2.1s;--t:.55s"></i>
+        <i class="fx-p" style="--x:74%;--y:93%;--dx:-6px;--dy:-160px;--d:2.3s;--t:.4s;--s:4px"></i>
+        <i class="fx-p" style="--x:86%;--y:88%;--dx:8px;--dy:-110px;--d:1.8s;--t:.6s"></i>
+        <i class="fx-p" style="--x:24%;--y:40%;--dx:30px;--dy:-60px;--d:1.4s;--t:.2s;--s:4px"></i>
+        <i class="fx-p" style="--x:14%;--y:30%;--dx:-20px;--dy:-50px;--d:1.3s;--t:.25s;--s:3px"></i>
+        <i class="fx-p" style="--x:40%;--y:78%;--dx:4px;--dy:-130px;--d:2.2s;--t:.9s;--s:3px"></i>
+      </div>
+      <span class="card-class">Paladin</span>
+      <div class="card-plate"><div class="card-name">Krunk</div><div class="card-sub">Half-Orc &middot; Vengeance</div></div>
+    </div>
   </a>
-  <a class="plaque" href="turnkeeper.html?sheet=https%3A%2F%2Fdocs.google.com%2Fspreadsheets%2Fd%2F1mS5Z2jgmi4U-bdEPP0JvZIkI-7puhWGjwlF8i6JIYbo%2Fedit%3Fgid%3D359784640%23gid%3D359784640&name=Venthor" target="_blank" rel="noopener">
-    <div class="plaque-name">Venthor</div>
-    <div class="plaque-sub">Sheet</div>
+  <a class="card card-rogue" href="turnkeeper.html?sheet=https%3A%2F%2Fdocs.google.com%2Fspreadsheets%2Fd%2F1mS5Z2jgmi4U-bdEPP0JvZIkI-7puhWGjwlF8i6JIYbo%2Fedit%3Fgid%3D359784640%23gid%3D359784640&name=Venthor" target="_blank" rel="noopener">
+    <div class="card-art">
+      <img src="portraits/venthor.webp" alt="Portrait of Venthor">
+      <div class="card-fx" aria-hidden="true">
+        <div class="fx-shade"></div>
+        <div class="fx-smoke" style="--x:-10%;--dx:18px;--t:0s"></div>
+        <div class="fx-smoke" style="--x:40%;--dx:-22px;--t:.35s"></div>
+        <div class="fx-glint"></div>
+        <div class="fx-star" style="--x:37.5%;--y:55%;--t:1.45s"></div>
+      </div>
+      <span class="card-class">Rogue</span>
+      <div class="card-plate"><div class="card-name">Venthor</div><div class="card-sub">Wood Elf &middot; Assassin</div></div>
+    </div>
   </a>
-  <a class="plaque" href="turnkeeper.html?sheet=https%3A%2F%2Fdocs.google.com%2Fspreadsheets%2Fd%2F1GqXXArCfLC42oVTF9XVrbNeKbw868HF1ih2S7VpX8jk%2Fedit%3Fgid%3D359784640%23gid%3D359784640&name=Ezlo" target="_blank" rel="noopener">
-    <div class="plaque-name">Ezlo</div>
-    <div class="plaque-sub">Sheet</div>
+  <a class="card card-wizard" href="turnkeeper.html?sheet=https%3A%2F%2Fdocs.google.com%2Fspreadsheets%2Fd%2F1GqXXArCfLC42oVTF9XVrbNeKbw868HF1ih2S7VpX8jk%2Fedit%3Fgid%3D359784640%23gid%3D359784640&name=Ezlo" target="_blank" rel="noopener">
+    <div class="card-art">
+      <img src="portraits/ezlo.webp" alt="Portrait of Ezlo">
+      <div class="card-fx" aria-hidden="true">
+        <div class="fx-tint"></div>
+        <div class="fx-rune"></div>
+        <div class="fx-rune inner"></div>
+        <div class="fx-orb"></div>
+        <i class="fx-p" style="--x:81%;--y:20%;--dx:-42px;--dy:-34px;--d:1.6s;--t:.25s"></i>
+        <i class="fx-p" style="--x:81%;--y:20%;--dx:-64px;--dy:18px;--d:1.8s;--t:.4s;--s:4px"></i>
+        <i class="fx-p" style="--x:81%;--y:20%;--dx:-28px;--dy:-62px;--d:1.5s;--t:.55s;--s:6px"></i>
+        <i class="fx-p" style="--x:81%;--y:20%;--dx:-74px;--dy:-8px;--d:2s;--t:.7s"></i>
+        <i class="fx-p" style="--x:81%;--y:20%;--dx:-22px;--dy:42px;--d:1.7s;--t:.85s;--s:4px"></i>
+        <i class="fx-p" style="--x:81%;--y:20%;--dx:-52px;--dy:-48px;--d:1.9s;--t:1s;--s:3px"></i>
+        <i class="fx-p" style="--x:81%;--y:20%;--dx:-84px;--dy:22px;--d:2s;--t:1.15s;--s:5px"></i>
+        <i class="fx-p" style="--x:81%;--y:20%;--dx:-36px;--dy:28px;--d:1.6s;--t:1.3s;--s:3px"></i>
+      </div>
+      <span class="card-class">Wizard</span>
+      <div class="card-plate"><div class="card-name">Ezlo</div><div class="card-sub">Drow</div></div>
+    </div>
   </a>
-  <a class="plaque" href="turnkeeper.html?sheet=https%3A%2F%2Fdocs.google.com%2Fspreadsheets%2Fd%2F14TFj-bb1ixAUl9bw_tNdcIpWtnYxeV8JW5f2kIbiW_Q%2Fedit%3Fgid%3D359784640%23gid%3D359784640&name=Bel" target="_blank" rel="noopener">
-    <div class="plaque-name">Bel</div>
-    <div class="plaque-sub">Sheet</div>
+  <a class="card card-bard" href="turnkeeper.html?sheet=https%3A%2F%2Fdocs.google.com%2Fspreadsheets%2Fd%2F14TFj-bb1ixAUl9bw_tNdcIpWtnYxeV8JW5f2kIbiW_Q%2Fedit%3Fgid%3D359784640%23gid%3D359784640&name=Bel" target="_blank" rel="noopener">
+    <div class="card-art">
+      <img src="portraits/bel.webp" alt="Portrait of Bel">
+      <div class="card-fx" aria-hidden="true">
+        <div class="fx-warm"></div>
+        <div class="fx-star" style="--x:27%;--y:35%;--t:.8s"></div>
+        <span class="fx-note" style="--x:20%;--y:32%;--dx:-14px;--dy:-100px;--d:2s;--t:.9s;--r:-18deg;--s:24px">&#9835;</span>
+        <span class="fx-note" style="--x:34%;--y:30%;--dx:12px;--dy:-120px;--d:2.1s;--t:1.1s;--r:14deg;--s:22px">&#9834;</span>
+        <span class="fx-note" style="--x:70%;--y:40%;--dx:10px;--dy:-110px;--d:1.9s;--t:1.25s;--r:-10deg;--s:19px">&#9833;</span>
+        <span class="fx-note" style="--x:80%;--y:28%;--dx:-8px;--dy:-90px;--d:1.7s;--t:1.4s;--r:20deg;--s:26px">&#9836;</span>
+      </div>
+      <span class="card-class">Bard</span>
+      <div class="card-plate"><div class="card-name">Bel</div><div class="card-sub">Tiefling</div></div>
+    </div>
   </a>
 </div>
 
-<footer>Click a name to open that character's sheet.</footer>
+<footer>Click a character to open their sheet.</footer>
 
+<script>
+// Cards with a video clip in .card-art play it from the start on hover and stop it after
+// (reduced motion: never play)
+const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+document.querySelectorAll('.card').forEach(card=>{
+  const v = card.querySelector('.card-video');
+  if(!v || reduceMotion) return;
+  const start = ()=>{ v.currentTime = 0; v.play().catch(()=>{}); };
+  const stop = ()=>{ v.pause(); v.currentTime = 0; };
+  card.addEventListener('mouseenter', start); card.addEventListener('focus', start);
+  card.addEventListener('mouseleave', stop); card.addEventListener('blur', stop);
+});
+</script>
 </body>
 </html>
