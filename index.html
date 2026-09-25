@@ -91,16 +91,16 @@ h1{
 .card:is(:hover, :focus-visible, .is-active) .card-video{opacity:1;}
 .card:is(:hover, :focus-visible, .is-active) .card-art img{filter:none; animation:cardPush 2.6s ease-out forwards;}
 @keyframes cardPush{from{transform:scale(1);} to{transform:scale(1.07);}}
-/* Inner frame line, class tag (top) and name plate (bottom) */
+/* Inner frame line, and the name plate at the bottom: name, then race and class on a
+   metallic badge in the class's frame colors */
 .card-art::after{content:''; position:absolute; inset:5px; border:1px solid var(--line); border-radius:4px; z-index:5; pointer-events:none; opacity:0.6;}
-.card-class{
-  position:absolute; top:11px; left:11px; z-index:6; padding:3px 9px; border-radius:3px;
-  background:var(--frame); color:var(--tag-ink); font-size:0.6rem; font-weight:700;
-  text-transform:uppercase; letter-spacing:0.14em; box-shadow:0 2px 6px rgba(0,0,0,0.55);
-}
 .card-plate{position:absolute; left:0; right:0; bottom:0; z-index:6; padding:40px 10px 15px; text-align:center; background:linear-gradient(to top, rgba(0,0,0,0.92), rgba(0,0,0,0.6) 55%, transparent);}
 .card-name{font-family:var(--font-display); font-size:1.5rem; line-height:1.1; color:#fff; letter-spacing:0.02em; text-shadow:0 2px 6px #000;}
-.card-sub{margin-top:4px; font-size:0.64rem; color:var(--line); text-transform:uppercase; letter-spacing:0.12em;}
+.card-sub{
+  display:inline-block; margin-top:6px; padding:3px 10px; border-radius:3px;
+  background:var(--frame); color:var(--tag-ink); font-size:0.6rem; font-weight:700;
+  text-transform:uppercase; letter-spacing:0.12em; white-space:nowrap; box-shadow:0 2px 6px rgba(0,0,0,0.55);
+}
 /* Effect layer: hidden until hover; each effect sets its own animation below */
 .card-fx{position:absolute; inset:0; z-index:4; pointer-events:none; overflow:hidden;}
 .card-fx > *{position:absolute; opacity:0;}
@@ -262,7 +262,6 @@ window.addEventListener('storage', e=>{ if(e.key === 'dndTracker:theme'){ applyT
         <i class="fx-p" style="--x:14%;--y:30%;--dx:-20px;--dy:-50px;--d:1.3s;--t:.25s;--s:3px"></i>
         <i class="fx-p" style="--x:40%;--y:78%;--dx:4px;--dy:-130px;--d:2.2s;--t:.9s;--s:3px"></i>
       </div>
-      <span class="card-class">Paladin</span>
       <div class="card-plate"><div class="card-name">Krunk</div><div class="card-sub">Half-Orc Paladin</div></div>
     </div>
   </a>
@@ -276,7 +275,6 @@ window.addEventListener('storage', e=>{ if(e.key === 'dndTracker:theme'){ applyT
         <div class="fx-glint"></div>
         <div class="fx-star" style="--x:37.5%;--y:55%;--t:1.45s"></div>
       </div>
-      <span class="card-class">Rogue</span>
       <div class="card-plate"><div class="card-name">Venthor</div><div class="card-sub">Wood Elf Rogue</div></div>
     </div>
   </a>
@@ -297,7 +295,6 @@ window.addEventListener('storage', e=>{ if(e.key === 'dndTracker:theme'){ applyT
         <i class="fx-p" style="--x:81%;--y:20%;--dx:-84px;--dy:22px;--d:2s;--t:1.15s;--s:5px"></i>
         <i class="fx-p" style="--x:81%;--y:20%;--dx:-36px;--dy:28px;--d:1.6s;--t:1.3s;--s:3px"></i>
       </div>
-      <span class="card-class">Wizard</span>
       <div class="card-plate"><div class="card-name">Ezlo</div><div class="card-sub">Drow Wizard</div></div>
     </div>
   </a>
@@ -320,7 +317,6 @@ window.addEventListener('storage', e=>{ if(e.key === 'dndTracker:theme'){ applyT
         <span class="fx-note" style="--x:70%;--y:40%;--dx:10px;--dy:-110px;--d:1.9s;--t:1.25s;--r:-10deg;--s:19px">&#9833;</span>
         <span class="fx-note" style="--x:80%;--y:28%;--dx:-8px;--dy:-90px;--d:1.7s;--t:1.4s;--r:20deg;--s:26px">&#9836;</span>
       </div>
-      <span class="card-class">Bard</span>
       <div class="card-plate"><div class="card-name">Bel</div><div class="card-sub">Tiefling Bard</div></div>
     </div>
   </a>

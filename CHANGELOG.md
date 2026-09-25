@@ -3,6 +3,13 @@
 What's new in Turnkeeper, the Crisis in Waterdeep character tracker, newest first.
 Rules follow D&D 5e (2014), checked against [dnd5e.wikidot.com](https://dnd5e.wikidot.com).
 
+## Unreleased
+
+### Changed
+- On the hub's character cards, the race and class under each name (e.g. "Half-Orc
+  Paladin") now sit on a metallic badge in the card's class colors, and the class tag in the
+  top-left corner is gone.
+
 ## 2026-09-24 — Hub portrait cards, saved spells and a shared theme
 
 ### Added
