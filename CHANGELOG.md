@@ -3,7 +3,7 @@
 What's new in Turnkeeper, the Crisis in Waterdeep character tracker, newest first.
 Rules follow D&D 5e (2014), checked against [dnd5e.wikidot.com](https://dnd5e.wikidot.com).
 
-## Unreleased
+## 2026-09-24 — !tk rolls and Keep as the default theme
 
 ### Changed
 - **Roll commands now use `!tk`** instead of `!r`, e.g. `!tk 1d20+5 adv`. `!tk` is our
