@@ -1753,7 +1753,8 @@ document.querySelector('.action-grid button[data-act="bonus"]').addEventListener
 });
 
 /* ---------- Attack flow (V2): Attack → weapon/maneuver → roll mode → Roll → popup ----------
-   Commands are plain Avrae !r rolls ONLY (never !a or other character commands).
+   Commands are plain dice rolls ONLY (never !a or other character commands), sent through
+   ROLL (below).
    Anything the 2014 rules decide after seeing the roll (crit, Divine Smite) is chosen in the
    popup, not before Roll. */
 const attackFlow = {choice:null, mode:'normal'};
@@ -1808,13 +1809,17 @@ function renderCheckDetail(act){
 
 function hasFeature(name){ return classFeatureItems().some(t=>t.name===name && charLevel() >= t.level); }
 function skillMod(name){ const s = state.skills.find(x=>x.name===name); return s && typeof s.mod==='number' ? s.mod : 0; }
-// A d20 roll command: "!r 1d20+5", with Avrae's own ` adv` / ` dis` word for advantage and
-// disadvantage (Avrae's !roll help: "!r 1d20+1 adv"; it turns the first 1d20 into 2d20kh1 / kl1).
-// minTen: Reliable Talent (a d20 roll of 9 or lower counts as 10) → `mi10`, which Avrae keeps
-// when it applies advantage.
+// The command every copy box starts with. "!tk" is the party server's Avrae alias (Justin,
+// 2026-09-24): it rolls like !r (same dice, adv / dis words and mi10) and adds a random GIF
+// and flavor title on a natural 1 or 20. Its code is in NOTES.md. Change this to "!r" to go
+// back to Avrae's plain roll, e.g. for a server without the alias.
+const ROLL = '!tk';
+// A d20 roll command: "!tk 1d20+5", with Avrae's ` adv` / ` dis` word for advantage and
+// disadvantage (Avrae's !roll help: "!r 1d20+1 adv"; !tk rolls the two d20s itself).
+// minTen: Reliable Talent (a d20 roll of 9 or lower counts as 10) → `mi10`.
 function d20Cmd(mode, bonus, minTen){
   const word = mode==='adv' ? ' adv' : mode==='dis' ? ' dis' : '';
-  return `!r 1d20${minTen ? 'mi10' : ''}${fmtMod(bonus)}${word}`;
+  return `${ROLL} 1d20${minTen ? 'mi10' : ''}${fmtMod(bonus)}${word}`;
 }
 // Reliable Talent applies to ability checks you're proficient in
 function reliableFor(skill){
@@ -1953,7 +1958,7 @@ function damageCommand(){
   const weaponDice = `${count}d${p.die}${gwf?'ro<3':''}`;
   const savage = savageOk && rollState.savage;
   if(savage) notes.push('Savage Attacker: weapon dice rolled twice, the higher total is kept. Once per turn.');
-  const cmd = `!r ${savage ? `(${weaponDice},${weaponDice})kh1` : weaponDice}${mod ? fmtMod(mod) : ''}${sneak ? `+${sneak}d6` : ''}${radiant ? `+${radiant}d8` : ''}`;
+  const cmd = `${ROLL} ${savage ? `(${weaponDice},${weaponDice})kh1` : weaponDice}${mod ? fmtMod(mod) : ''}${sneak ? `+${sneak}d6` : ''}${radiant ? `+${radiant}d8` : ''}`;
   // Beside the command: the damage type, then everything the command adds or changes, e.g.
   // "Greatsword damage (slashing), +10 Great Weapon Master, +2d8 Divine Smite (radiant)"
   const extras = [
@@ -2031,33 +2036,33 @@ function spellPopupHtml(){
     const dice = scaleDice(base, p.per, {up, cantrip, crit: r.attack && crit}) + adeptMi(p.type);
     let extra = r.attack ? critToggle() : '';
     if(p.alt) extra += `<div class="roll-toggles" style="margin-top:6px;">${toggleBtn('data-alt','1',r.altLabel,!!rollState.alt)}</div>`;
-    html += cmdBox('Damage', {cmd:`!r ${dice}${i===0 && empowered ? fmtMod(empowered) : ''}`, desc:`${sp.name} damage (${p.type})${i===0 && empowered ? `, +${empowered} Empowered Evocation` : ''}${adeptMi(p.type) ? ', Elemental Adept (1s count as 2s)' : ''}`}, extra);
+    html += cmdBox('Damage', {cmd:`${ROLL} ${dice}${i===0 && empowered ? fmtMod(empowered) : ''}`, desc:`${sp.name} damage (${p.type})${i===0 && empowered ? `, +${empowered} Empowered Evocation` : ''}${adeptMi(p.type) ? ', Elemental Adept (1s count as 2s)' : ''}`}, extra);
   });
   if(r.explosion){
     const x = r.explosion;
     html += infoBox('Explosion', `${x.text} ${saveLine(s.dc, x.save, x.onSave)}`)
-      + cmdBox('Explosion damage', {cmd:`!r ${scaleDice(x.d, x.per, {up})}${adeptMi(x.type)}`, desc:`${sp.name} explosion (${x.type})`});
+      + cmdBox('Explosion damage', {cmd:`${ROLL} ${scaleDice(x.d, x.per, {up})}${adeptMi(x.type)}`, desc:`${sp.name} explosion (${x.type})`});
   }
-  if(r.heal){ const d = scaleDice(r.heal.d, r.heal.per, {up}); html += cmdBox('Healing', {cmd:`!r ${d}${fmtMod(s.mod)}`, desc:'hit points regained'}); }
-  if(r.temp) html += cmdBox('Temporary hit points', {cmd:`!r ${r.temp.d}+${r.temp.flat + r.temp.perFlat*up}`, desc:'temporary hit points for 1 hour'});
-  if(r.pool) html += cmdBox('Hit point pool', {cmd:`!r ${scaleDice(r.pool.d, r.pool.per, {up})}`, desc:r.pool.what});
+  if(r.heal){ const d = scaleDice(r.heal.d, r.heal.per, {up}); html += cmdBox('Healing', {cmd:`${ROLL} ${d}${fmtMod(s.mod)}`, desc:'hit points regained'}); }
+  if(r.temp) html += cmdBox('Temporary hit points', {cmd:`${ROLL} ${r.temp.d}+${r.temp.flat + r.temp.perFlat*up}`, desc:'temporary hit points for 1 hour'});
+  if(r.pool) html += cmdBox('Hit point pool', {cmd:`${ROLL} ${scaleDice(r.pool.d, r.pool.per, {up})}`, desc:r.pool.what});
   if(r.darts){
     const n = r.darts.n + up;
-    html += cmdBox('All darts, one target', {cmd:`!r ${n}${r.darts.d.slice(1)}+${n*r.darts.bonus}`, desc:`${n} darts (${r.darts.type})`})
-      + cmdBox('One dart', {cmd:`!r ${r.darts.d}+${r.darts.bonus}`, desc:`per dart (${r.darts.type})`});
+    html += cmdBox('All darts, one target', {cmd:`${ROLL} ${n}${r.darts.d.slice(1)}+${n*r.darts.bonus}`, desc:`${n} darts (${r.darts.type})`})
+      + cmdBox('One dart', {cmd:`${ROLL} ${r.darts.d}+${r.darts.bonus}`, desc:`per dart (${r.darts.type})`});
     notes.push(`${n} darts. Each one hits automatically; split them between targets however you like.`);
   }
   if(r.rider || r.onHit){
     html += infoBox('No roll now', `This adds to ${r.rider ? r.rider.on : r.onHit}.`);
     if(r.rider){
-      html += cmdBox('Extra damage on the hit', {cmd:`!r ${scaleDice(r.rider.d, r.rider.per, {up, crit})}${adeptMi(r.rider.type)}`, desc:r.rider.type}, critToggle());
+      html += cmdBox('Extra damage on the hit', {cmd:`${ROLL} ${scaleDice(r.rider.d, r.rider.per, {up, crit})}${adeptMi(r.rider.type)}`, desc:r.rider.type}, critToggle());
       notes.push('Roll this with your weapon damage. A crit doubles these dice too.');
     }
   }
   if(r.hitSave) html += infoBox('On a hit', `Target makes a <b>DC ${s.dc} ${ABILITY_TEXT(r.hitSave.save)}</b> saving throw or is ${r.hitSave.effect}.`);
   if(r.ongoing){
     const o = r.ongoing;
-    html += cmdBox('Later turns', {cmd:`!r ${scaleDice(o.d, o.per, {up})}${adeptMi(o.type)}`, desc:o.type},
+    html += cmdBox('Later turns', {cmd:`${ROLL} ${scaleDice(o.d, o.per, {up})}${adeptMi(o.type)}`, desc:o.type},
       `<div class="roll-notes" style="list-style:none; padding-left:0;">${o.text}${o.save ? ` (DC ${s.dc} ${ABILITY_FULL[o.save]}.)` : ''}</div>`);
   }
   if(r.note) notes.push(r.note);
@@ -2992,7 +2997,7 @@ const CLASS_FEATURES = {
       'School of Divination': [
         {level:2, name:'Divination Savant', desc:'Copying a divination spell into your spellbook costs half the gold and time.'},
         {level:2, name:'Portent', uses:{max:()=>charLevel() >= 14 ? 3 : 2, recharge:'long'}, spendOnUse:false,
-          roll:{label:'Roll your Portent dice after a long rest', cmd:()=>`!r ${charLevel() >= 14 ? 3 : 2}d20`, desc:()=>'note each die; the total doesn’t matter'},
+          roll:{label:'Roll your Portent dice after a long rest', cmd:()=>`${ROLL} ${charLevel() >= 14 ? 3 : 2}d20`, desc:()=>'note each die; the total doesn’t matter'},
           desc:'After a long rest, roll two d20s and record them. Replace any attack roll, saving throw or ability check made by you or a creature you can see with one of them, before the roll. Once per turn. Unused dice are lost on your next long rest.'},
         {level:6, name:'Expert Divination', desc:'When you cast a 2nd-level or higher divination spell with a slot, regain one spent slot of a lower level (up to 5th).'},
         {level:10, name:'The Third Eye', type:'action', uses:{max:()=>1, recharge:'short'}, desc:'Gain one of: darkvision 60 ft, ethereal sight 60 ft, the ability to read any language, or see invisibility within 10 ft. Lasts until you’re incapacitated or rest.'},
@@ -3047,11 +3052,11 @@ const CLASS_FEATURES = {
     base: [
       {level:1, name:'Spellcasting', desc:'Cast bard spells using Charisma. You know a set number of spells, and can cast any bard spell you know as a ritual if it has the ritual tag.'},
       {level:1, name:'Bardic Inspiration', type:'bonus', spends:'bardicInspiration',
-        roll:{label:'For the creature you inspire', cmd:()=>`!r 1d${bardicDie()}`, desc:()=>`Bardic Inspiration d${bardicDie()}: add to one ability check, attack roll or saving throw`},
+        roll:{label:'For the creature you inspire', cmd:()=>`${ROLL} 1d${bardicDie()}`, desc:()=>`Bardic Inspiration d${bardicDie()}: add to one ability check, attack roll or saving throw`},
         desc:'Give a creature other than you within 60 ft that can hear you an inspiration die (d6, d8 at level 5, d10 at 10, d12 at 15). Within 10 minutes, it can roll the die and add it to one ability check, attack roll or saving throw, even after seeing its d20, before the DM says whether it succeeds. Uses: Charisma modifier (minimum 1) per long rest.'},
       {level:2, name:'Jack of All Trades', desc:'Add half your proficiency bonus (rounded down) to ability checks you aren’t proficient in. Your sheet’s skill modifiers already include it.'},
       {level:2, name:'Song of Rest',
-        roll:{label:'Extra healing during a short rest', cmd:()=>`!r 1d${songOfRestDie()}`, desc:()=>'added to each friendly creature that spends Hit Dice'},
+        roll:{label:'Extra healing during a short rest', cmd:()=>`${ROLL} 1d${songOfRestDie()}`, desc:()=>'added to each friendly creature that spends Hit Dice'},
         desc:'During a short rest, you and friendly creatures who hear your performance regain an extra d6 hit points (d8 at level 9, d10 at 13, d12 at 17) if they spend any Hit Dice.'},
       {level:3, name:'Expertise', desc:'Double your proficiency bonus for two of your skill proficiencies; two more at level 10. Your sheet’s skill modifiers already include it.'},
       {level:4, name:'Ability Score Improvement', desc:'At levels 4, 8, 12, 16 and 19: raise one ability score by 2, or two scores by 1 each (max 20), or take a feat if your table allows it.'},
@@ -3064,11 +3069,11 @@ const CLASS_FEATURES = {
       'College of Lore': [
         {level:3, name:'Bonus Proficiencies', desc:'Proficiency with three skills of your choice.'},
         {level:3, name:'Cutting Words', type:'reaction', spends:'bardicInspiration',
-          roll:{label:'Subtract from the creature’s roll', cmd:()=>`!r 1d${bardicDie()}`, desc:()=>'subtract this from its attack roll, ability check or damage roll'},
+          roll:{label:'Subtract from the creature’s roll', cmd:()=>`${ROLL} 1d${bardicDie()}`, desc:()=>'subtract this from its attack roll, ability check or damage roll'},
           desc:'When a creature you can see within 60 ft makes an attack roll, ability check or damage roll, spend a Bardic Inspiration use to subtract your inspiration die from it, after it rolls but before the DM says whether it succeeds or before it deals damage. Creatures that can’t hear you or can’t be charmed are immune.'},
         {level:6, name:'Additional Magical Secrets', desc:'Learn two spells from any class’s list; they count as bard spells.'},
         {level:14, name:'Peerless Skill', spends:'bardicInspiration',
-          roll:{label:'Add to your ability check', cmd:()=>`!r 1d${bardicDie()}`, desc:()=>'add this to your ability check'},
+          roll:{label:'Add to your ability check', cmd:()=>`${ROLL} 1d${bardicDie()}`, desc:()=>'add this to your ability check'},
           desc:'When you make an ability check, spend a Bardic Inspiration use to add your inspiration die, after you roll but before the DM says whether you succeed.'},
       ],
       'College of Valor': [
@@ -3570,7 +3575,7 @@ const FEATS = [
     desc:'Advantage on attack rolls against a creature you’re grappling. As an action, try to pin it with another grapple check: if you win, you and it are both restrained until the grapple ends.'},
   {name:'Great Weapon Master', type:'bonus', tip:'Use Attack → your weapon for the roll.', desc:'When you score a crit or drop a creature to 0 HP with a melee weapon, make one melee weapon attack as a bonus action. Before a melee attack with a heavy weapon you’re proficient with, you can take −5 to hit for +10 damage: Turnkeeper offers it in the Attack step.'},
   {name:'Healer', type:'action',
-    roll:{label:'Healing', cmd:()=>'!r 1d6+4', desc:()=>'plus the creature’s maximum number of Hit Dice'},
+    roll:{label:'Healing', cmd:()=>`${ROLL} 1d6+4`, desc:()=>'plus the creature’s maximum number of Hit Dice'},
     desc:'When you stabilize a creature with a healer’s kit, it also regains 1 HP. As an action, spend one use of a healer’s kit to restore 1d6 + 4 HP, plus the creature’s maximum number of Hit Dice. Each creature can benefit once per short or long rest.'},
   {name:'Heavily Armored', prereq:'Proficiency with medium armor', asi:{str:1}, desc:'+1 Strength. Proficiency with heavy armor.'},
   {name:'Heavy Armor Master', prereq:'Proficiency with heavy armor', asi:{str:1}, desc:'+1 Strength. While wearing heavy armor, nonmagical bludgeoning, piercing and slashing damage you take is reduced by 3.'},
@@ -3581,13 +3586,13 @@ const FEATS = [
   {name:'Lightly Armored', asiPick:['str','dex'], desc:'+1 Strength or Dexterity. Proficiency with light armor.'},
   {name:'Linguist', asi:{int:1}, desc:'+1 Intelligence. Learn three languages. You can write ciphers; others need an Intelligence check (DC your Intelligence score + proficiency bonus) to decode them without your help.'},
   {name:'Lucky', uses:{max:()=>3, recharge:'long'}, useDesc:'a luck point',
-    roll:{label:'Your extra d20', cmd:()=>'!r 1d20', desc:()=>'pick which d20 counts'},
+    roll:{label:'Your extra d20', cmd:()=>`${ROLL} 1d20`, desc:()=>'pick which d20 counts'},
     desc:'Three luck points per long rest. After you roll an attack, ability check or saving throw (before the DM says the outcome), spend one to roll another d20 and choose which to use. When you’re attacked, spend one to roll a d20 and choose whether the attacker uses it or theirs.'},
   {name:'Mage Slayer', type:'reaction', desc:'When a creature within 5 ft casts a spell, make a melee weapon attack against it as a reaction. Creatures you damage have disadvantage on concentration saves, and you have advantage on saves against spells cast within 5 ft of you.'},
   {name:'Magic Initiate', uses:{max:()=>1, recharge:'long'}, useDesc:'your Magic Initiate spell',
     desc:'Learn two cantrips and one 1st-level spell from the bard, cleric, druid, sorcerer, warlock or wizard list. Cast the 1st-level spell once per long rest without a slot (track it in Resources). Your spellcasting ability for them depends on that class.'},
   {name:'Martial Adept', uses:{max:()=>1, recharge:'short'}, useDesc:'your superiority die',
-    rolls:()=>[{label:'Superiority die', cmd:()=>'!r 1d6', desc:()=>'add to the maneuver'},
+    rolls:()=>[{label:'Superiority die', cmd:()=>`${ROLL} 1d6`, desc:()=>'add to the maneuver'},
       {label:'Maneuver save DC', info:()=>{ const m = Math.max(abilityScoreMod('str'), abilityScoreMod('dex')); return `<b>DC ${8 + proficiencyBonus() + m}</b> (8 + proficiency ${fmtMod(proficiencyBonus())} + Strength or Dexterity ${fmtMod(m)}).`; }}],
     desc:'Learn two Battle Master maneuvers. You have one superiority die (d6) to fuel them, regained on a short or long rest. Maneuver save DC: 8 + proficiency bonus + Strength or Dexterity modifier.'},
   {name:'Medium Armor Master', prereq:'Proficiency with medium armor', desc:'Medium armor doesn’t give you disadvantage on Stealth checks, and you can add up to +3 Dexterity to AC in it instead of +2.'},
@@ -3601,7 +3606,7 @@ const FEATS = [
       if(!a || !p) return [{label:'Butt end', info:()=>'No glaive, halberd, quarterstaff or spear found on your sheet.'}];
       const bonus = parseInt(String(a.bonus||'0').replace(/\s/g,''),10) || 0;
       return [{label:'To hit', cmd:()=>d20Cmd('normal', bonus), desc:()=>`${a.name} butt end attack`},
-              {label:'Damage', cmd:()=>`!r 1d4${p.mod ? fmtMod(p.mod) : ''}`, desc:()=>`${a.name} butt end damage (bludgeoning)`}];
+              {label:'Damage', cmd:()=>`${ROLL} 1d4${p.mod ? fmtMod(p.mod) : ''}`, desc:()=>`${a.name} butt end damage (bludgeoning)`}];
     },
     desc:'When you take the Attack action with only a glaive, halberd, quarterstaff or spear, make a bonus action attack with its other end (1d4 bludgeoning). Creatures entering your reach with one of those (or a pike) provoke an opportunity attack.'},
   {name:'Resilient', asiPick:['str','dex','con','int','wis','cha'], desc:'+1 to one ability score, and proficiency in saving throws with that ability. Pick the ability at the top of Character Summary; Turnkeeper adds both.'},
