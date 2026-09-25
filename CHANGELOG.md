@@ -25,8 +25,10 @@ Rules follow D&D 5e (2014), checked against [dnd5e.wikidot.com](https://dnd5e.wi
   - **Ezlo:** the flame in his hand flares, a rune circle turns around it and sparks fly.
   - **Bel:** candlelight warms up, she tips her ale for a "cheers", the mug glints, bubbles
     rise out of her ale and music notes drift up.
-  On phones and tablets the portraits show in color. No motion if your device is set to
-  reduce motion.
+  The card you point at comes forward while the others dim back. On phones and tablets, tap
+  a card once to bring it forward and play its effect (a "Tap again to open" badge appears),
+  then tap again to open the sheet; tap another card to switch, or anywhere else to put it
+  back. No motion if your device is set to reduce motion.
 
 ## 2026-09-24 — Color themes
 
