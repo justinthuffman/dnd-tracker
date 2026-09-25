@@ -9,6 +9,7 @@ Rules follow D&D 5e (2014), checked against [dnd5e.wikidot.com](https://dnd5e.wi
 - On the hub's character cards, the race and class under each name (e.g. "Half-Orc
   Paladin") now sit on a metallic badge in the card's class colors, and the class tag in the
   top-left corner is gone.
+- The hub lists the characters in alphabetical order: Bel, Ezlo, Krunk, Venthor.
 
 ## 2026-09-24 — Hub portrait cards, saved spells and a shared theme
 
