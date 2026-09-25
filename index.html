@@ -170,6 +170,15 @@ h1{
 .card-bard .fx-star{--star:#ffe7a3;}
 .fx-note{left:var(--x); top:var(--y); font-family:Georgia, serif; font-size:var(--s, 16px); color:#ffd98a; text-shadow:0 0 6px rgba(255,180,80,0.9);}
 .card:is(:hover, :focus-visible) .fx-note{animation:fxRise var(--d, 2s) ease-out var(--t, 0s) forwards;}
+/* Bubbles rise through the ale and wobble out over the foam */
+.fx-bubble{left:var(--x); top:var(--y); width:var(--s, 7px); height:var(--s, 7px); border-radius:50%; border:1.5px solid rgba(255,248,225,0.95); box-shadow:0 0 3px rgba(255,235,180,0.7); background:radial-gradient(circle at 35% 30%, rgba(255,255,255,0.95) 0 18%, rgba(255,230,160,0.15) 45%, transparent 70%);}
+.card:is(:hover, :focus-visible) .fx-bubble{animation:bubbleUp var(--d, 1.2s) ease-out var(--t, 0s) forwards;}
+@keyframes bubbleUp{
+  0%{opacity:0; transform:translate(0, 0) scale(0.5);}
+  20%{opacity:1;}
+  50%{transform:translate(calc(var(--dx, 0px) * -1), calc(var(--dy, -50px) * 0.5)) scale(0.9);}
+  100%{opacity:0; transform:translate(var(--dx, 0px), var(--dy, -50px)) scale(1.15);}
+}
 
 /* No hover on touch screens: show the portraits in color. Reduced motion: no animation. */
 @media (hover:none){ .card-art img{filter:none;} }
@@ -269,6 +278,14 @@ window.addEventListener('storage', e=>{ if(e.key === 'dndTracker:theme') applyTh
       <div class="card-fx" aria-hidden="true">
         <div class="fx-warm"></div>
         <div class="fx-star" style="--x:27%;--y:35%;--t:.8s"></div>
+        <i class="fx-bubble" style="--x:24%;--y:48%;--dx:3px;--dy:-58px;--d:1.1s;--t:.3s;--s:7px"></i>
+        <i class="fx-bubble" style="--x:28%;--y:50%;--dx:-3px;--dy:-72px;--d:1.3s;--t:.45s;--s:8px"></i>
+        <i class="fx-bubble" style="--x:31%;--y:46%;--dx:2px;--dy:-50px;--d:1s;--t:.6s;--s:6px"></i>
+        <i class="fx-bubble" style="--x:26%;--y:45%;--dx:-2px;--dy:-64px;--d:1.2s;--t:.85s;--s:9px"></i>
+        <i class="fx-bubble" style="--x:29%;--y:49%;--dx:3px;--dy:-70px;--d:1.3s;--t:1.05s;--s:7px"></i>
+        <i class="fx-bubble" style="--x:23%;--y:47%;--dx:-3px;--dy:-55px;--d:1.1s;--t:1.3s;--s:6px"></i>
+        <i class="fx-bubble" style="--x:30%;--y:44%;--dx:2px;--dy:-60px;--d:1.2s;--t:1.5s;--s:8px"></i>
+        <i class="fx-bubble" style="--x:27%;--y:50%;--dx:-2px;--dy:-75px;--d:1.3s;--t:1.7s;--s:7px"></i>
         <span class="fx-note" style="--x:20%;--y:32%;--dx:-14px;--dy:-100px;--d:2s;--t:.9s;--r:-18deg;--s:24px">&#9835;</span>
         <span class="fx-note" style="--x:34%;--y:30%;--dx:12px;--dy:-120px;--d:2.1s;--t:1.1s;--r:14deg;--s:22px">&#9834;</span>
         <span class="fx-note" style="--x:70%;--y:40%;--dx:10px;--dy:-110px;--d:1.9s;--t:1.25s;--r:-10deg;--s:19px">&#9833;</span>

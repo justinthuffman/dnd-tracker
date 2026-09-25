@@ -23,8 +23,8 @@ Rules follow D&D 5e (2014), checked against [dnd5e.wikidot.com](https://dnd5e.wi
   - **Krunk:** a flash of radiant light off his sword, the shock of the swing, rising embers.
   - **Venthor:** shadows close in, smoke rises, and a flash of steel cuts across the card.
   - **Ezlo:** the flame in his hand flares, a rune circle turns around it and sparks fly.
-  - **Bel:** candlelight warms up, she tips her ale for a "cheers", the mug glints and music
-    notes drift up.
+  - **Bel:** candlelight warms up, she tips her ale for a "cheers", the mug glints, bubbles
+    rise out of her ale and music notes drift up.
   On phones and tablets the portraits show in color. No motion if your device is set to
   reduce motion.
 
