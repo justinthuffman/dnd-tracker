@@ -3,6 +3,16 @@
 What's new in Turnkeeper, the Crisis in Waterdeep character tracker, newest first.
 Rules follow D&D 5e (2014), checked against [dnd5e.wikidot.com](https://dnd5e.wikidot.com).
 
+## Unreleased
+
+### Added
+- **Character names are remembered.** The character sheet has no spot for the character's
+  name, so the first time you import a sheet, Turnkeeper asks for it at the top of Character
+  Summary. It's saved for that sheet in your browser, so refreshing or re-importing fills it
+  in. Opening a character from the hub saves their name automatically. Click **Rename** next
+  to Character Name to change it. The browser tab shows the name too, e.g. "Krunk ·
+  Turnkeeper".
+
 ## 2026-09-24 — Hub card badges and order
 
 ### Changed

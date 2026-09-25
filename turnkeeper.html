@@ -362,6 +362,13 @@ button.feat-opt[hidden]{display:none;}
 .weapon-row .wdmg{color:var(--ink-dim); font-size:0.82rem;}
 /* Build box (permanent choices) */
 .build-box{margin:0 0 14px; display:flex; flex-direction:column; gap:10px;}
+/* Asking for the character's name (the sheet template has no name cell) */
+.name-ask{display:flex; flex-wrap:wrap; align-items:center; gap:8px 10px; margin:0 0 14px; padding:10px 12px; border:1px solid var(--orange); background:var(--orange-wash); border-radius:6px; font-size:0.88rem;}
+.name-ask[hidden]{display:none;}
+.name-ask input{flex:1 1 180px; min-width:0; background:var(--panel2); border:1px solid var(--border); color:var(--ink); padding:7px 9px; border-radius:4px; font-size:0.95rem; font-family:var(--font-display);}
+.name-ask button{padding:6px 14px; font-size:0.85rem;}
+.name-ask-note{flex-basis:100%; font-size:0.75rem; color:var(--ink-dim);}
+button.name-edit{font-size:0.66rem; margin-left:6px; text-transform:none; letter-spacing:0;}
 .build-pending{border:1px solid var(--orange); background:var(--orange-wash); border-radius:6px; padding:10px 12px;}
 .build-title{font-size:0.72rem; text-transform:uppercase; letter-spacing:0.06em; color:var(--orange-bright); margin-bottom:6px;}
 .build-row{display:flex; flex-wrap:wrap; align-items:center; gap:6px 8px; padding:3px 0;}
@@ -550,9 +557,16 @@ try{ applyTheme(localStorage.getItem('dndTracker:theme')); }catch(e){}
 <!-- CHARACTER SUMMARY -->
 <div class="panel">
   <div class="panel-head"><h2>Character Summary</h2><button type="button" class="sel-toggle" id="masterSelAll" title="Pin or unpin everything: traits, features, saving throws, skills and attacks"></button></div>
+  <div class="name-ask" id="nameAsk" hidden>
+    <label for="nameAskInput" id="nameAskLabel">What’s this character’s name?</label>
+    <input type="text" id="nameAskInput" maxlength="60" autocomplete="off">
+    <button type="button" id="nameAskSave">Save</button>
+    <button type="button" class="ghost" id="nameAskCancel" hidden>Cancel</button>
+    <span class="name-ask-note">Turnkeeper remembers it for this sheet, in this browser.</span>
+  </div>
   <div id="buildBox" class="build-box" hidden></div>
   <div class="summary-grid">
-    <div class="field name wide"><label>Character Name</label><input id="f_name" type="text" readonly></div>
+    <div class="field name wide"><label>Character Name <button type="button" class="sel-toggle name-edit" id="nameEdit" hidden>Rename</button></label><input id="f_name" type="text" readonly></div>
     <div class="field"><label>Level</label><input id="f_level" type="text" readonly></div>
     <div class="field"><label>Race</label><input id="f_race" type="text" readonly></div>
     <div class="field"><label>Class</label><input id="f_class" type="text" readonly></div>
@@ -2740,7 +2754,7 @@ async function runImport(){
     const table = data.table.rows.map(row => (row.c||[]).map(cell => cell ? (cell.v!==null && cell.v!==undefined ? cell.v : cell.f) : null));
     renderRawDump(table);
 
-    document.getElementById('f_name').value = getFirstValue(table, RANGES.name) || '';
+    const sheetName = String(getFirstValue(table, RANGES.name) || '').trim();   // usually blank on the v2.1 template
     document.getElementById('f_level').value = getFirstValue(table, RANGES.level);
     document.getElementById('f_race').value = getFirstValue(table, RANGES.race);
     const cls = getFirstValue(table, RANGES.class);
@@ -2766,6 +2780,14 @@ async function runImport(){
     const perceptionMod = findSkillModifier(table, 20, 37, 'Perception', 'I', 'J');
     basePassive = perceptionMod !== null ? 10 + perceptionMod : null;
     currentCharId = sheetId;
+    // Character name: saved for this sheet in this browser, else the hub link's name, else the
+    // sheet (usually blank). With none of those, ask once; the answer is saved for this sheet.
+    const charName = savedName(sheetId) || importNameHint || sheetName;
+    importNameHint = '';
+    if(charName && !savedName(sheetId)) saveName(sheetId, charName);
+    setCharName(charName);
+    showNameAsk(!charName ? 'ask' : null);
+    document.getElementById('nameEdit').hidden = false;
     // A new character: close any open Combat Menu panel/popup so nothing stale stays on screen
     if(!rollPopup.hidden) closeRollPopup();
     dashActive = false;
@@ -3117,6 +3139,43 @@ function subclassFromText(classKey, cls){
 let currentCharId = '';
 function storageGet(key){ try{ return localStorage.getItem(key); }catch(e){ return null; } }
 function storageSet(key, val){ try{ if(val===null) localStorage.removeItem(key); else localStorage.setItem(key, val); }catch(e){} }
+/* ---------- Character name ----------
+   The public v2.1 sheet has no character-name cell, and its structure can't be changed (other
+   people use the same template). So the name is remembered per sheet in this browser: from
+   the hub link (&name=) the first time, or asked once on import. "Rename" changes it. */
+let importNameHint = '';
+const nameMem = new Map();
+function savedName(id){ return nameMem.get(id) || storageGet(`dndTracker:charName:${id}`) || ''; }
+function saveName(id, name){ nameMem.set(id, name); storageSet(`dndTracker:charName:${id}`, name || null); }
+function setCharName(name){
+  document.getElementById('f_name').value = name;
+  document.title = name ? `${name} · Turnkeeper` : 'Turnkeeper';
+}
+// mode: 'ask' (first time, no name yet), 'rename', or null to hide
+function showNameAsk(mode){
+  const box = document.getElementById('nameAsk'), input = document.getElementById('nameAskInput');
+  box.hidden = !mode;
+  if(!mode) return;
+  document.getElementById('nameAskLabel').textContent = mode==='rename' ? 'Rename this character:' : 'What’s this character’s name?';
+  document.getElementById('nameAskCancel').hidden = mode !== 'rename';
+  input.value = mode==='rename' ? document.getElementById('f_name').value : '';
+  setTimeout(()=>{ input.focus(); input.select(); }, 0);
+}
+function saveAskedName(){
+  const input = document.getElementById('nameAskInput'), name = input.value.trim();
+  if(!name || !currentCharId){ input.focus(); return; }
+  saveName(currentCharId, name);
+  setCharName(name);
+  showNameAsk(null);
+}
+document.getElementById('nameAskSave').addEventListener('click', saveAskedName);
+document.getElementById('nameAskInput').addEventListener('keydown', e=>{
+  if(e.key === 'Enter') saveAskedName();
+  else if(e.key === 'Escape' && !document.getElementById('nameAskCancel').hidden) showNameAsk(null);
+});
+document.getElementById('nameAskCancel').addEventListener('click', ()=>showNameAsk(null));
+document.getElementById('nameEdit').addEventListener('click', ()=>showNameAsk('rename'));
+
 // Which sections are expanded is remembered per browser (a view setting, so not per character)
 function rememberOpen(name, open){ storageSet(`dndTracker:open:${name}`, open ? '1' : null); }
 function wasOpen(name){ return storageGet(`dndTracker:open:${name}`) === '1'; }
@@ -4193,11 +4252,8 @@ window.addEventListener('storage', e=>{ if(e.key === 'dndTracker:theme'){ applyT
   const nameParam = params.get('name');
   if(sheetParam){
     document.getElementById('sheetUrl').value = sheetParam;
+    importNameHint = (nameParam || '').trim();   // used (and saved) only if this sheet has no saved name yet
     await runImport();
-  }
-  // Set after import so it isn't overwritten by whatever (usually blank) the sheet import found for name.
-  if(nameParam){
-    document.getElementById('f_name').value = nameParam;
   }
 })();
 </script>
