@@ -544,7 +544,11 @@ function applyTheme(key){
     document.head.appendChild(l);
   }
 }
-try{ applyTheme(localStorage.getItem('dndTracker:theme')); }catch(e){}
+// Keep is the default look for anyone who hasn't picked a theme (Justin, 2026-09-24)
+const DEFAULT_THEME = 'keep';
+let savedTheme = null;
+try{ savedTheme = localStorage.getItem('dndTracker:theme'); }catch(e){}
+applyTheme(savedTheme || DEFAULT_THEME);
 </script>
 </head>
 <body>
@@ -4226,7 +4230,7 @@ const THEMES = [
 function setTheme(key){
   const t = THEMES.find(x=>x.key===key) || THEMES[0];
   applyTheme(t.key);
-  storageSet('dndTracker:theme', t.key==='harbor' ? null : t.key);
+  storageSet('dndTracker:theme', t.key);   // saved even for Harbor, since Keep is the default
   renderThemeBar();
 }
 function renderThemeBar(){
@@ -4248,7 +4252,7 @@ document.addEventListener('click', e=>{ if(!e.composedPath().includes(document.g
 document.addEventListener('keydown', e=>{ if(e.key === 'Escape') showThemeMenu(false); });
 renderThemeBar();
 // A theme picked in another tab (tracker or hub) is followed here straight away
-window.addEventListener('storage', e=>{ if(e.key === 'dndTracker:theme'){ applyTheme(e.newValue); renderThemeBar(); } });
+window.addEventListener('storage', e=>{ if(e.key === 'dndTracker:theme'){ applyTheme(e.newValue || DEFAULT_THEME); renderThemeBar(); } });
 
 /* ---------- Auto-import when opened with ?sheet=<url>&name=<name> ---------- */
 (async function(){

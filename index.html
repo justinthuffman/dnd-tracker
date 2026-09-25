@@ -234,8 +234,12 @@ function applyTheme(key){
     document.head.appendChild(l);
   }
 }
-try{ applyTheme(localStorage.getItem('dndTracker:theme')); }catch(e){}
-window.addEventListener('storage', e=>{ if(e.key === 'dndTracker:theme'){ applyTheme(e.newValue); if(window.renderThemeBar) renderThemeBar(); } });
+// Keep is the default look for anyone who hasn't picked a theme (Justin, 2026-09-24)
+const DEFAULT_THEME = 'keep';
+let savedTheme = null;
+try{ savedTheme = localStorage.getItem('dndTracker:theme'); }catch(e){}
+applyTheme(savedTheme || DEFAULT_THEME);
+window.addEventListener('storage', e=>{ if(e.key === 'dndTracker:theme'){ applyTheme(e.newValue || DEFAULT_THEME); if(window.renderThemeBar) renderThemeBar(); } });
 </script>
 </head>
 <body>
@@ -345,7 +349,7 @@ const THEMES = [
 function setTheme(key){
   const t = THEMES.find(x=>x.key===key) || THEMES[0];
   applyTheme(t.key);
-  try{ if(t.key === 'harbor') localStorage.removeItem('dndTracker:theme'); else localStorage.setItem('dndTracker:theme', t.key); }catch(e){}
+  try{ localStorage.setItem('dndTracker:theme', t.key); }catch(e){}   // saved even for Harbor, since Keep is the default
   renderThemeBar();
 }
 function renderThemeBar(){

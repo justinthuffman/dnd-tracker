@@ -9,6 +9,9 @@ Rules follow D&D 5e (2014), checked against [dnd5e.wikidot.com](https://dnd5e.wi
 - **Roll commands now use `!tk`** instead of `!r`, e.g. `!tk 1d20+5 adv`. `!tk` is our
   server's Avrae command: it rolls exactly like `!r`, and on a natural 1 or natural 20 it
   adds a title and a random GIF.
+- **Keep is the default theme** on both the hub and the tracker, for anyone who hasn't picked
+  one. Harbor, the original look, is still in the Theme menu, and any theme you pick is
+  remembered.
 
 ## 2026-09-24 — Remembered character names
 
