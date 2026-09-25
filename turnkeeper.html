@@ -114,7 +114,7 @@ html[data-theme="keep"] .field input, html[data-theme="keep"] .stat-box, html[da
   box-shadow:inset 0 2px 5px rgba(0,0,0,0.55);
 }
 /* Main buttons: hammered copper plates with a highlight and a dark lower edge */
-html[data-theme="keep"] button:not(.sel-toggle):not(.pip):not(.theme-swatch):not(.roll-close):not(.feat-opt):not(.chip-btn):not(.build-tag):not(.ghost){
+html[data-theme="keep"] button:not(.sel-toggle):not(.pip):not(.theme-toggle):not(.theme-option):not(.roll-close):not(.feat-opt):not(.chip-btn):not(.build-tag):not(.ghost){
   background-image:linear-gradient(180deg, rgba(255,235,200,0.22), rgba(255,235,200,0.04) 45%, rgba(0,0,0,0.22));
   border-color:#2e1a0e; box-shadow:inset 0 1px 0 rgba(255,240,210,0.35), 0 2px 0 rgba(0,0,0,0.5);
   text-shadow:0 1px 0 rgba(0,0,0,0.55);
@@ -186,11 +186,11 @@ html[data-theme="inferno"] header.top h1{font-size:2rem;}
 /* The title sits on a line of fire */
 html[data-theme="inferno"] header.top{border-bottom:2px solid transparent; border-image:linear-gradient(90deg, transparent, #ff7a1a 20%, #b30f00 50%, #ff7a1a 80%, transparent) 1; box-shadow:0 8px 14px -8px rgba(255,80,0,0.5);}
 /* Buttons: blood red with a dark lower edge and a hot glow on hover */
-html[data-theme="inferno"] button:not(.sel-toggle):not(.pip):not(.theme-swatch):not(.roll-close):not(.feat-opt):not(.chip-btn):not(.build-tag):not(.ghost){
+html[data-theme="inferno"] button:not(.sel-toggle):not(.pip):not(.theme-toggle):not(.theme-option):not(.roll-close):not(.feat-opt):not(.chip-btn):not(.build-tag):not(.ghost){
   background-image:linear-gradient(180deg, rgba(255,120,80,0.18), transparent 50%, rgba(0,0,0,0.3));
   border-color:#3a0705; box-shadow:inset 0 1px 0 rgba(255,150,110,0.25), 0 2px 0 rgba(0,0,0,0.6);
 }
-html[data-theme="inferno"] button:not(.sel-toggle):not(.pip):not(.theme-swatch):not(.roll-close):not(.feat-opt):not(.chip-btn):not(.build-tag):not(.ghost):hover{box-shadow:inset 0 1px 0 rgba(255,150,110,0.3), 0 0 12px rgba(255,60,10,0.55);}
+html[data-theme="inferno"] button:not(.sel-toggle):not(.pip):not(.theme-toggle):not(.theme-option):not(.roll-close):not(.feat-opt):not(.chip-btn):not(.build-tag):not(.ghost):hover{box-shadow:inset 0 1px 0 rgba(255,150,110,0.3), 0 0 12px rgba(255,60,10,0.55);}
 /* Charges (spell slots, uses) are blood drops: full drops are left, hollow ones are spent */
 html[data-theme="inferno"] button.pip{border-radius:0 50% 50% 50%; transform:rotate(45deg); border-color:#c0180f;}
 html[data-theme="inferno"] button.pip.on{background:radial-gradient(circle at 35% 35%, #e0301f, #8a0905 70%); box-shadow:0 0 6px rgba(200,20,10,0.6);}
@@ -502,10 +502,23 @@ button.flow-btn .src-tag{color:var(--ink); border-color:rgba(255,255,255,0.6);}
 #tooltip a{color:var(--sea); pointer-events:auto;}
 
 footer{text-align:center; color:var(--ink-dim); font-size:0.75rem; margin-top:30px;}
-.theme-bar{display:flex; justify-content:center; align-items:center; gap:8px; margin-top:14px; font-size:0.75rem; color:var(--ink-dim);}
-button.theme-swatch{width:22px; height:22px; padding:0; border-radius:50%; border:2px solid var(--border); cursor:pointer; background-clip:padding-box;}
-button.theme-swatch:hover{border-color:var(--ink-dim);}
-button.theme-swatch[aria-pressed="true"]{border-color:var(--ink); box-shadow:0 0 0 2px var(--bg), 0 0 0 3px var(--ink);}
+/* Theme picker: a small, quiet "Theme" button that opens a menu of the themes
+   (the same on the tracker and the hub; keep the two in step) */
+.theme-picker{position:relative; display:flex; justify-content:center; margin-top:14px;}
+button.theme-toggle{display:inline-flex; align-items:center; gap:5px; background:none; border:none; padding:4px 6px; border-radius:4px; color:var(--ink-dim); opacity:0.6; font-size:0.72rem; font-family:var(--font-body); cursor:pointer; box-shadow:none; text-shadow:none;}
+button.theme-toggle:hover, button.theme-toggle[aria-expanded="true"]{background:none; opacity:1; color:var(--ink);}
+button.theme-toggle svg{width:13px; height:13px;}
+.theme-menu{
+  position:absolute; bottom:calc(100% + 6px); left:50%; transform:translateX(-50%); z-index:50;
+  display:grid; grid-template-columns:repeat(2, auto); gap:4px 12px; padding:10px 12px;
+  background:var(--panel); border:1px solid var(--border); border-radius:8px; box-shadow:0 8px 24px rgba(0,0,0,0.45);
+}
+.theme-menu[hidden]{display:none;}
+button.theme-option{display:flex; align-items:center; gap:8px; background:none; border:none; padding:4px 6px; border-radius:4px; color:var(--ink); font-size:0.78rem; font-family:var(--font-body); white-space:nowrap; cursor:pointer; box-shadow:none; text-shadow:none;}
+button.theme-option:hover{background:var(--panel2);}
+.theme-dot{width:16px; height:16px; border-radius:50%; border:1.5px solid var(--border); flex:0 0 auto;}
+button.theme-option[aria-pressed="true"]{font-weight:600;}
+button.theme-option[aria-pressed="true"] .theme-dot{border-color:var(--ink); box-shadow:0 0 0 2px var(--panel), 0 0 0 3px var(--ink);}
 </style>
 <script>
 // Apply the saved color theme before the page draws (no flash of the default look).
@@ -716,7 +729,11 @@ try{ applyTheme(localStorage.getItem('dndTracker:theme')); }catch(e){}
 </div>
 
 <footer>Spell lists sourced from the "core" class lists at dnd5e.wikidot.com. Hover details are brief paraphrased summaries, not the original text &mdash; use the linked page for full rules text.</footer>
-<div class="theme-bar" id="themeBar" role="group" aria-label="Color theme"><span id="themeName">Theme</span></div>
+<div class="theme-picker" id="themePicker">
+  <button type="button" class="theme-toggle" id="themeToggle" aria-expanded="false" aria-controls="themeMenu" title="Change the color theme"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 3a9 9 0 0 0 0 18c1.1 0 1.8-.8 1.8-1.7 0-.5-.2-.9-.5-1.2-.3-.3-.5-.7-.5-1.2 0-.9.8-1.7 1.7-1.7H16a5 5 0 0 0 5-5C21 6.4 17 3 12 3zm-5.5 9a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm3-4a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm3 4a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z"/></svg><span>Theme</span></button>
+  <div class="theme-menu" id="themeMenu" role="group" aria-label="Color theme" hidden></div>
+</div>
+
 
 <!-- IMPORT (moved to bottom, collapsed and de-emphasized) -->
 <div style="margin-top:22px; padding-top:14px; border-top:1px solid var(--border);">
@@ -4149,13 +4166,22 @@ function setTheme(key){
   renderThemeBar();
 }
 function renderThemeBar(){
-  const bar = document.getElementById('themeBar');
+  const menu = document.getElementById('themeMenu');
   const cur = document.documentElement.getAttribute('data-theme') || 'harbor';
-  const t = THEMES.find(x=>x.key===cur) || THEMES[0];
-  bar.innerHTML = `<span>Theme: ${t.name}</span>` + THEMES.map(x=>
-    `<button type="button" class="theme-swatch" data-theme-pick="${x.key}" aria-pressed="${x.key===t.key}" title="${x.name}" aria-label="${x.name} theme" style="background:linear-gradient(135deg, ${x.bg} 50%, ${x.accent} 50%);"></button>`).join('');
-  bar.querySelectorAll('[data-theme-pick]').forEach(b=>b.addEventListener('click', ()=>setTheme(b.dataset.themePick)));
+  menu.innerHTML = THEMES.map(x=>
+    `<button type="button" class="theme-option" data-theme-pick="${x.key}" aria-pressed="${x.key===cur}"><span class="theme-dot" style="background:linear-gradient(135deg, ${x.bg} 50%, ${x.accent} 50%);"></span>${x.name}</button>`).join('');
+  menu.querySelectorAll('[data-theme-pick]').forEach(b=>b.addEventListener('click', ()=>setTheme(b.dataset.themePick)));
 }
+// The Theme button opens and closes the menu; a click elsewhere or Escape closes it.
+// It stays open after a pick so themes can be compared.
+function showThemeMenu(open){
+  document.getElementById('themeMenu').hidden = !open;
+  document.getElementById('themeToggle').setAttribute('aria-expanded', String(open));
+}
+document.getElementById('themeToggle').addEventListener('click', ()=>showThemeMenu(document.getElementById('themeMenu').hidden));
+// composedPath, not closest(): picking a theme rebuilds the menu, detaching the clicked button
+document.addEventListener('click', e=>{ if(!e.composedPath().includes(document.getElementById('themePicker'))) showThemeMenu(false); });
+document.addEventListener('keydown', e=>{ if(e.key === 'Escape') showThemeMenu(false); });
 renderThemeBar();
 // A theme picked in another tab (tracker or hub) is followed here straight away
 window.addEventListener('storage', e=>{ if(e.key === 'dndTracker:theme'){ applyTheme(e.newValue); renderThemeBar(); } });

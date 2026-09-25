@@ -11,10 +11,14 @@ Rules follow D&D 5e (2014), checked against [dnd5e.wikidot.com](https://dnd5e.wi
 - **Sections stay the way you left them.** Whichever sections you expand or collapse
   (Racial Traits, Class Features, Feats, Saving Throws, Skills, Attacks, Backup, Spells)
   stay that way after a reload.
-- **One theme for both pages.** The character hub has the same theme swatches at the bottom
-  as the tracker, and a theme picked on either page applies to both, including Tome's
-  parchment and Inferno's embers. If the other page is open in another tab, it changes
-  straight away.
+- **One theme for both pages.** The character hub can change the theme too, and a theme
+  picked on either page applies to both, including Tome's parchment and Inferno's embers. If
+  the other page is open in another tab, it changes straight away.
+
+### Changed
+- **The theme picker is tucked away.** Instead of a row of swatches, both pages have a small
+  **Theme** button at the bottom. Click it to open the list of themes; click outside it or
+  press Escape to close it.
 - **Back to the hub:** click the Turnkeeper logo or name at the top of the tracker to return
   to the character list.
 - **Character cards on the hub.** Each character is now a portrait card, like a trading card,
